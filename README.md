@@ -164,6 +164,7 @@ make setup
 - Start here for backend specifics: `backend/README.md`
 - Start here for frontend specifics: `frontend/README.md`
 - Multi-machine start/stop runbook: `CONTINUITY-CHECKLIST.md`
+- Windows 11 + PyCharm + WSL setup runbook: `WINDOWS-11-SETUP.md`
 - Project workflow: `WORKFLOW.md`
 - Setup gaps / production checklist: `WORKFLOW-SETUP.md`
 - Latest project context: `DEV-SESSION.md`
