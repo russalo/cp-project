@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environment
+.venv/
+venv/
+backend/.venv/
+
+# Environmental files
+ENV/
+env/
+.env
+.env.*
+
+# PyCharm
+.idea/
+
+# Django
+*.log
+db.sqlite3
+db.sqlite3-journal
+/media
+/staticfiles
+
+# Local reference material / office temp files
+.github-copilot/.~lock*
+.github-copilot/*.xlsx
+.github-copilot/*.pdf
+
+# OS
+.DS_Store
+Thumbs.db
