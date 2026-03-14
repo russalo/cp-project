@@ -114,10 +114,10 @@ That prints:
 ## PyCharm setup on a new machine
 
 1. Open the repo root: `cp-project`
-2. Set the Python interpreter to `./.venv/bin/python`
-3. Let PyCharm detect the Django project from `backend/`
-4. Use the integrated terminal from the repo root for `make` commands
-5. Do **not** commit `.idea/` machine-specific state
+2. Set the Python interpreter to **`backend/.venv/bin/python`**.
+3. Let PyCharm detect the Django project from `backend/`.
+4. Use the integrated terminal from the repo root for `make` commands.
+5. Do **not** commit `.idea/` machine-specific state.
 
 ## Secrets and local machine data
 
@@ -137,12 +137,12 @@ When moving to another machine, recreate `backend/.env` locally from the example
 
 ## Continuity rules between machines
 
-1. Work in short-lived branches such as `feature/<name>` or `fix/<name>`
-2. Push early and often so another machine can pick up where you left off
-3. Record important scope changes in `DECISIONS.md`
-4. Record session context in `DEV-SESSION.md` when stopping mid-stream
-5. Keep secrets out of Git and inside local env files or GitHub secrets
-6. Prefer repo commands (`make ...`) over ad-hoc machine-specific commands
+1. Work in short-lived branches such as `feature/<name>` or `fix/<name>`.
+2. Push early and often so another machine can pick up where you left off.
+3. Record important scope changes in `DECISIONS.md`.
+4. Record session context in `DEV-SESSION.md` when stopping mid-stream.
+5. Keep secrets out of Git and inside local env files or GitHub secrets.
+6. Prefer repo commands (`make ...`) over ad-hoc machine-specific commands.
 
 ## Resume on another machine checklist
 
@@ -159,12 +159,4 @@ If `.venv/` or frontend dependencies are missing, rerun:
 make setup
 ```
 
-## Important project docs
-
-- Start here for backend specifics: `backend/README.md`
-- Start here for frontend specifics: `frontend/README.md`
-- Multi-machine start/stop runbook: `CONTINUITY-CHECKLIST.md`
-- Windows 11 + PyCharm + WSL setup runbook: `WINDOWS-11-SETUP.md`
-- Project workflow: `WORKFLOW.md`
-- Setup gaps / production checklist: `WORKFLOW-SETUP.md`
-- Latest project context: `DEV-SESSION.md`
+---
