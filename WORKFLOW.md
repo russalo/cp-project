@@ -30,6 +30,7 @@ This document defines the baseline delivery workflow from local development to G
 - Use `make continuity-status` when resuming work on another machine.
 - Push active branches frequently so another machine can immediately continue from GitHub.
 - Capture important scope or architecture changes in `DECISIONS.md` and session context in `DEV-SESSION.md`.
+- Use `CONTINUITY-CHECKLIST.md` as the step-by-step start/stop runbook.
 
 ## Decision Records
 

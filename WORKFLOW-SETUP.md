@@ -6,6 +6,81 @@ This file tracks what is still outstanding to complete the baseline path:
 
 _Last updated: 2026-03-14_
 
+## Milestone 1 Execution Order (Plan of Action)
+
+Work these in order to complete `Milestone 1` from `MILESTONES.md` with minimal rework.
+
+### Phase A - Repo and Continuity Baseline
+
+- [ ] Confirm local `main` tracks `origin/main` and working tree is clean.
+- [ ] Confirm multi-machine runbook is in place and usable: `CONTINUITY-CHECKLIST.md`.
+- [ ] Confirm baseline commit is pushed to GitHub before cross-machine setup.
+
+Verification (Terminal, local):
+
+```bash
+cd /home/russellp/Projects/cp-project
+git status -sb
+git remote -v
+make continuity-status
+```
+
+### Phase B - Dev Machine Baseline (Fedora + PyCharm)
+
+- [ ] Bootstrap with `make setup`.
+- [ ] Run `make dev-check` and resolve failures before proceeding.
+- [ ] Confirm PyCharm interpreter points to `./.venv/bin/python`.
+
+Verification (Terminal, local):
+
+```bash
+cd /home/russellp/Projects/cp-project
+make setup
+make dev-check
+```
+
+### Phase C - GitHub Baseline and CI
+
+- [ ] Verify `.github/workflows/ci.yml` runs on push/PR.
+- [ ] Enable branch protection for `main` (PR review + required status checks + no force push).
+- [ ] Add GitHub Environment `production` and seed required secrets.
+- [ ] Decision closeout: resolve `DEC-001` (CI gate strategy) and reflect it in docs.
+
+Verification:
+
+- GitHub site -> Actions: confirm latest workflow run status.
+- GitHub site -> Settings -> Branches: confirm `main` protection rule exists.
+
+### Phase D - Production VPS Baseline
+
+- [ ] Access hardening complete (`deploy` key auth, no root SSH login, password auth disabled after verification).
+- [ ] Runtime/services validated (Python/PostgreSQL/Nginx; Redis if needed).
+- [ ] Create app DB role/database and verify Django DB connectivity.
+
+Verification (Terminal, VPS):
+
+```bash
+whoami
+sudo ufw status verbose
+sudo systemctl is-active postgresql nginx
+python3 --version
+psql --version
+sudo -u postgres psql -tAc "\du" | cat
+sudo -u postgres psql -tAc "\l" | cat
+```
+
+### Phase E - Backup/Restore Proof (Required for Milestone 1)
+
+- [ ] Create first PostgreSQL backup artifact.
+- [ ] Execute one restore test and document exact commands/results.
+- [ ] Keep backup/restore notes in `WORKFLOW-SETUP.md` or linked runbook.
+
+### Phase F - Milestone 1 Closeout
+
+- [ ] Mark complete items in `MILESTONES.md` only after command/UI verification.
+- [ ] Confirm `DEC-002` is accepted and linked from milestone progress notes.
+- [ ] Confirm Milestone 1 does not depend on post-v1 document/Dropbox features.
+
 ## 0) Critical Early Concerns (Must Be Correct Before Feature Scale)
 
 - [ ] Money calculations are server-side and use `Decimal` only (no float arithmetic for costs).

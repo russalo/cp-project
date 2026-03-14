@@ -2,7 +2,7 @@ SHELL := /bin/bash
 ROOT_DIR := $(abspath .)
 VENV_PYTHON := $(ROOT_DIR)/.venv/bin/python
 
-.PHONY: setup setup-backend backend-check frontend-install frontend-build dev-check backend-run frontend-dev continuity-status
+.PHONY: setup setup-backend backend-check frontend-install frontend-build dev-check backend-run frontend-dev continuity-status start-session stop-session
 
 setup:
 	./setup.sh
@@ -41,3 +41,22 @@ continuity-status:
 	else \
 		echo "No commits yet on this clone."; \
 	fi
+
+start-session:
+	@echo "[session] Syncing and verifying local environment"
+	git pull --rebase
+	$(MAKE) continuity-status
+	$(MAKE) dev-check
+
+stop-session:
+	@echo "[session] Preparing end-of-session checkpoint"
+	@echo "[session] Reminder: update DEV-SESSION.md and DECISIONS.md (if needed) before commit"
+	git status
+	git add -A
+	@if git diff --cached --quiet; then \
+		echo "[session] No staged changes to commit."; \
+	else \
+		git commit -m "$(if $(MSG),$(MSG),WIP: session checkpoint)"; \
+		git push -u origin HEAD; \
+	fi
+
