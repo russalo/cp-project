@@ -42,7 +42,7 @@ make dev-check
 ### Phase C - GitHub Baseline and CI
 
 - [x] Verify `.github/workflows/ci.yml` runs on push/PR.
-- [ ] Enable branch protection for `main` (PR review + required status checks + no force push).
+- [x] Enable branch protection for `main` (PR review + required status checks + no force push).
 - [ ] Add GitHub Environment `production` and seed required secrets.
 - [x] Decision closeout: resolve `DEC-001` (CI gate strategy) and reflect it in docs.
 
@@ -148,7 +148,7 @@ npm run build
   - `DB_PASSWORD`
   - `DB_HOST`
   - `DB_PORT`
-- [ ] Enable branch protection on `main`:
+- [x] Enable branch protection on `main`:
   - Require PR reviews
   - Require status checks (backend + frontend CI jobs)
   - Block force pushes
