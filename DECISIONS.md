@@ -33,6 +33,7 @@ Use it to record what was considered, what was chosen, and why.
 | DEC-015 | M2 | Submitted EWO rate snapshot behavior | accepted | TBD | 2026-03-14 |
 | DEC-016 | M2 | v1 EWO lifecycle baseline | accepted | TBD | 2026-03-14 |
 | DEC-017 | M6 | Document storage strategy | proposed | TBD | TBD |
+| DEC-018 | M2 | Web architecture boundary (DRF vs Inertia vs hybrid) | proposed | TBD | TBD |
 
 ## Decision Template
 
@@ -402,3 +403,38 @@ TBD after a focused pros/cons review closer to document-feature implementation.
 - Related milestone item: `MILESTONES.md`
 - Related workflow/pipeline notes: `WORKFLOW-SETUP.md`
 - Related implementation PR(s): TBD
+
+## DEC-018: Web architecture boundary (DRF vs Inertia vs hybrid)
+- Status: proposed
+- Milestone: M2
+- Owner: TBD
+- Date proposed: 2026-03-14
+- Date decided: TBD
+
+### Context
+Current milestones call for backend API endpoint implementation in M2, while recent research notes in `.github-copilot` evaluate an Inertia-style modern monolith approach that could reduce internal API boilerplate. We need a clear architecture boundary before deeper M2 implementation to avoid rework.
+
+### Options considered
+1. DRF/API-first for all web workflows.
+   - Pros: Clean multi-client path for future mobile/integrations; explicit contracts; familiar Django ecosystem support.
+   - Cons: More boilerplate and coordination overhead for internal web features.
+2. Inertia-first for internal web UI, no DRF for internal flows.
+   - Pros: Faster full-stack iteration; fewer duplicated contracts/state layers.
+   - Cons: Higher coupling to server-rendered web patterns; weaker path for mobile/public API reuse.
+3. Hybrid: API-first domain boundary, optional Inertia for selected internal/admin surfaces.
+   - Pros: Preserves reusable API contracts while allowing faster delivery in selected UI surfaces.
+   - Cons: Highest architecture discipline required; risk of inconsistent patterns without clear boundaries.
+
+### Decision
+TBD after a focused M2 architecture review. Initial preference is Option 3 (hybrid) if explicit boundaries are documented up front.
+
+### Consequences
+- `DEC-003`, `DEC-004`, and `DEC-005` should be finalized with this decision so API/source-of-truth conventions remain coherent.
+- M2 implementation should avoid committing deeply to either pure DRF-only or pure Inertia-only patterns until this record is accepted.
+- If hybrid is selected, document which routes/surfaces are API contracts versus server-driven UI props before coding accelerates.
+
+### Links
+- Related milestone item: `MILESTONES.md`
+- Related workflow/pipeline notes: `WORKFLOW.md`
+- Related implementation PR(s): TBD
+
