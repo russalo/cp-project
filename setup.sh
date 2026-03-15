@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKEND_DIR="$ROOT_DIR/backend"
 FRONTEND_DIR="$ROOT_DIR/frontend"
-VENV_DIR="$ROOT_DIR/.venv"
+VENV_DIR="$BACKEND_DIR/.venv"
 TARGET_PYTHON_MINOR="3.12"
 TARGET_NODE_MAJOR="22"
 
@@ -118,23 +118,22 @@ bootstrap_db() {
   fi
 
   log "Creating PostgreSQL role/database if missing"
-  sudo -u postgres psql -v db_name="$DB_NAME" -v db_user="$DB_USER" -v db_password="$DB_PASSWORD" <<'SQL'
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = :'db_user') THEN
-    EXECUTE format('CREATE ROLE %I LOGIN PASSWORD %L', :'db_user', :'db_password');
-  END IF;
-END
-$$;
+  # psql does not interpolate :variables inside dollar-quoted DO $$ blocks,
+  # so use separate -c commands with shell-expanded values instead.
+  if ! sudo -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname = '$DB_USER'" | grep -q 1; then
+    sudo -u postgres psql -c "CREATE ROLE \"$DB_USER\" LOGIN PASSWORD '$DB_PASSWORD';"
+    log "Created role $DB_USER"
+  else
+    log "Role $DB_USER already exists"
+  fi
 
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT FROM pg_database WHERE datname = :'db_name') THEN
-    EXECUTE format('CREATE DATABASE %I OWNER %I', :'db_name', :'db_user');
-  END IF;
-END
-$$;
-SQL
+  if ! sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname = '$DB_NAME'" | grep -q 1; then
+    sudo -u postgres psql -c "CREATE DATABASE \"$DB_NAME\" OWNER \"$DB_USER\";"
+    sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE \"$DB_NAME\" TO \"$DB_USER\";"
+    log "Created database $DB_NAME"
+  else
+    log "Database $DB_NAME already exists"
+  fi
 }
 
 install_frontend_dependencies() {
@@ -196,7 +195,8 @@ main() {
     install_postgresql
   fi
 
-  if [[ ! -d "$VENV_DIR" ]]; then
+  if [[ ! -f "$VENV_DIR/bin/pip" ]]; then
+    rm -rf "$VENV_DIR"
     log "Creating virtual environment"
     "$python_bin" -m venv "$VENV_DIR"
   fi

@@ -29,7 +29,7 @@ make continuity-status
 
 - [ ] Bootstrap with `make setup`.
 - [ ] Run `make dev-check` and resolve failures before proceeding.
-- [ ] Confirm PyCharm interpreter points to `./.venv/bin/python`.
+- [ ] Confirm PyCharm interpreter points to `./backend/.venv/bin/python`.
 
 Verification (Terminal, local):
 
@@ -120,8 +120,8 @@ Note: this section is intentionally not part of the baseline or v1 completion de
 
 ```bash
 cd /home/russellp/Projects/cp-project/backend
-../.venv/bin/python manage.py check
-../.venv/bin/python manage.py migrate
+.venv/bin/python manage.py check
+.venv/bin/python manage.py migrate
 ```
 
 - [ ] Run frontend baseline check:

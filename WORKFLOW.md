@@ -26,7 +26,7 @@ This document defines the baseline delivery workflow from local development to G
 ## Multi-Machine Development Continuity
 
 - Use repo-tracked setup files for parity: `README.md`, `.python-version`, `.nvmrc`, `backend/.env.example`, `Makefile`, and `setup.sh`.
-- Keep machine-specific state out of Git: `.idea/`, `.venv/`, `backend/.env`, and frontend build artifacts.
+- Keep machine-specific state out of Git: `.idea/`, `backend/.venv/`, `backend/.env`, and frontend build artifacts.
 - Use `make continuity-status` when resuming work on another machine.
 - Push active branches frequently so another machine can immediately continue from GitHub.
 - Capture important scope or architecture changes in `DECISIONS.md` and session context in `DEV-SESSION.md`.

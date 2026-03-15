@@ -22,7 +22,7 @@ make setup
 
 The setup script will:
 
-- create `.venv/` if missing
+- create `backend/.venv/` if missing
 - install Python dependencies
 - create `backend/.env` from `backend/.env.example` if missing
 - install PostgreSQL packages on Fedora/Ubuntu unless skipped
@@ -35,7 +35,7 @@ Note: the repository target is Python `3.12` to match CI/production. The script 
 
 ```bash
 cd /home/russellp/Projects/cp-project/backend
-../.venv/bin/pip install -r requirements.txt
+.venv/bin/pip install -r requirements.txt
 ```
 
 ## 2) Install PostgreSQL manually
@@ -101,9 +101,9 @@ Optional but commonly needed:
 
 ```bash
 cd /home/russellp/Projects/cp-project/backend
-../.venv/bin/python manage.py check --database default
-../.venv/bin/python manage.py migrate
-../.venv/bin/python manage.py shell -c "from django.db import connection; print(connection.vendor)"
+.venv/bin/python manage.py check --database default
+.venv/bin/python manage.py migrate
+.venv/bin/python manage.py shell -c "from django.db import connection; print(connection.vendor)"
 ```
 
 Expected output from the last command: `postgresql`

@@ -47,7 +47,6 @@ make dev-check
 **Where:** PyCharm
 
 - Open `cp-project`
-- Confirm interpreter is `./.venv/bin/python`
 - Use integrated terminal at repo root for `make` commands
 
 ### 3) Pick work branch
@@ -136,5 +135,4 @@ make dev-check
 make continuity-status
 ```
 
-Then open `cp-project` in PyCharm and set interpreter to `./.venv/bin/python`.
-
+Then open `cp-project` in PyCharm and set interpreter to `./backend/.venv/bin/python`.

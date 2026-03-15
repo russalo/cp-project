@@ -183,7 +183,7 @@ make continuity-status
 1. Open project folder (WSL path), for example:
    - `\\wsl$\Ubuntu\home\<your-wsl-user>\Projects\cp-project`
 2. Set interpreter to project venv:
-   - `.../cp-project/.venv/bin/python`
+   - `.../cp-project/backend/.venv/bin/python`
 3. Use integrated terminal at project root for `make` commands
 
 Optional run commands:
@@ -278,7 +278,7 @@ make backend-check
 
 Re-select interpreter path:
 
-- `.../cp-project/.venv/bin/python`
+- `.../cp-project/backend/.venv/bin/python`
 
 ---
 
@@ -287,7 +287,7 @@ Re-select interpreter path:
 - [ ] `git clone` works via SSH
 - [ ] `make setup` completes
 - [ ] `make dev-check` passes
-- [ ] PyCharm uses `./.venv/bin/python`
+- [ ] PyCharm uses `./backend/.venv/bin/python`
 - [ ] `make start-session` works
 - [ ] `make stop-session` commits/pushes checkpoint
 

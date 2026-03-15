@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 ROOT_DIR := $(abspath .)
-VENV_PYTHON := $(ROOT_DIR)/.venv/bin/python
+VENV_PYTHON := $(ROOT_DIR)/backend/.venv/bin/python
 
 .PHONY: setup setup-backend backend-check frontend-install frontend-build dev-check backend-run frontend-dev continuity-status start-session stop-session
 

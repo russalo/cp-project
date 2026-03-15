@@ -71,7 +71,7 @@ make setup-backend
 
 What `make setup` does:
 
-- creates `.venv/` if missing
+- creates `backend/.venv/` if missing
 - installs Python dependencies from `backend/requirements.txt`
 - installs frontend dependencies with `npm ci`
 - creates `backend/.env` from `backend/.env.example` if needed
@@ -129,7 +129,7 @@ Tracked in repo:
 Not tracked in repo:
 
 - `backend/.env`
-- `.venv/`
+- `backend/.venv/`
 - `.idea/`
 - frontend build artifacts / `node_modules`
 
@@ -153,10 +153,11 @@ make continuity-status
 make dev-check
 ```
 
-If `.venv/` or frontend dependencies are missing, rerun:
+If `backend/.venv/` or frontend dependencies are missing, rerun:
 
 ```bash
 make setup
 ```
 
 ---
+
