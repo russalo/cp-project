@@ -56,7 +56,16 @@ stop-session:
 	@if git diff --cached --quiet; then \
 		echo "[session] No staged changes to commit."; \
 	else \
+		branch="$$(git rev-parse --abbrev-ref HEAD)"; \
+		if [ "$$branch" = "main" ]; then \
+			checkpoint_branch="checkpoint/$$(date +%Y%m%d-%H%M%S)"; \
+			echo "[session] main is protected; creating $$checkpoint_branch for checkpoint commit"; \
+			git checkout -b "$$checkpoint_branch"; \
+			branch="$$checkpoint_branch"; \
+		fi; \
 		git commit -m "$(if $(MSG),$(MSG),WIP: session checkpoint)"; \
-		git push -u origin HEAD; \
+		git push -u origin "$$branch"; \
+		remote_url="$$(git remote get-url origin)"; \
+		repo_path="$$(echo "$$remote_url" | sed -E 's#(git@github.com:|https://github.com/)##; s#\.git$$##')"; \
+		echo "[session] Open PR: https://github.com/$$repo_path/pull/new/$$branch"; \
 	fi
-
