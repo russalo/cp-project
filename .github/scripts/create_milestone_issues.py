@@ -84,9 +84,6 @@ def ensure_milestones():
     """Create any missing milestones and return a title→number dict."""
     print("\n── GitHub Milestones ──")
 
-    existing = _run_json("gh", "api", f"repos/{REPO}/milestones",
-                         "--paginate", "--jq", ".[].title") or []
-    # gh api with --jq returns newline-separated strings, not JSON array
     existing_raw = _run("gh", "api", f"repos/{REPO}/milestones", "--paginate")
     existing_list = json.loads(existing_raw.stdout) if existing_raw.returncode == 0 else []
     by_title = {m["title"]: m["number"] for m in existing_list}
