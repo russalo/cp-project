@@ -43,7 +43,7 @@ make dev-check
 
 - [x] Verify `.github/workflows/ci.yml` runs on push/PR.
 - [x] Enable branch protection for `main` (PR review + required status checks + no force push).
-- [ ] Add GitHub Environment `production` and seed required secrets.
+- [x] Add GitHub Environment `production` and seed required secrets.
 - [x] Decision closeout: resolve `DEC-001` (CI gate strategy) and reflect it in docs.
 
 Verification:
@@ -138,7 +138,7 @@ npm run build
 ## 2) GitHub Baseline
 
 - [x] Push current branch with `.github/workflows/ci.yml` and verify green checks on PR and `main`.
-- [ ] Add required repository secrets for deployment (once deploy workflow is added):
+- [x] Add required repository secrets for deployment (1 secret + 7 variables added to `production` environment):
   - `VPS_HOST`
   - `VPS_USER`
   - `VPS_SSH_KEY`
@@ -152,7 +152,7 @@ npm run build
   - Require PR reviews
   - Require status checks (backend + frontend CI jobs)
   - Block force pushes
-- [ ] Add GitHub Environment `production` with required approvals.
+- [x] Add GitHub Environment `production` with required approvals.
 
 ## 3) Production VPS Baseline
 
