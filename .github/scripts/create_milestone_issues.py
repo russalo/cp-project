@@ -594,7 +594,8 @@ def ensure_issues(milestone_by_title):
         for label in labels:
             args += ["--label", label]
         if milestone_number:
-            args += ["--milestone", str(milestone_number)]
+            # gh issue create --milestone expects the milestone title, not the numeric ID
+            args += ["--milestone", milestone_title]
 
         result = _run(*args)
         if result.returncode == 0:
