@@ -111,6 +111,12 @@ Sync open decision items into a PyCharm TODO-friendly file:
 make decisions-sync
 ```
 
+Sync open milestone checklist items into a PyCharm TODO-friendly file:
+
+```bash
+make milestones-sync
+```
+
 That prints:
 
 - current branch
@@ -120,6 +126,7 @@ That prints:
 Decision sync outputs:
 
 - `DECISIONS-TODO.md` with `TODO(decision): ...` lines for `proposed` and `deferred` items in `DECISIONS.md`
+- `MILESTONES-TODO.md` with `TODO(milestone): ...` lines for unchecked checklist items in `MILESTONES.md`
 - optional GitHub issue sync via `make decisions-sync-github` (requires `GITHUB_TOKEN` in environment)
 
 ## PyCharm setup on a new machine

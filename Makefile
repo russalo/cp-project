@@ -2,7 +2,7 @@ SHELL := /bin/bash
 ROOT_DIR := $(abspath .)
 VENV_PYTHON := $(ROOT_DIR)/backend/.venv/bin/python
 
-.PHONY: setup setup-backend backend-check frontend-install frontend-build dev-check backend-run frontend-dev continuity-status start-session stop-session decisions-sync decisions-sync-github
+.PHONY: setup setup-backend backend-check frontend-install frontend-build dev-check backend-run frontend-dev continuity-status start-session stop-session decisions-sync decisions-sync-github milestones-sync
 
 setup:
 	./setup.sh
@@ -75,4 +75,7 @@ decisions-sync:
 
 decisions-sync-github:
 	python3 scripts/sync_decisions.py --decisions-file DECISIONS.md --todo-file DECISIONS-TODO.md --sync-github
+
+milestones-sync:
+	python3 scripts/sync_milestones.py --milestones-file MILESTONES.md --todo-file MILESTONES-TODO.md
 
