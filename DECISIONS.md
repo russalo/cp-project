@@ -16,7 +16,7 @@ Use it to record what was considered, what was chosen, and why.
 
 | ID | Milestone | Topic | Status | Owner | Target Date |
 |---|---|---|---|---|---|
-| DEC-001 | M1 | CI gate strategy | proposed | TBD | TBD |
+| DEC-001 | M1 | CI gate strategy | accepted | TBD | 2026-03-14 |
 | DEC-002 | M1 | Production Python/runtime pinning | accepted | TBD | 2026-03-13 |
 | DEC-003 | M2 | Source of truth and calculation boundary | proposed | TBD | TBD |
 | DEC-004 | M2 | API contract conventions | proposed | TBD | TBD |
@@ -70,11 +70,11 @@ Use it to record what was considered, what was chosen, and why.
 ## Decision Records
 
 ## DEC-001: CI gate strategy
-- Status: proposed
+- Status: accepted
 - Milestone: M1
 - Owner: TBD
 - Date proposed: 2026-03-13
-- Date decided: TBD
+- Date decided: 2026-03-14
 
 ### Context
 Milestone 1 expects CI with linting and tests, but current CI only enforces lint/build/check gates.
@@ -88,10 +88,23 @@ Milestone 1 expects CI with linting and tests, but current CI only enforces lint
    - Cons: Slows setup and deploy readiness work.
 
 ### Decision
-TBD
+Adopt a phased CI gate policy:
+
+- For Milestone 1, require the current baseline checks on every PR and `main` push:
+  - backend `manage.py check`
+  - backend `manage.py migrate --noinput`
+  - frontend `npm run lint`
+  - frontend `npm run build`
+- Add smoke tests as soon as basic backend/frontend test scaffolding exists.
+- Promote backend and frontend automated tests to required CI gates before Milestone 2 closeout.
+
+This balances immediate delivery readiness with a clear, time-bound path to stronger automated quality coverage.
 
 ### Consequences
-TBD
+- M1 is not blocked by the absence of full test suites, but CI still enforces meaningful quality gates.
+- Test implementation is now a tracked follow-up and cannot be treated as optional backlog noise.
+- Branch protection should require the current CI job checks now, then be updated to include test jobs when added.
+- Milestone tracking and workflow docs should continue to state current-vs-target test gate status explicitly to avoid ambiguity.
 
 ### Links
 - Related milestone item: `MILESTONES.md`
