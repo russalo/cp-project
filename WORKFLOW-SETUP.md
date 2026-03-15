@@ -12,9 +12,9 @@ Work these in order to complete `Milestone 1` from `MILESTONES.md` with minimal 
 
 ### Phase A - Repo and Continuity Baseline
 
-- [ ] Confirm local `main` tracks `origin/main` and working tree is clean.
-- [ ] Confirm multi-machine runbook is in place and usable: `CONTINUITY-CHECKLIST.md`.
-- [ ] Confirm baseline commit is pushed to GitHub before cross-machine setup.
+- [x] Confirm local `main` tracks `origin/main` and working tree is clean.
+- [x] Confirm multi-machine runbook is in place and usable: `CONTINUITY-CHECKLIST.md`.
+- [x] Confirm baseline commit is pushed to GitHub before cross-machine setup.
 
 Verification (Terminal, local):
 
@@ -27,9 +27,9 @@ make continuity-status
 
 ### Phase B - Dev Machine Baseline (Fedora + PyCharm)
 
-- [ ] Bootstrap with `make setup`.
-- [ ] Run `make dev-check` and resolve failures before proceeding.
-- [ ] Confirm PyCharm interpreter points to `./backend/.venv/bin/python`.
+- [x] Bootstrap with `make setup`.
+- [x] Run `make dev-check` and resolve failures before proceeding.
+- [x] Confirm PyCharm interpreter points to `./backend/.venv/bin/python`.
 
 Verification (Terminal, local):
 
@@ -41,10 +41,10 @@ make dev-check
 
 ### Phase C - GitHub Baseline and CI
 
-- [ ] Verify `.github/workflows/ci.yml` runs on push/PR.
+- [x] Verify `.github/workflows/ci.yml` runs on push/PR.
 - [ ] Enable branch protection for `main` (PR review + required status checks + no force push).
 - [ ] Add GitHub Environment `production` and seed required secrets.
-- [ ] Decision closeout: resolve `DEC-001` (CI gate strategy) and reflect it in docs.
+- [x] Decision closeout: resolve `DEC-001` (CI gate strategy) and reflect it in docs.
 
 Verification:
 
@@ -137,7 +137,7 @@ npm run build
 
 ## 2) GitHub Baseline
 
-- [ ] Push current branch with `.github/workflows/ci.yml` and verify green checks on PR and `main`.
+- [x] Push current branch with `.github/workflows/ci.yml` and verify green checks on PR and `main`.
 - [ ] Add required repository secrets for deployment (once deploy workflow is added):
   - `VPS_HOST`
   - `VPS_USER`
