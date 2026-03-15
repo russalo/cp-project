@@ -33,7 +33,7 @@ Use it to record what was considered, what was chosen, and why.
 | DEC-015 | M2 | Submitted EWO rate snapshot behavior | accepted | TBD | 2026-03-14 |
 | DEC-016 | M2 | v1 EWO lifecycle baseline | accepted | TBD | 2026-03-14 |
 | DEC-017 | M6 | Document storage strategy | proposed | TBD | TBD |
-| DEC-018 | M2 | Web architecture boundary (DRF vs Inertia vs hybrid) | proposed | TBD | TBD |
+| DEC-018 | M2 | Web architecture boundary (DRF vs Inertia vs hybrid) | accepted | TBD | 2026-03-14 |
 
 ## Decision Template
 
@@ -405,11 +405,11 @@ TBD after a focused pros/cons review closer to document-feature implementation.
 - Related implementation PR(s): TBD
 
 ## DEC-018: Web architecture boundary (DRF vs Inertia vs hybrid)
-- Status: proposed
+- Status: accepted
 - Milestone: M2
 - Owner: TBD
 - Date proposed: 2026-03-14
-- Date decided: TBD
+- Date decided: 2026-03-14
 
 ### Context
 Current milestones call for backend API endpoint implementation in M2, while recent research notes in `.github-copilot` evaluate an Inertia-style modern monolith approach that could reduce internal API boilerplate. We need a clear architecture boundary before deeper M2 implementation to avoid rework.
@@ -426,12 +426,19 @@ Current milestones call for backend API endpoint implementation in M2, while rec
    - Cons: Highest architecture discipline required; risk of inconsistent patterns without clear boundaries.
 
 ### Decision
-TBD after a focused M2 architecture review. Initial preference is Option 3 (hybrid) if explicit boundaries are documented up front.
+Adopt a DRF/API-first architecture for product workflows, with a two-layer admin strategy:
+
+- Keep Django Admin for superuser/emergency operations and internal maintenance.
+- Continue delivering day-to-day product workflows in React against explicit Django API endpoints.
+- Do not adopt an Inertia-first architecture for core workflow paths in v1/M2.
+
+This preserves clear server-side boundaries for costing rules, lifecycle transitions, and auditability while keeping a practical admin surface for operations.
 
 ### Consequences
-- `DEC-003`, `DEC-004`, and `DEC-005` should be finalized with this decision so API/source-of-truth conventions remain coherent.
-- M2 implementation should avoid committing deeply to either pure DRF-only or pure Inertia-only patterns until this record is accepted.
-- If hybrid is selected, document which routes/surfaces are API contracts versus server-driven UI props before coding accelerates.
+- `DEC-003`, `DEC-004`, and `DEC-005` should be finalized using an API-first boundary as the baseline.
+- API contracts remain the primary integration surface for current web workflows and future client expansion.
+- Admin modernization can proceed independently (for example, UI theming/enhancements) without changing core product architecture.
+- Inertia is not blocked forever, but any future adoption should be scoped to a clearly bounded surface and documented as a new decision.
 
 ### Links
 - Related milestone item: `MILESTONES.md`

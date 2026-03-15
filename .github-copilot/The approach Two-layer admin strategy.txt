@@ -1,0 +1,20 @@
+The approach: Two-layer admin strategy
+
+Layer 1 — Django Admin (modernized, not replaced)
+
+Keep Django Admin but upgrade it with django-unfold. It's actively maintained, Tailwind-based, and turns the built-in admin into something that looks modern with minimal effort — no custom views, no new architecture. Reserve it for superuser-level access: database management, emergency overrides, user account management. It stays out of the critical path but is genuinely usable.
+
+Layer 2 — Custom React frontend over DRF (the daily driver)
+
+This is where your team actually works. EWO creation, submission, approval, billing — all of that lives in the React SPA communicating with DRF over session auth. No JWT, no CORS problem (same-origin in production behind Nginx, Vite proxy in dev). Standard DRF viewsets, one consistent JSON error format.
+
+Why not Inertia for the admin modernization specifically:
+
+The proposal makes Inertia sound like the elegant middle ground, but you'd be solving a Django Admin problem with a community-maintained adapter whose primary home is Laravel. django-unfold solves the same visual problem in an afternoon, stays entirely within your existing stack, and has zero new dependency risk. Inertia's real pitch is eliminating the API layer entirely — but you actually want that API layer, because your decisions already point toward server-side calculations, snapshotted rates, and an EWO lifecycle that needs clean, testable endpoint boundaries.
+
+Concrete next steps this unlocks:
+
+Add django-unfold to requirements.txt, configure it — done in one session
+Close DEC-007: session auth with DRF, no JWT
+Close DEC-004: DRF viewsets, standard JSON error shape ({field: [errors]}), no versioning in v1
+Add djangorestframework and gunicorn to requirements.txt before M2 starts so CI picks them up immediately
