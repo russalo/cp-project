@@ -34,6 +34,9 @@ jobs:
 
       - name: Dry run — list issues that would be created
         if: inputs.dry_run == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
         run: |
           echo "Dry run mode: listing issue titles from the script..."
           python3 - <<'EOF'
