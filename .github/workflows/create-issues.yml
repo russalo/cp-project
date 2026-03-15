@@ -1,0 +1,50 @@
+name: Create Issues from MILESTONES.md
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (list issues that would be created without creating them)"
+        required: false
+        default: "false"
+        type: boolean
+
+permissions:
+  issues: write
+
+jobs:
+  create-issues:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Create labels, milestones, and issues
+        if: inputs.dry_run != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: python3 .github/scripts/create_milestone_issues.py
+
+      - name: Dry run — list issues that would be created
+        if: inputs.dry_run == 'true'
+        run: |
+          echo "Dry run mode: listing issue titles from the script..."
+          python3 - <<'EOF'
+          import sys, os
+          sys.path.insert(0, ".github/scripts")
+          # Patch out network calls for dry run
+          import create_milestone_issues as m
+          m.REPO = "${{ github.repository }}"
+          issues = m._issues_spec({})
+          print(f"\nWould create {len(issues)} issues:\n")
+          for i, (title, _, labels, milestone) in enumerate(issues, 1):
+              print(f"  {i:2}. [{', '.join(labels)}] {title}")
+              print(f"      → {milestone}")
+          EOF
