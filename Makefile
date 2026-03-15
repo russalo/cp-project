@@ -2,7 +2,7 @@ SHELL := /bin/bash
 ROOT_DIR := $(abspath .)
 VENV_PYTHON := $(ROOT_DIR)/backend/.venv/bin/python
 
-.PHONY: setup setup-backend backend-check frontend-install frontend-build dev-check backend-run frontend-dev continuity-status start-session stop-session
+.PHONY: setup setup-backend backend-check frontend-install frontend-build dev-check backend-run frontend-dev continuity-status start-session stop-session decisions-sync decisions-sync-github
 
 setup:
 	./setup.sh
@@ -69,3 +69,10 @@ stop-session:
 		repo_path="$$(echo "$$remote_url" | sed -E 's#(git@github.com:|https://github.com/)##; s#\.git$$##')"; \
 		echo "[session] Open PR: https://github.com/$$repo_path/pull/new/$$branch"; \
 	fi
+
+decisions-sync:
+	python3 scripts/sync_decisions.py --decisions-file DECISIONS.md --todo-file DECISIONS-TODO.md
+
+decisions-sync-github:
+	python3 scripts/sync_decisions.py --decisions-file DECISIONS.md --todo-file DECISIONS-TODO.md --sync-github
+

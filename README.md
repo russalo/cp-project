@@ -105,11 +105,22 @@ Check where you left off:
 make continuity-status
 ```
 
+Sync open decision items into a PyCharm TODO-friendly file:
+
+```bash
+make decisions-sync
+```
+
 That prints:
 
 - current branch
 - working tree status
 - recent commits
+
+Decision sync outputs:
+
+- `DECISIONS-TODO.md` with `TODO(decision): ...` lines for `proposed` and `deferred` items in `DECISIONS.md`
+- optional GitHub issue sync via `make decisions-sync-github` (requires `GITHUB_TOKEN` in environment)
 
 ## PyCharm setup on a new machine
 

@@ -89,6 +89,13 @@ Update `DEV-SESSION.md` with:
 
 If a planning/architecture choice was made, update `DECISIONS.md`.
 
+If `DECISIONS.md` changed, run:
+
+```bash
+cd ~/Projects/cp-project
+make decisions-sync
+```
+
 Homework rollover rule:
 
 - If the current homework batch is fully answered, add 10 new homework items to `HOMEWORK.md` before ending the session.

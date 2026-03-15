@@ -1,0 +1,40 @@
+name: Decisions Sync
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 02:00 UTC daily (typically evening in US time zones)
+    - cron: "0 2 * * *"
+  push:
+    branches: [main]
+    paths:
+      - DECISIONS.md
+      - scripts/sync_decisions.py
+      - .github/workflows/decisions-sync.yml
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  sync-decisions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Sync decision issues
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          python3 scripts/sync_decisions.py \
+            --decisions-file DECISIONS.md \
+            --todo-file DECISIONS-TODO.md \
+            --sync-github
+

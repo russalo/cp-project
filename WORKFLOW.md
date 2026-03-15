@@ -37,6 +37,16 @@ This document defines the baseline delivery workflow from local development to G
 - Decision items are tracked in `DECISIONS.md`.
 - For milestone tasks marked `Decision:`, document options and pros/cons before implementation.
 - When a decision is accepted, reference its ID in the PR that applies the change.
+- Keep local planning in sync with `make decisions-sync` to regenerate `DECISIONS-TODO.md` for PyCharm TODO tracking.
+- Sync GitHub decision issues using `make decisions-sync-github` or the `Decisions Sync` workflow.
+
+Local sync commands:
+
+```bash
+cd /home/russellp/Projects/cp-project
+make decisions-sync
+GITHUB_TOKEN=<token> make decisions-sync-github
+```
 
 ## CI Gates (GitHub Actions)
 
