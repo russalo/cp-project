@@ -2,6 +2,60 @@
 
 This repository is being prepared so you can open it on another machine, bootstrap it quickly, and keep continuity between development environments.
 
+## Start Session / Stop Session (Quick Card)
+
+Pin this section for daily continuity.
+
+> Maintenance rule: keep this quick card and the matching section in `CONTINUITY-CHECKLIST.md` identical. Update both in the same commit.
+
+### Start Session (Terminal)
+
+```bash
+cd ~/Projects/cp-project
+git switch main
+git pull --rebase
+make start-session
+git switch -c feature/<short-name>
+```
+
+If continuing an existing branch:
+
+```bash
+cd ~/Projects/cp-project
+git switch <existing-branch>
+git pull --rebase
+make continuity-status
+```
+
+### Stop Session (PyCharm + Terminal)
+
+1. In PyCharm, update `DEV-SESSION.md` with what changed, next step, and blockers.
+2. If you made a planning choice, update `DECISIONS.md`.
+
+Then in terminal:
+
+```bash
+cd ~/Projects/cp-project
+make stop-session MSG="WIP: <short summary>"
+```
+
+What `make stop-session` does:
+
+- runs homework rollover check (`scripts/homework_rollover.py`)
+- shows `git status`
+- stages changes, commits (if any), and pushes current branch
+
+### After PR Merge (Terminal)
+
+```bash
+cd ~/Projects/cp-project
+git switch main
+git pull --rebase
+git branch -d <merged-branch>
+```
+
+---
+
 ## What this repo contains
 
 - `backend/` — Django + PostgreSQL backend
@@ -160,4 +214,3 @@ make setup
 ```
 
 ---
-
