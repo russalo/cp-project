@@ -18,6 +18,47 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Ensure labels exist
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = [
+              { name: 'todo',              color: '0E8A16', description: 'Tracked TODO item' },
+              { name: 'milestone:M1',      color: '1D76DB', description: 'Milestone 1 - Project Setup and Baseline' },
+              { name: 'milestone:M2',      color: '1D76DB', description: 'Milestone 2 - Core Backend' },
+              { name: 'milestone:M3',      color: '1D76DB', description: 'Milestone 3 - Frontend' },
+              { name: 'milestone:M4',      color: '1D76DB', description: 'Milestone 4 - Auth' },
+              { name: 'milestone:M5',      color: '1D76DB', description: 'Milestone 5 - Deployment' },
+              { name: 'milestone:M6',      color: '1D76DB', description: 'Milestone 6 - Enhancements' },
+              { name: 'area:setup',        color: 'E4E669', description: 'Setup and infrastructure' },
+              { name: 'area:backend',      color: 'E4E669', description: 'Backend development' },
+              { name: 'area:frontend',     color: 'E4E669', description: 'Frontend development' },
+              { name: 'area:auth',         color: 'E4E669', description: 'Authentication and authorization' },
+              { name: 'area:deploy',       color: 'E4E669', description: 'Deployment and monitoring' },
+              { name: 'area:api',          color: 'E4E669', description: 'API design and contracts' },
+              { name: 'area:ci',           color: 'E4E669', description: 'CI/CD pipeline' },
+              { name: 'area:runtime',      color: 'E4E669', description: 'Runtime and environment' },
+              { name: 'area:documents',    color: 'E4E669', description: 'Document handling' },
+              { name: 'area:enhancements', color: 'E4E669', description: 'Additional features' },
+              { name: 'area:integrations', color: 'E4E669', description: 'Third-party integrations' },
+              { name: 'type:task',         color: 'D93F0B', description: 'Implementation task' },
+              { name: 'type:decision',     color: 'D93F0B', description: 'Decision required' },
+            ];
+            const { owner, repo } = context.repo;
+            for (const label of labels) {
+              try {
+                await github.rest.issues.getLabel({ owner, repo, name: label.name });
+                core.info(`Label already exists: ${label.name}`);
+              } catch (e) {
+                if (e.status === 404) {
+                  await github.rest.issues.createLabel({ owner, repo, ...label });
+                  core.info(`Created label: ${label.name}`);
+                } else {
+                  throw e;
+                }
+              }
+            }
+
       - name: TODO to Issue
         uses: alstr/todo-to-issue-action@v5
         with:
