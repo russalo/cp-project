@@ -51,6 +51,7 @@ start-session:
 stop-session:
 	@echo "[session] Preparing end-of-session checkpoint"
 	@echo "[session] Reminder: update DEV-SESSION.md and DECISIONS.md (if needed) before commit"
+	python3 scripts/homework_rollover.py
 	git status
 	git add -A
 	@if git diff --cached --quiet; then \
