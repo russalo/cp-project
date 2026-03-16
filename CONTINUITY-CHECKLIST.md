@@ -2,6 +2,51 @@
 
 Use this runbook whenever you switch machines so work stays synchronized and easy to resume.
 
+## Start Session / Stop Session (Quick Card)
+
+Use this one-screen card for day-to-day continuity.
+
+> Maintenance rule: keep this quick card and the matching section in `README.md` identical. Update both in the same commit.
+
+### Start Session (new work branch)
+
+```bash
+cd ~/Projects/cp-project
+git switch main
+git pull --rebase
+make start-session
+git switch -c feature/<short-name>
+```
+
+### Start Session (continue existing branch)
+
+```bash
+cd ~/Projects/cp-project
+git switch <existing-branch>
+git pull --rebase
+make continuity-status
+```
+
+### Stop Session
+
+Before running the command, update `DEV-SESSION.md` and `DECISIONS.md` (if a planning decision changed).
+
+```bash
+cd ~/Projects/cp-project
+make stop-session MSG="WIP: <short summary>"
+```
+
+### After PR Merge
+
+```bash
+cd ~/Projects/cp-project
+git switch main
+git pull --rebase
+git branch -d <merged-branch>
+```
+
+---
+
 ## Quick Session Commands
 
 Use these when you want a one-command start/stop flow.
@@ -37,7 +82,7 @@ make stop-session MSG="WIP: <short summary>"
 
 ```bash
 cd ~/Projects/cp-project
-git pull
+git pull --rebase
 make continuity-status
 make dev-check
 ```
@@ -47,6 +92,7 @@ make dev-check
 **Where:** PyCharm
 
 - Open `cp-project`
+- Confirm interpreter is `./.venv/bin/python`
 - Use integrated terminal at repo root for `make` commands
 
 ### 3) Pick work branch
@@ -55,16 +101,16 @@ make dev-check
 
 ```bash
 cd ~/Projects/cp-project
-git checkout main
-git pull
-git checkout -b feature/<short-name>
+git switch main
+git pull --rebase
+git switch -c feature/<short-name>
 ```
 
 If branch already exists:
 
 ```bash
 cd ~/Projects/cp-project
-git checkout <existing-branch>
+git switch <existing-branch>
 git pull --rebase
 ```
 
@@ -136,4 +182,4 @@ make dev-check
 make continuity-status
 ```
 
-Then open `cp-project` in PyCharm and set interpreter to `./backend/.venv/bin/python`.
+Then open `cp-project` in PyCharm and set interpreter to `./.venv/bin/python`.
