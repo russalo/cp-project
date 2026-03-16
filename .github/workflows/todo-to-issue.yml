@@ -1,0 +1,22 @@
+name: TODO to Issue
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  todo-to-issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: TODO to Issue
+        uses: alstr/todo-to-issue-action@v5
+        with:
+          INSERT_ISSUE_URLS: "true"
