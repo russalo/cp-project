@@ -92,6 +92,7 @@ If a planning/architecture choice was made, update `DECISIONS.md`.
 Homework rollover rule:
 
 - If the current homework batch is fully answered, add 10 new homework items to `HOMEWORK.md` before ending the session.
+- `make stop-session` now checks this automatically and appends a new 10-item open batch when needed.
 
 ### 2) Commit and push checkpoint
 
