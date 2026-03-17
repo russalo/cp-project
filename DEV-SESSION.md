@@ -1,3 +1,37 @@
+# DEV SESSION - 2026-03-17
+
+## Goal For Today
+
+Finish TODO-to-GitHub Issues workflow wiring (labels, PyCharm sync, node deprecation fix), verify CI is clean, and surface any remaining M1 configuration gaps.
+
+## Key Accomplishments
+
+- Fixed TODO-to-Issue GitHub Actions workflow to auto-create required labels before `alstr/todo-to-issue-action` runs — resolves label-missing failures.
+- Upgraded `actions/checkout` to `v4` (pinned to SHA) to clear Node.js 20 deprecation annotation; workflow now runs clean with no warnings.
+- Verified PyCharm TODO tool window and GitHub Issues reflect the same canonical set from `PROJECT_TODOS.py`.
+- Confirmed branch protection is working correctly — direct pushes to `main` are blocked; all changes go through PR + CI.
+- Added `CLAUDE.md` to repo root (AI assistant guidance file for this project).
+- Identified that `fix/todo-workflow-label-bootstrap` has one unpushed commit (charter update); included in this stop-session push.
+
+## Current Branch
+
+`fix/todo-workflow-label-bootstrap` — ahead of origin by 1 commit; stop-session will push and create a PR.
+
+## Still Open / Next Session
+
+- Homework Batch 002 remains fully unanswered — answer those before triggering rollover.
+- Start first-pass backend model design (M2 prep): EWO, LaborLine, EquipmentLine, MaterialLine, rate snapshot approach.
+- Decide DEC-003 (calculation boundary) and DEC-004 (API contract) — both gate M2.
+- Production server still needs: authorized_keys hardening, DB role + database creation, gunicorn service, nginx vhost wiring.
+- WORKFLOW-SETUP.md VPS checklist items are still open.
+
+## Notes
+
+- `CLAUDE.md` is the guidance file for AI assistants working in this repo (mirrors key CHARTER/DECISIONS context).
+- All TODOs in `PROJECT_TODOS.py` are the single source of truth for GitHub Issues sync — do not scatter TODO comments across other files.
+
+---
+
 # DEV SESSION - 2026-03-13
 
 ## Goal For Today
