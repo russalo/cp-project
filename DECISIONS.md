@@ -1227,6 +1227,20 @@ discovery with foremen users before being designed.
 - The EWO → job relationship must stay clean enough for a daily report entry to reference a job
   and generate an EWO stub.
 
+### Population mechanisms (resolved 2026-03-18)
+Two fast-entry paths for foremen, both producing an editable starting point:
+
+1. **Apply a saved crew** — foreman or PM has pre-built a crew for the job (see DEC-044);
+   applying it pre-fills the day's labor and equipment lines. Foreman then adds or removes
+   what is different for that day.
+
+2. **Copy from previous workday** — for daily reports in particular, the system can
+   auto-populate lines by copying the most recent workday entry for the same job. Foreman
+   adjusts the delta. This is the primary fast-entry path when the crew hasn't changed.
+
+Both mechanisms produce editable lines, not locked records. The foreman is always the one
+who confirms and submits the final daily entry.
+
 ### Escalation flow (resolved 2026-03-18)
 When a foreman flags a daily report entry as "extra work", it escalates to a PM for review.
 The PM decides whether to create an EWO from it. The foreman does not create the EWO directly.
@@ -1242,6 +1256,8 @@ Implied model requirements:
 - Is the daily report a separate app or part of `ewo`?
 - What happens to daily report records that are never flagged as extra — are they retained for payroll reference?
 - How does the PM review queue surface — dashboard widget, email notification, or both?
+- "Copy from previous workday" — does it copy the submitted lines exactly, or does it offer a
+  diff view so the foreman can see what is being carried forward?
 
 ### Links
 - Related decisions: DEC-037, DEC-044
@@ -1271,11 +1287,23 @@ The right UX for applying a crew (replace all lines vs. append vs. diff) needs u
 - v1 should not hard-code "one employee, one trade" assumptions that would prevent a crew from
   carrying mixed-trade rosters.
 
+### Clarifications (resolved 2026-03-18)
+- **Purpose:** Crews are a population mechanism — a saved starting point, not a locked template.
+  Applying a crew pre-fills the day's labor and equipment lines; the foreman then adds or removes
+  what is different for that specific day. Speed of adjustment, not exact repeatability, is the goal.
+- **Job association:** Crews are typically built around a specific job ("the usual crew for job 1886").
+  A crew should carry a reference to the job it was built for, though applying it to a different
+  job should not be blocked.
+- **Who can build crews:** Both foreman and PM can create and edit crew definitions.
+- **Apply behavior:** Applying a crew replaces the current empty day lines with the crew's roster
+  as a starting point. If lines already exist, the UI should confirm before overwriting.
+- **No schedule:** A crew is a membership list (employees + equipment units) with no date or
+  schedule attached — it is purely a template for population.
+
 ### Open questions (resolve before implementation)
-- Does applying a crew replace the current WorkDay lines, append to them, or show a diff for confirmation?
-- Can a crew be a template (no dates, just membership) or does it carry a default schedule?
-- Who can create/edit/delete crew definitions — foreman only, or PM/office as well?
-- Are crews job-specific or company-wide?
+- Are crews job-specific (one crew per job) or can multiple named crews exist per job?
+- Is the `Crew` model in `resources` or in the future `dailyreport` app?
+- What happens to a crew definition when an employee leaves or equipment is retired?
 
 ### Links
 - Related decisions: DEC-029, DEC-032, DEC-043
