@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>cp-project — Full ERD v3</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f8f7f2;
+    color: #2c2c2a;
+    padding: 24px;
+    min-height: 100vh;
+  }
+  header { margin-bottom: 16px; }
+  header h1 { font-size: 18px; font-weight: 500; color: #2c2c2a; }
+  header p { font-size: 13px; color: #5f5e5a; margin-top: 4px; }
+  .legend {
+    display: flex; gap: 20px; margin-bottom: 16px;
+    font-size: 12px; color: #5f5e5a; flex-wrap: wrap;
+  }
+  .legend span { display: flex; align-items: center; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  #erd svg { width: 100%; height: auto; }
+  #erd svg.erDiagram .divider path { stroke-opacity: 0.4; }
+  #erd svg.erDiagram .row-rect-odd path,
+  #erd svg.erDiagram .row-rect-odd rect,
+  #erd svg.erDiagram .row-rect-even path,
+  #erd svg.erDiagram .row-rect-even rect { stroke: none !important; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #1a1a18; color: #c2c0b6; }
+    header h1 { color: #e8e6dc; }
+    header p, .legend { color: #888780; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>cp-project — data model ERD v3</h1>
+  <p>v3 updates: EquipmentType / EquipmentUnit split · ownership flag · MaterialCatalog with categories · boilerplate material seed · subcontractor invoice handling on MaterialLine</p>
+</header>
+<div class="legend">
+  <span><span class="dot" style="background:#534AB7"></span> Rate authority (Caltrans + Union CBA)</span>
+  <span><span class="dot" style="background:#0F6E56"></span> Company reference data</span>
+  <span><span class="dot" style="background:#993C1D"></span> EWO core</span>
+  <span><span class="dot" style="background:#444441"></span> Auth (Django built-in)</span>
+</div>
+<div id="erd"></div>
+<script type="module">
+import mermaid from 'https://esm.sh/mermaid@11/dist/mermaid.esm.min.mjs';
+const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+await document.fonts.ready;
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'base',
+  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  themeVariables: {
+    darkMode: dark,
+    fontSize: '13px',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    lineColor: dark ? '#9c9a92' : '#73726c',
+    textColor: dark ? '#c2c0b6' : '#3d3d3a',
+    primaryColor: dark ? '#2a2a28' : '#f4f2eb',
+    primaryBorderColor: dark ? '#5f5e5a' : '#b4b2a9',
+    attributeBackgroundColorEven: dark ? '#232320' : '#faf9f5',
+    attributeBackgroundColorOdd: dark ? '#2a2a27' : '#f1efe8',
+  },
+});
+
+const diagram = `erDiagram
+
+  DjangoUser {
+    int id PK
+    string username
+    string email
+    string first_name
+    string last_name
+    bool is_active
+    bool is_staff
+  }
+
+  UserProfile {
+    int id PK
+    int user_id FK
+    string role
+    bool active
+  }
+
+  Job {
+    int id PK
+    string job_number
+    string name
+    string location
+    string gc_name
+    bool active
+  }
+
+  TradeClassification {
+    int id PK
+    string name
+    string union_name
+    string union_abbrev
+    bool active
+  }
+
+  LaborRate {
+    int id PK
+    int trade_classification_id FK
+    decimal rate_reg
+    decimal rate_ot
+    decimal rate_dt
+    date effective_date
+    date expiry_date
+    string notes
+  }
+
+  Employee {
+    int id PK
+    string code
+    string full_name
+    int trade_classification_id FK
+    bool active
+  }
+
+  CaltransSchedule {
+    int id PK
+    string schedule_year
+    date effective_date
+    date expiry_date
+    string source_file
+  }
+
+  CaltransRateLine {
+    int id PK
+    int schedule_id FK
+    string class_code
+    string class_desc
+    string make_code
+    string make_desc
+    string model_code
+    string model_desc
+    decimal rental_rate
+    decimal rw_delay_rate
+    decimal overtime_rate
+    string unit
+  }
+
+  EquipmentType {
+    int id PK
+    string name
+    int caltrans_rate_line_id FK
+    string notes
+    bool active
+  }
+
+  EquipmentUnit {
+    int id PK
+    int equipment_type_id FK
+    string internal_code
+    string description
+    string ownership
+    bool active
+    string notes
+  }
+
+  ExtraWorkOrder {
+    int id PK
+    int job_id FK
+    int created_by_id FK
+    string ewo_number
+    string ewo_type
+    date work_date
+    text description
+    string status
+    decimal labor_ohp_pct
+    decimal equip_mat_ohp_pct
+    decimal bond_pct
+    bool bond_required
+    string gc_ack_name
+    date gc_ack_date
+    string gc_ack_method
+    decimal labor_subtotal
+    decimal labor_ohp_amount
+    decimal equip_mat_subtotal
+    decimal equip_mat_ohp_amount
+    decimal bond_amount
+    decimal total
+    datetime submitted_at
+  }
+
+  LaborLine {
+    int id PK
+    int ewo_id FK
+    string labor_type
+    int employee_id FK
+    int employee_default_trade_id FK
+    int trade_classification_id FK
+    string trade_override_reason
+    string time_type
+    decimal hours
+    decimal rate_snapshot
+    decimal line_total
+  }
+
+  EquipmentLine {
+    int id PK
+    int ewo_id FK
+    int equipment_type_id FK
+    int caltrans_rate_line_id FK
+    decimal operating_hours
+    decimal delay_hours
+    decimal ot_hours
+    string unit
+    decimal rental_rate_snapshot
+    decimal delay_rate_snapshot
+    decimal ot_rate_snapshot
+    decimal line_total
+  }
+
+  MaterialCategory {
+    int id PK
+    string name
+    bool active
+  }
+
+  MaterialCatalog {
+    int id PK
+    int category_id FK
+    string description
+    string default_unit
+    decimal last_unit_cost
+    date last_cost_date
+    int use_count
+    date last_used
+    bool is_boilerplate
+    bool active
+  }
+
+  MaterialLine {
+    int id PK
+    int ewo_id FK
+    int catalog_item_id FK
+    string description
+    decimal quantity
+    string unit
+    decimal unit_cost
+    decimal line_total
+    bool is_subcontractor
+    string reference_number
+  }
+
+  DjangoUser ||--|| UserProfile : "extends"
+  DjangoUser ||--o{ ExtraWorkOrder : "created by"
+  Job ||--o{ ExtraWorkOrder : "has many"
+  ExtraWorkOrder ||--o{ LaborLine : "contains"
+  ExtraWorkOrder ||--o{ EquipmentLine : "contains"
+  ExtraWorkOrder ||--o{ MaterialLine : "contains"
+  TradeClassification ||--o{ LaborRate : "versioned by"
+  TradeClassification ||--o{ Employee : "default for"
+  TradeClassification ||--o{ LaborLine : "billed trade"
+  TradeClassification ||--o{ LaborLine : "employee default snapshot"
+  Employee ||--o{ LaborLine : "named on"
+  CaltransSchedule ||--o{ CaltransRateLine : "contains"
+  CaltransRateLine ||--|| EquipmentType : "rate reference"
+  EquipmentType ||--o{ EquipmentUnit : "has units"
+  EquipmentType ||--o{ EquipmentLine : "billed as"
+  CaltransRateLine ||--o{ EquipmentLine : "rate snapshot source"
+  MaterialCategory ||--o{ MaterialCatalog : "groups"
+  MaterialCatalog ||--o{ MaterialLine : "selected from"
+`;
+
+const { svg } = await mermaid.render('erd-svg', diagram);
+document.getElementById('erd').innerHTML = svg;
+
+document.querySelectorAll('#erd svg.erDiagram .node').forEach(node => {
+  const firstPath = node.querySelector('path[d]');
+  if (!firstPath) return;
+  const d = firstPath.getAttribute('d');
+  const nums = d.match(/-?[\d.]+/g)?.map(Number);
+  if (!nums || nums.length < 8) return;
+  const xs = [nums[0], nums[2], nums[4], nums[6]];
+  const ys = [nums[1], nums[3], nums[5], nums[7]];
+  const x = Math.min(...xs), y = Math.min(...ys);
+  const w = Math.max(...xs) - x, h = Math.max(...ys) - y;
+  const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  rect.setAttribute('x', x); rect.setAttribute('y', y);
+  rect.setAttribute('width', w); rect.setAttribute('height', h);
+  rect.setAttribute('rx', '8');
+  for (const a of ['fill', 'stroke', 'stroke-width', 'class', 'style']) {
+    if (firstPath.hasAttribute(a)) rect.setAttribute(a, firstPath.getAttribute(a));
+  }
+  firstPath.replaceWith(rect);
+});
+
+document.querySelectorAll('#erd svg.erDiagram .row-rect-odd path, #erd svg.erDiagram .row-rect-even path').forEach(p => {
+  p.setAttribute('stroke', 'none');
+});
+</script>
+</body>
+</html>

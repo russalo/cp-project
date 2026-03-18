@@ -52,22 +52,49 @@ ALLOWED_HOSTS = env_list('ALLOWED_HOSTS', 'localhost,127.0.0.1')
 # Application definition
 
 INSTALLED_APPS = [
+    # unfold must appear before django.contrib.admin
+    'unfold',
+    'unfold.contrib.filters',
+    'unfold.contrib.forms',
+    'unfold.contrib.import_export',
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # Third-party
+    'rest_framework',
+    'corsheaders',
+    'drf_spectacular',
+    'simple_history',
+    'import_export',
+    'django_extensions',
+    'debug_toolbar',
+    'axes',
+
+    # Local
+    'accounts',
+    'resources',
+    'jobs',
+    'ewo',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'simple_history.middleware.HistoryRequestMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # axes must be last
+    'axes.middleware.AxesMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -140,3 +167,91 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+
+# ─── Django REST Framework ────────────────────────────────────────────────────
+
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
+
+
+# ─── drf-spectacular (OpenAPI) ────────────────────────────────────────────────
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'CP Project API',
+    'DESCRIPTION': 'Extra Work Order management for underground wet utility pipeline contractor',
+    'VERSION': '0.1.0',
+}
+
+
+# ─── CORS ─────────────────────────────────────────────────────────────────────
+
+CORS_ALLOWED_ORIGINS = env_list('CORS_ALLOWED_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173')
+
+
+# ─── django-debug-toolbar ─────────────────────────────────────────────────────
+
+INTERNAL_IPS = env_list('INTERNAL_IPS', '127.0.0.1')
+
+
+# ─── django-simple-history ────────────────────────────────────────────────────
+
+SIMPLE_HISTORY_HISTORY_CHANGE_REASON_USE_TEXT_FIELD = True
+
+
+# ─── Authentication backends (axes must replace default backend) ──────────────
+
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+
+# ─── django-axes (login rate limiting) ───────────────────────────────────────
+
+AXES_FAILURE_LIMIT = 5           # lock after 5 failed attempts
+AXES_COOLOFF_TIME = 1            # lock for 1 hour
+AXES_LOCKOUT_PARAMETERS = ['ip_address', 'username']  # lock by IP + username combo
+AXES_RESET_ON_SUCCESS = True     # clear failure count on successful login
+AXES_ENABLE_ADMIN = True         # show lockout records in admin
+
+
+# ─── Security settings ────────────────────────────────────────────────────────
+
+# HTTP headers
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+
+# In production these must be True; in dev over plain HTTP they must be False
+# Set PRODUCTION=true in backend/.env on the VPS
+_PRODUCTION = env_bool('PRODUCTION', False)
+
+SESSION_COOKIE_SECURE = _PRODUCTION
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_AGE = 28800       # 8 hours
+
+CSRF_COOKIE_SECURE = _PRODUCTION
+CSRF_COOKIE_HTTPONLY = False     # must be readable by JS for SPA CSRF handling
+CSRF_COOKIE_SAMESITE = 'Lax'
+
+if _PRODUCTION:
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+
+# ─── django-unfold (admin theme) ─────────────────────────────────────────────
+
+UNFOLD = {
+    'SITE_TITLE': 'CP Project',
+    'SITE_HEADER': 'CP Project Admin',
+    'SITE_URL': '/',
+    'SHOW_HISTORY': True,
+    'SHOW_VIEW_ON_SITE': True,
+}

@@ -5,8 +5,8 @@ This file is the live homework tracker for the next planning batch.
 ## Current Status
 
 - Homework batch `001` is complete and preserved in `HOMEWORK-001.md`.
-- Accepted answers from that batch have been folded into `DECISIONS.md`.
-- Active homework batch: `002` in this file.
+- Homework batch `002` is complete and preserved in `HOMEWORK-002.md`; answers folded into `DECISIONS.md` as DEC-018 through DEC-027.
+- Active homework batch: `003` in this file.
 
 ## How To Use
 
@@ -19,33 +19,70 @@ When a new batch of planning questions is created:
 
 ## Session Rollover Rule
 
-- At the end of each session, if the previous homework batch has been fully answered, add 10 new homework items to this file for the next session.
+- At the end of each session, if the previous homework batch has been fully answered,
+  add 10 new homework items to this file for the next session.
 
 ## Still Open From Batch 001
 
-- Document storage strategy for future upload support is still unresolved; see `DEC-017` in `DECISIONS.md`.
+- Document storage strategy for future upload support is still unresolved;
+  see `DEC-017` in `DECISIONS.md`.
 
-## Homework Batch 002 (Open)
+---
 
-Created automatically during stop-session rollover on 2026-03-14.
+## Homework Batch 002 (Complete — archived in HOMEWORK-002.md)
 
-1. **EWO numbering strategy:** should EWO IDs be sequential globally, per customer, or per job number?
+Answered: 2026-03-18. Decisions recorded as DEC-018 through DEC-027 in `DECISIONS.md`.
+
+---
+
+## Homework Batch 003 (Open)
+
+Created: 2026-03-18
+
+1. **Role permissions matrix:** what specific actions can each role (foreman,
+   PM, office, admin) perform — create EWO, edit lines, submit, approve, mark
+   sent, mark billed, manage reference data?
    - Answer: TBD
-2. **Job number validation:** what format rules should v1 enforce for job number entry (required prefix/length/characters)?
+
+2. **Sent status tracking:** when an EWO is marked as sent to the GC, what
+   information should be recorded — sent date, sent by, method (email, GC portal),
+   reference/confirmation number?
    - Answer: TBD
-3. **Labor unit policy:** should labor be captured in hours only, or support hour + minute precision in v1?
+
+3. **GC response tracking:** should the system record the GC's response to a
+   submitted EWO (accepted, rejected, partial, pending) even though the
+   submission itself happens outside the system?
    - Answer: TBD
-4. **Equipment quantity model:** should equipment usage be time-based only, quantity-based only, or both with explicit unit types?
+
+4. **Billed status:** when is an EWO marked as billed — when it's included in
+   a pay application, when payment is received, or when it's sent to accounting?
    - Answer: TBD
-5. **Material pricing entry rule:** should materials default to unit cost x quantity, with optional manual total override?
+
+5. **Multiple work dates:** can a single EWO span multiple work dates (e.g.
+   a T&M job that runs Tuesday through Thursday), or is one EWO always one
+   work date?
    - Answer: TBD
-6. **Rounding policy detail:** where should rounding occur (line item, category subtotal, final total), and to how many decimals?
+
+6. **Employee CSV seed format:** what columns does the employee seed CSV need —
+   is the Excel rate sheet (code, name, trade, rates) the source, or is there
+   a separate HR/payroll export?
    - Answer: TBD
-7. **Tax policy boundary:** should tax be excluded from v1, optional per EWO, or required per material line category?
+
+7. **Equipment type seed:** how should the initial `EquipmentType` records be
+   populated — from the existing Excel rate reference, manual entry, or a
+   dedicated CSV? Which Caltrans codes are actively used and need to be in
+   the initial set?
    - Answer: TBD
-8. **Overtime modeling:** should overtime be represented as separate labor line types or a multiplier on standard labor lines?
+
+8. **Job CRUD ownership:** who creates and manages job records in v1 — PM only,
+   office/admin only, or any authenticated user?
    - Answer: TBD
-9. **Approval authority:** which role is allowed to approve/reject EWOs in v1, and is dual-approval needed?
+
+9. **EWO description field:** is the work description a single free-text field,
+   or does it need structure — e.g. separate fields for location, scope,
+   reason it's extra work?
    - Answer: TBD
-10. **Post-approval edits:** if an approved EWO must change, should it reopen, clone to revision, or require admin override with audit reason?
-   - Answer: TBD
+
+10. **Audit log visibility:** should the audit/history trail (who changed what
+    and when) be visible to all roles, PM and above only, or admin only?
+    - Answer: TBD
