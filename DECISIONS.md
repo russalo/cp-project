@@ -48,6 +48,16 @@ Use it to record what was considered, what was chosen, and why.
 | DEC-030 | M2 | Trade classification override | accepted | TBD | 2026-03-18 |
 | DEC-031 | M2 | EWO calculation timing and lock | accepted | TBD | 2026-03-18 |
 | DEC-032 | M2 | Django app structure and package selection | accepted | TBD | 2026-03-18 |
+| DEC-033 | M4 | Role permissions matrix | accepted | TBD | 2026-03-18 |
+| DEC-034 | M2 | Sent status fields | accepted | TBD | 2026-03-18 |
+| DEC-035 | M2 | GC acknowledgment fields | accepted | TBD | 2026-03-18 |
+| DEC-036 | M2 | Billed status definition and fields | accepted | TBD | 2026-03-18 |
+| DEC-037 | M2 | Multi-date EWOs | accepted | TBD | 2026-03-18 |
+| DEC-038 | M2 | Employee CSV seed format | accepted | TBD | 2026-03-18 |
+| DEC-039 | M2 | Equipment type seed approach | accepted | TBD | 2026-03-18 |
+| DEC-040 | M2 | Job CRUD ownership | accepted | TBD | 2026-03-18 |
+| DEC-041 | M2 | EWO description field structure | accepted | TBD | 2026-03-18 |
+| DEC-042 | M2 | Audit log visibility | accepted | TBD | 2026-03-18 |
 
 ## Decision Template
 
@@ -859,3 +869,313 @@ Explicitly rejected:
 
 ### Links
 - Related decisions: DEC-003, DEC-011, DEC-028, DEC-031
+
+## DEC-033: Role permissions matrix
+- Status: accepted
+- Milestone: M4
+- Owner: TBD
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+Before building any permission checks, view guards, or API authorization, the exact set of allowed
+actions per role must be defined. DEC-026 established PM-only approval authority; this decision
+extends that to a full matrix covering all lifecycle transitions and data management actions.
+
+### Decision
+Four roles (foreman, pm, office, admin) with the following permissions:
+
+| Action                                   | foreman | pm | office | admin |
+|------------------------------------------|---------|----|--------|-------|
+| Create EWO                               | ✓       | ✓  | ✓      | ✓     |
+| Edit lines on own open EWO               | ✓       | ✓  | ✓      | ✓     |
+| Edit lines on any open EWO               | —       | ✓  | ✓      | ✓     |
+| Submit EWO (open → submitted)            | ✓       | ✓  | ✓      | ✓     |
+| Approve EWO (submitted → approved)       | —       | ✓  | —      | ✓     |
+| Reject EWO (submitted → open)            | —       | ✓  | —      | ✓     |
+| Mark sent (approved → sent)              | —       | ✓  | ✓      | ✓     |
+| Mark billed (sent → billed)              | —       | —  | ✓      | ✓     |
+| Manage reference data                    | —       | —  | ✓      | ✓     |
+| Manage users / UserProfile               | —       | —  | —      | ✓     |
+| Read any EWO                             | ✓       | ✓  | ✓      | ✓     |
+| View audit history                       | ✓       | ✓  | ✓      | ✓     |
+
+### Consequences
+- Permission checks in M4 read from `UserProfile.role` (per DEC-028).
+- "Edit any open EWO" is given to PM and office to allow data entry assistance for foremen.
+- Foreman cannot approve, reject, or advance past `submitted`.
+- Office does not approve or reject — that responsibility remains with PM only.
+
+### Links
+- Related decisions: DEC-026, DEC-028, DEC-016
+
+## DEC-034: Sent status fields
+- Status: accepted
+- Milestone: M2
+- Owner: TBD
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+When an EWO is marked `sent`, the system should capture how it was transmitted to the GC
+for audit and follow-up purposes. DEC-016 defines the `sent` state; this decision defines
+what data is collected at that transition.
+
+### Decision
+Four fields on `ExtraWorkOrder`, all nullable, populated atomically on `approved → sent`:
+- `sent_date` — DateField, auto-set to today
+- `sent_by` — FK to `User`, auto-set to current user
+- `sent_method` — CharField choices: `email` / `gc_portal` / `hand_delivered` / `other`
+- `sent_reference` — CharField optional (email thread subject, portal confirmation number, etc.)
+
+No separate model. PM and office roles can trigger this transition (per DEC-033).
+
+### Consequences
+- `sent_method` is required on the transition form — the user must choose one option.
+- `sent_reference` is optional; leave blank if no reference number exists.
+
+### Links
+- Related decisions: DEC-016, DEC-033
+
+## DEC-035: GC acknowledgment fields
+- Status: accepted
+- Milestone: M2
+- Owner: TBD
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+The charter (CLAUDE.md) explicitly requires: "GC acknowledgment tracked per EWO: who, when,
+method (signature/email/verbal) — absence is itself recordable." This is distinct from the `sent`
+state — it tracks the GC's receipt/acknowledgment of the EWO, not CP's act of sending it.
+
+### Decision
+Three fields on `ExtraWorkOrder` as metadata (not a lifecycle state):
+- `gc_acknowledged_by` — CharField (name string per DEC-012; not a User FK)
+- `gc_acknowledged_at` — DateTimeField nullable
+- `gc_acknowledgment_method` — CharField choices: `signature` / `email` / `verbal` / `none_recorded`
+
+An EWO can be `sent` with `gc_acknowledgment_method = 'none_recorded'` — absence is explicitly
+recordable. Fields are editable by PM and office after the `sent` transition.
+
+### Consequences
+- These fields are not part of the state machine; they can be updated at any time after `sent`.
+- `gc_acknowledged_by` is a free-text name, not a FK, consistent with DEC-012 (people as name strings in v1).
+- `none_recorded` is a valid, intentional choice — not a null/unknown.
+
+### Links
+- Related decisions: DEC-016, DEC-012, DEC-033
+
+## DEC-036: Billed status definition and fields
+- Status: accepted
+- Milestone: M2
+- Owner: TBD
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+DEC-016 defines `billed` as included in a pay application, but did not specify what data to
+capture at that transition or what the pay application reference should look like.
+
+### Decision
+`billed` = included in a pay application. The `sent → billed` transition is triggered by office
+or admin only (per DEC-033). Fields populated atomically on transition:
+- `billed_date` — DateField, auto-set to today
+- `billed_by` — FK to `User`, auto-set to current user
+- `pay_app_reference` — CharField optional (e.g. "PA-14", "March 2026 Pay App")
+
+No payment-received tracking in v1 — that is an accounting system concern outside this app.
+
+### Consequences
+- `pay_app_reference` is optional; some offices may track pay app numbers, others may not.
+- Payment confirmation, lien waivers, and AR tracking are explicitly out of scope for v1.
+
+### Links
+- Related decisions: DEC-016, DEC-033
+
+## DEC-037: Multi-date EWOs
+- Status: accepted
+- Milestone: M2
+- Owner: TBD
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+T&M extra work often spans multiple consecutive days (e.g. Tuesday through Thursday of the same week).
+The system must support this without forcing one EWO per day, which would create fragmented records.
+
+### Decision
+A single EWO can span multiple calendar dates. There is no constraint requiring all lines to share
+the same date. Each `LaborLine` and `EquipmentLine` carries a `work_date` DateField (required).
+Multiple lines with different `work_date` values under one EWO are valid and expected.
+
+No `ewo_date` header field on `ExtraWorkOrder` — the date range is derived from line `work_date`
+values when needed for display or reporting.
+
+### Consequences
+- `work_date` is required on `LaborLine` and `EquipmentLine` at save time (not just submission).
+- Rate lookup uses `work_date` to find the effective rate per DEC-014.
+- Reporting and listing views should display the date range (min → max `work_date` across lines).
+
+### Links
+- Related decisions: DEC-014, DEC-025
+
+## DEC-038: Employee CSV seed format
+- Status: accepted
+- Milestone: M2
+- Owner: TBD
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+The `Employee` model (in the `resources` app per DEC-032) needs to be populated before EWOs with
+named labor can be created. The company already has employee/trade data in an Excel rate sheet —
+the seed import should draw from that source.
+
+### Decision
+Source: existing Excel rate sheet. CSV columns for employee seed import via `django-import-export`:
+- `employee_id` — optional internal identifier string; blank = auto-assign
+- `first_name` — required
+- `last_name` — required
+- `default_trade_code` — required; must match a `TradeClassification.code` already in the system
+- `union` — required; choices: `IUOE` / `LIUNA` / `OPCMIA` / `IBT`
+
+A blank template is committed at `backend/resources/seed/employees_template.csv`. Import runs via
+the Django admin `django-import-export` mixin on the `Employee` model admin.
+
+### Consequences
+- `TradeClassification` records must be seeded before the employee CSV import runs.
+- The template CSV must be filled out by PM or office before the first data load.
+- Employee photos, phone numbers, and other HR fields are not in scope for v1.
+
+### Links
+- Related decisions: DEC-012, DEC-029, DEC-032
+
+## DEC-039: Equipment type seed approach
+- Status: accepted
+- Milestone: M2
+- Owner: TBD
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+`CaltransRateLine` records (in the `resources` app per DEC-032) are the source for equipment billing
+rates. The Caltrans Equipment Rental Rate schedule is published periodically as a PDF table. An import
+approach is needed before equipment lines can be added to EWOs.
+
+### Decision
+Convert the relevant pages of the Caltrans schedule to CSV (one-time manual step). Import via
+`django-import-export` admin action on `CaltransRateLine`. CSV committed at
+`backend/resources/seed/caltrans_rates_<year>.csv`.
+
+CSV columns:
+- `schedule_year` — e.g. `2025`
+- `class_code` — Caltrans equipment class identifier
+- `make` — manufacturer name
+- `model` — model description
+- `rental_rate` — operating rate (Rental_Rate column in Caltrans schedule)
+- `rw_delay_rate` — standby rate (Rw_Delay column)
+- `overtime_rate` — overtime adder (Overtime column)
+- `effective_date` — start date of this rate period
+
+Only the Caltrans codes CP actively uses are included in the initial seed — a filtered subset of
+the full schedule. PM or office provides the list of active codes before the seed file is built.
+
+### Consequences
+- Full Caltrans schedule import is not required — targeted subset only.
+- New rate periods (annual Caltrans updates) are imported the same way as new CSV rows.
+- `django-import-export` is already selected in DEC-032; no new package needed.
+
+### Links
+- Related decisions: DEC-014, DEC-021, DEC-032
+
+## DEC-040: Job CRUD ownership
+- Status: accepted
+- Milestone: M2
+- Owner: TBD
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+DEC-011 established a lightweight `Job` model (job number only in v1). The access pattern for who
+can create and manage jobs must be defined before building the jobs app.
+
+### Decision
+PM and office roles can create, edit, and deactivate `Job` records. Foreman is read-only (can select
+a job when creating an EWO but cannot create or modify jobs). Admin has full access.
+
+Jobs are entered manually in-app — job numbers come from the estimating/bidding process outside this
+system. No external sync in v1. `Job` model fields:
+- `job_number` — validated per DEC-019
+- `job_name` — CharField optional (free-text description)
+- `active` — BooleanField default True; deactivation hides the job from new-EWO dropdowns without deleting it
+
+### Consequences
+- Job creation permission gates match the office/PM split from DEC-033.
+- Soft deactivation (not deletion) prevents orphaning EWOs tied to a job number.
+- Future job hierarchy (customer, site, location per DEC-011) extends this model rather than replacing it.
+
+### Links
+- Related decisions: DEC-011, DEC-019, DEC-033
+
+## DEC-041: EWO description field structure
+- Status: accepted
+- Milestone: M2
+- Owner: TBD
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+EWOs need enough textual context to stand alone as a billing document presented to the GC.
+The question is whether a single free-text field is sufficient or whether structure is needed.
+
+### Options considered
+1. Single `description` TextField.
+   - Pros: Simplest input; no required format.
+   - Cons: Location is consistently needed and gets buried in freeform text; hard to search/filter later.
+2. Two fields: `location` + `description`.
+   - Pros: Location is always distinct and useful for cross-referencing with plans/stationing.
+   - Cons: Slightly more fields on the form.
+3. Three fields: `location` + `description` + `reason_for_extra`.
+   - Pros: Separates scope from justification.
+   - Cons: Over-structured for v1; reason can live in description.
+
+### Decision
+Two fields:
+- `location` — CharField (where the work was performed; e.g. "Sta. 42+00, south trench wall")
+- `description` — TextField (what was done and why it qualifies as extra work)
+
+Both are optional while the EWO is `open`; both are required at submission.
+
+### Consequences
+- No `reason_for_extra` field in v1 — justification context goes in `description`.
+- `location` CharField max length TBD at implementation (suggest 200 chars).
+
+### Links
+- Related decisions: DEC-016
+
+## DEC-042: Audit log visibility
+- Status: accepted
+- Milestone: M2
+- Owner: TBD
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+`django-simple-history` is already committed to (DEC-032) and will be applied to key models at
+definition time. The access policy for who can read the history trail must be decided before
+building the history API endpoint.
+
+### Decision
+All authenticated users can read the `django-simple-history` trail for any EWO they can view.
+History records are read-only for all roles. The Django admin history interface is restricted to
+admin only.
+
+### Consequences
+- The history API endpoint applies the same object-level read permission as the EWO itself —
+  if you can read the EWO, you can read its history.
+- No separate permission check is needed for history vs. EWO reads.
+- Admin-only Django admin history is the default `django-simple-history` behavior; no override needed.
+
+### Links
+- Related decisions: DEC-032, DEC-033
