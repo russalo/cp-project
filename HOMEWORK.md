@@ -87,11 +87,14 @@ Created: 2026-03-18
 5. **Multiple work dates:** can a single EWO span multiple work dates (e.g.
    a T&M job that runs Tuesday through Thursday), or is one EWO always one
    work date?
-   - Answer: Yes — a single EWO can span multiple calendar dates. DEC-025
-     already implies this ("single LaborLine per worker per day" means multiple
-     LaborLine records with different `work_date` values can live under one EWO).
-     Same applies to EquipmentLine. No single EWO header date field — the date
-     range is derived from line `work_date` values.
+   - Answer: Yes — multi-day EWOs are the norm, not the exception. The printed
+     output has one page per day (with that day's work description) plus a
+     summary cover page. This requires a `WorkDay` grouping model: one record
+     per calendar date per EWO, carrying its own `work_date`, `location`, and
+     `description`. `LaborLine` and `EquipmentLine` belong to a `WorkDay`, not
+     directly to the EWO. `MaterialLine` stays at EWO level (materials are not
+     tied to a specific day). The EWO header carries a summary `description`
+     for the cover page.
    - Decision: DEC-037
 
 6. **Employee CSV seed format:** what columns does the employee seed CSV need —
@@ -133,11 +136,13 @@ Created: 2026-03-18
 9. **EWO description field:** is the work description a single free-text field,
    or does it need structure — e.g. separate fields for location, scope,
    reason it's extra work?
-   - Answer: Two fields. `location` (CharField — where the work was performed;
-     e.g. "Sta. 42+00, south trench wall") and `description` (TextField — what
-     was done and why it qualifies as extra work). No separate `reason_for_extra`
-     field in v1; that context goes in `description`. Both fields required at
-     submission; optional while open.
+   - Answer: Description lives at two levels. On `WorkDay` (per DEC-037):
+     `location` (CharField) and `description` (TextField) specific to that
+     day's work — these drive each day's printed page. On `ExtraWorkOrder`
+     header: a summary `description` (TextField) for the cover page; `location`
+     on the header is optional (defaults to the job location context). Both
+     `WorkDay` fields required at submission; header `description` required at
+     submission. No separate `reason_for_extra` field in v1.
    - Decision: DEC-041
 
 10. **Audit log visibility:** should the audit/history trail (who changed what

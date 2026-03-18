@@ -836,7 +836,7 @@ Before writing any models, the Django project needs a stable app boundary layout
 | `accounts` | User extension and role management | `UserProfile` |
 | `resources` | All reference/master data — the building blocks that populate EWOs | `TradeClassification`, `LaborRate`, `Employee`, `CaltransSchedule`, `CaltransRateLine`, `EquipmentType`, `EquipmentUnit`, `MaterialCategory`, `MaterialCatalog` |
 | `jobs` | Job reference; lightweight v1, future home for customer/job hierarchy | `Job` |
-| `ewo` | EWO transactions and calculation logic | `ExtraWorkOrder`, `LaborLine`, `EquipmentLine`, `MaterialLine`, `services.py` |
+| `ewo` | EWO transactions and calculation logic | `ExtraWorkOrder`, `WorkDay`, `LaborLine`, `EquipmentLine`, `MaterialLine`, `services.py` |
 
 Dependency direction: `ewo` imports from `resources`, `jobs`, `accounts`. No reverse imports.
 
@@ -993,7 +993,7 @@ No payment-received tracking in v1 — that is an accounting system concern outs
 ### Links
 - Related decisions: DEC-016, DEC-033
 
-## DEC-037: Multi-date EWOs
+## DEC-037: Multi-date EWOs and WorkDay model
 - Status: accepted
 - Milestone: M2
 - Owner: TBD
@@ -1001,24 +1001,42 @@ No payment-received tracking in v1 — that is an accounting system concern outs
 - Date decided: 2026-03-18
 
 ### Context
-T&M extra work often spans multiple consecutive days (e.g. Tuesday through Thursday of the same week).
-The system must support this without forcing one EWO per day, which would create fragmented records.
+T&M extra work often spans multiple consecutive days. The printed EWO output has one page per
+calendar day (with that day's specific work description, crew, and equipment) plus a summary cover
+page. This output structure drives the data model — day-level grouping is a first-class concept.
 
 ### Decision
-A single EWO can span multiple calendar dates. There is no constraint requiring all lines to share
-the same date. Each `LaborLine` and `EquipmentLine` carries a `work_date` DateField (required).
-Multiple lines with different `work_date` values under one EWO are valid and expected.
+Introduce a `WorkDay` model as the grouping unit between `ExtraWorkOrder` and line items:
 
-No `ewo_date` header field on `ExtraWorkOrder` — the date range is derived from line `work_date`
-values when needed for display or reporting.
+```
+ExtraWorkOrder  (cover page — summary description, totals)
+  └── WorkDay   (one per calendar date — date-specific location + description + lines)
+        ├── LaborLine
+        └── EquipmentLine
+MaterialLine    (stays at EWO level — not tied to a specific day)
+```
+
+`WorkDay` fields:
+- `ewo` — FK to `ExtraWorkOrder`
+- `work_date` — DateField required
+- `location` — CharField (where the work occurred that day)
+- `description` — TextField (what was done that day)
+
+`LaborLine` and `EquipmentLine` FK to `WorkDay` (not directly to `ExtraWorkOrder`).
+`MaterialLine` FK remains directly on `ExtraWorkOrder`.
+
+`ExtraWorkOrder` header carries a summary `description` (TextField) for the cover page.
+No `ewo_date` header field — the date range is derived from `WorkDay.work_date` values.
 
 ### Consequences
-- `work_date` is required on `LaborLine` and `EquipmentLine` at save time (not just submission).
-- Rate lookup uses `work_date` to find the effective rate per DEC-014.
-- Reporting and listing views should display the date range (min → max `work_date` across lines).
+- `work_date` lives on `WorkDay`, not on individual `LaborLine`/`EquipmentLine` records.
+- Rate lookup uses `WorkDay.work_date` to find the effective rate per DEC-014.
+- Both `WorkDay.location` and `WorkDay.description` are required at submission (optional while open).
+- Printed output: cover page from EWO header; one page per `WorkDay` ordered by `work_date`.
+- `WorkDay` is in the `ewo` app (DEC-032) alongside the line models.
 
 ### Links
-- Related decisions: DEC-014, DEC-025
+- Related decisions: DEC-014, DEC-025, DEC-041
 
 ## DEC-038: Employee CSV seed format
 - Status: accepted
@@ -1126,33 +1144,32 @@ system. No external sync in v1. `Job` model fields:
 - Date decided: 2026-03-18
 
 ### Context
-EWOs need enough textual context to stand alone as a billing document presented to the GC.
-The question is whether a single free-text field is sufficient or whether structure is needed.
-
-### Options considered
-1. Single `description` TextField.
-   - Pros: Simplest input; no required format.
-   - Cons: Location is consistently needed and gets buried in freeform text; hard to search/filter later.
-2. Two fields: `location` + `description`.
-   - Pros: Location is always distinct and useful for cross-referencing with plans/stationing.
-   - Cons: Slightly more fields on the form.
-3. Three fields: `location` + `description` + `reason_for_extra`.
-   - Pros: Separates scope from justification.
-   - Cons: Over-structured for v1; reason can live in description.
+The printed EWO has a summary cover page and one page per work day. Each day's page must carry
+a description of that day's specific work. This means description is a two-level concept:
+a summary at the EWO header (cover page) and a day-specific narrative at the `WorkDay` level.
 
 ### Decision
-Two fields:
-- `location` — CharField (where the work was performed; e.g. "Sta. 42+00, south trench wall")
-- `description` — TextField (what was done and why it qualifies as extra work)
+Description lives at two levels:
 
-Both are optional while the EWO is `open`; both are required at submission.
+**On `WorkDay`** (drives each day's printed page):
+- `location` — CharField (where the work occurred that day; e.g. "Sta. 42+00, south trench wall")
+- `description` — TextField (what was done that day and why it qualifies as extra work)
+- Both required at submission; optional while EWO is open.
+
+**On `ExtraWorkOrder` header** (drives the cover page):
+- `description` — TextField (summary of the overall extra work scope)
+- `location` — CharField optional (general area; often redundant with WorkDay locations)
+- Header `description` required at submission.
+
+No `reason_for_extra` field in v1 — justification context goes in `description` at the day level.
 
 ### Consequences
-- No `reason_for_extra` field in v1 — justification context goes in `description`.
+- UI must present per-day description entry alongside line item entry for each `WorkDay`.
+- Cover page summary `description` is a separate input at the EWO header level.
 - `location` CharField max length TBD at implementation (suggest 200 chars).
 
 ### Links
-- Related decisions: DEC-016
+- Related decisions: DEC-016, DEC-037
 
 ## DEC-042: Audit log visibility
 - Status: accepted
