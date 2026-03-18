@@ -18,7 +18,7 @@ Use it to record what was considered, what was chosen, and why.
 |---|---|---|---|---|---|
 | DEC-001 | M1 | CI gate strategy | accepted | TBD | 2026-03-14 |
 | DEC-002 | M1 | Production Python/runtime pinning | accepted | TBD | 2026-03-13 |
-| DEC-003 | M2 | Source of truth and calculation boundary | proposed | TBD | TBD |
+| DEC-003 | M2 | Source of truth and calculation boundary | accepted | TBD | 2026-03-18 |
 | DEC-004 | M2 | API contract conventions | proposed | TBD | TBD |
 | DEC-005 | M2 | Duplicate-prevention/idempotency approach | proposed | TBD | TBD |
 | DEC-006 | M3 | TypeScript migration strategy | proposed | TBD | TBD |
@@ -33,6 +33,21 @@ Use it to record what was considered, what was chosen, and why.
 | DEC-015 | M2 | Submitted EWO rate snapshot behavior | accepted | TBD | 2026-03-14 |
 | DEC-016 | M2 | v1 EWO lifecycle baseline | accepted | TBD | 2026-03-14 |
 | DEC-017 | M6 | Document storage strategy | proposed | TBD | TBD |
+| DEC-018 | M2 | EWO numbering format | accepted | TBD | 2026-03-18 |
+| DEC-019 | M2 | Job number validation format | accepted | TBD | 2026-03-18 |
+| DEC-020 | M2 | Labor hours precision | accepted | TBD | 2026-03-18 |
+| DEC-021 | M2 | Equipment usage model | accepted | TBD | 2026-03-18 |
+| DEC-022 | M2 | Material pricing rule | accepted | TBD | 2026-03-18 |
+| DEC-023 | M2 | Currency rounding policy | accepted | TBD | 2026-03-18 |
+| DEC-024 | M2 | Tax policy | accepted | TBD | 2026-03-18 |
+| DEC-025 | M2 | Overtime labor model | accepted | TBD | 2026-03-18 |
+| DEC-026 | M2 | EWO approval authority | accepted | TBD | 2026-03-18 |
+| DEC-027 | M2 | Post-approval edit model | accepted | TBD | 2026-03-18 |
+| DEC-028 | M2 | Auth model | accepted | TBD | 2026-03-18 |
+| DEC-029 | M2 | Named vs generic labor | accepted | TBD | 2026-03-18 |
+| DEC-030 | M2 | Trade classification override | accepted | TBD | 2026-03-18 |
+| DEC-031 | M2 | EWO calculation timing and lock | accepted | TBD | 2026-03-18 |
+| DEC-032 | M2 | Django app structure and package selection | accepted | TBD | 2026-03-18 |
 
 ## Decision Template
 
@@ -347,7 +362,7 @@ The rate used when an EWO is submitted becomes the rate for that EWO. Later glob
 - Milestone: M2
 - Owner: TBD
 - Date proposed: 2026-03-14
-- Date decided: 2026-03-14
+- Date decided: 2026-03-18
 
 ### Context
 The product will likely expand beyond Extra Work Orders into cost analysis or estimate-style outputs, but the first implementation still needs a concrete EWO lifecycle so validations, permissions, and edit-lock behavior can be designed coherently.
@@ -361,12 +376,23 @@ The product will likely expand beyond Extra Work Orders into cost analysis or es
    - Cons: May need later extension.
 
 ### Decision
-Use a v1 EWO lifecycle of `draft`, `submitted`, `approved/rejected`, and `billed`. Future support for cost analysis or estimate workflows can extend the broader product model later.
+v1 EWO lifecycle: `open → submitted → approved → sent → billed`, with `rejected → open` for corrections.
+
+State semantics:
+- `open` — actively being built; lines editable
+- `submitted` — sent to PM for review; lines locked; rates snapshotted
+- `approved` — PM has approved; ready to send to GC (GC submission happens outside the system)
+- `rejected` — PM has rejected; reopens to `open` for correction
+- `sent` — EWO has been transmitted to the GC via external means (email, GC portal)
+- `billed` — included in a pay application
+
+Post-approval edits use a revision model: original approved EWO is locked permanently; a revision is a new EWO record with `parent_ewo` FK and `revision` integer field (0 = original, 1 = first revision, etc.). EWO number carries a decimal suffix: `1886-001.1`. Revisions go through the full lifecycle same as originals (see DEC-027).
 
 ### Consequences
 - Role and edit-lock rules can now be defined against concrete states.
 - APIs and UI flows should reflect this state machine explicitly.
 - Future document types should extend the workflow deliberately rather than overloading EWO status semantics.
+- The `rejected` state does not appear in the forward path — it is a branch back to `open`.
 
 ### Links
 - Related milestone item: `MILESTONES.md`
@@ -402,3 +428,434 @@ TBD after a focused pros/cons review closer to document-feature implementation.
 - Related milestone item: `MILESTONES.md`
 - Related workflow/pipeline notes: `WORKFLOW-SETUP.md`
 - Related implementation PR(s): TBD
+
+## DEC-003: Source of truth and calculation boundary
+- Status: accepted
+- Milestone: M2
+- Owner: TBD
+- Date proposed: 2026-03-14
+- Date decided: 2026-03-18
+
+### Context
+EWO line totals, OH&P, and the final total must be calculated somewhere. The boundary choice affects auditability, frontend complexity, and what the database stores as authoritative.
+
+### Options considered
+1. Always recalculate from live rate tables on every request.
+   - Pros: No stored totals to go stale.
+   - Cons: Submitted EWOs would change if rates change; no audit-stable record.
+2. Calculate client-side (React) and POST the totals.
+   - Pros: Responsive UI.
+   - Cons: Server cannot trust posted numbers; requires validation duplication.
+3. Recalculate server-side on status transition (`open → submitted`); lock thereafter.
+   - Pros: One authoritative calculation path; snapshots are stable; audit-safe.
+   - Cons: Totals not available until submission; open EWO shows no stored total.
+
+### Decision
+Recalculate on status transition (option 3). When an EWO transitions from `open` to `submitted`, `calculate_ewo_totals(ewo)` runs once, writes all snapshot values and computed totals to the EWO record, and the EWO locks. All money math lives in `ewo/services.py` — never in views or serializers. After submission, stored values are the record; no recalculation ever touches a submitted EWO.
+
+### Consequences
+- `ewo/services.py` is the single calculation boundary; test it exhaustively with `freezegun`.
+- Open EWOs do not have stored totals — the UI can compute a live preview client-side for display only.
+- Rate changes after submission never affect the record.
+
+### Links
+- Related milestone item: `MILESTONES.md`
+- Related decision: DEC-031
+
+## DEC-018: EWO numbering format
+- Status: accepted
+- Milestone: M2
+- Owner: TBD
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+EWOs need a human-readable reference number that ties them to a job and maintains order within that job.
+
+### Decision
+EWO number = job number + hyphen + zero-padded 3-digit sequence per job (e.g. `26E-001`, `1886-003`). Sequence is per-job, auto-incremented at creation, atomic to prevent race conditions. Model also carries optional reference fields: `rfi_reference`, `addendum_ref`, `plan_revision`.
+
+### Consequences
+- Sequence counter must be incremented atomically (e.g. `select_for_update` or database sequence).
+- Display format for revisions appends decimal suffix: `1886-001.1` (see DEC-027).
+
+### Links
+- Related decision: DEC-027
+
+## DEC-019: Job number validation format
+- Status: accepted
+- Milestone: M2
+- Owner: TBD
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+The company uses two distinct job number formats that must both be accepted by the system.
+
+### Decision
+Two job categories:
+- **Regular jobs:** sequential integer, no padding (e.g. `1886`, `42`). Validation: `^\d+$`
+- **Small/misc jobs:** 2-digit year + sequential letter(s) starting at A, continuing to AA, AB, AC when year exceeds 26 entries (e.g. `26A`, `26AA`). Validation: `^\d{2}[A-Z]+$`
+
+### Consequences
+- Job number field stores as a string; validation enforces one of the two formats.
+- No auto-generation of job numbers — entered by PM or office staff.
+
+### Links
+- Related milestone item: `MILESTONES.md`
+
+## DEC-020: Labor hours precision
+- Status: accepted
+- Milestone: M2
+- Owner: TBD
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+Field labor is typically tracked by the half hour in this trade. Full minute precision is unnecessary and adds complexity to rate calculations.
+
+### Decision
+Labor stored in half-hour increments only. Field: `DecimalField(decimal_places=1)`. Valid values are multiples of 0.5. Validation: `(value * 2) == int(value * 2)`.
+
+### Consequences
+- Applies to `reg_hours`, `ot_hours`, and `dt_hours` on `LaborLine`.
+- UI should enforce half-hour steps (e.g. 0.5 increment spinner).
+
+### Links
+- Related decision: DEC-025
+
+## DEC-021: Equipment usage model
+- Status: accepted
+- Milestone: M2
+- Owner: TBD
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+Caltrans rates include three distinct billing modes: operating (rental rate), standby/delay (rw_delay rate), and overtime (rental + ot adder). The data model must capture which mode is being billed on each line.
+
+### Decision
+Equipment usage is time-based only — no quantity field. Each `EquipmentLine` has a `usage_type` field:
+- `operating` — bills at `rental_rate`
+- `standby` — bills at `rw_delay_rate`
+- `overtime` — bills at `rental_rate + overtime_rate`
+
+Standby/delay time is a separate `EquipmentLine` record with `usage_type = 'standby'`, not a field on the working line.
+
+### Consequences
+- One equipment line per usage type per day per piece of equipment.
+- All three Caltrans rate components (`rental_rate`, `rw_delay_rate`, `overtime_rate`) must be snapshotted at submission.
+
+### Links
+- Related decision: DEC-015, DEC-031
+
+## DEC-022: Material pricing rule
+- Status: accepted
+- Milestone: M2
+- Owner: TBD
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+Simple rule needed for how material line totals are calculated, with no ambiguity for edge cases like lump-sum invoices.
+
+### Decision
+Material line total is always `unit_cost × quantity`. No manual total override. Lump-sum items use unit type `LS` with quantity `1` and the full invoice amount as `unit_cost`. No special cases.
+
+### Consequences
+- No `total_override` field needed on `MaterialLine`.
+- Tax handling: if a material receipt includes sales tax, the full invoice amount (tax included) is entered as the `unit_cost` on an `LS` line (see DEC-024).
+
+### Links
+- Related decision: DEC-024
+
+## DEC-023: Currency rounding policy
+- Status: accepted
+- Milestone: M2
+- Owner: TBD
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+Money calculations on EWOs accumulate across many line items, OH&P markups, and a bond add-on. A consistent rounding rule must be established to prevent fractional-cent accumulation and ensure predictable billing totals.
+
+### Decision
+Round UP to the nearest cent (`decimal.ROUND_UP`) at every point where a calculation occurs: line totals, OH&P amounts, bond amount, and final total. No fractional cents ever carry forward. Use `decimal.ROUND_UP` throughout `ewo/services.py`. Never use float arithmetic on currency.
+
+### Consequences
+- All currency fields use `DecimalField`.
+- `ewo/services.py` applies `ROUND_UP` at each calculation step, not just at the final total.
+- This slightly favors the contractor (rounds up), which is appropriate for billing.
+
+### Links
+- Related decision: DEC-003
+
+## DEC-024: Tax policy
+- Status: accepted
+- Milestone: M2
+- Owner: TBD
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+The company performs installed construction work, not product sales. Tax handling must be defined to avoid adding unnecessary complexity.
+
+### Decision
+Tax is excluded entirely from the system. CP performs installed work — no sales tax on billings. If a material receipt includes sales tax, the full invoice amount (tax included) is entered as the `unit_cost` on an `LS` line. The system never acknowledges tax as a concept.
+
+### Consequences
+- No tax fields, tax rates, or tax line items anywhere in the data model.
+- Receipts with embedded tax are handled at the line level by the person entering materials.
+
+### Links
+- Related decision: DEC-022
+
+## DEC-025: Overtime labor model
+- Status: accepted
+- Milestone: M2
+- Owner: TBD
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+Field work regularly spans regular time, overtime, and double time in a single day. The model must capture all three without forcing artificial splitting into separate records.
+
+### Decision
+Single `LaborLine` per worker per day with three hour fields: `reg_hours`, `ot_hours`, `dt_hours`. Standard thresholds (OT after 8 reg hours, DT after 4 OT hours) are NOT auto-calculated — the person entering labor knows where in the workday the extra work fell and enters the correct breakdown manually.
+
+Each time type is calculated independently, rounded per DEC-023, then summed to line total. Three rate snapshots stored at submission: `rate_reg_snapshot`, `rate_ot_snapshot`, `rate_dt_snapshot`.
+
+### Consequences
+- `LaborLine` has 6 critical fields: `reg_hours`, `ot_hours`, `dt_hours`, `rate_reg_snapshot`, `rate_ot_snapshot`, `rate_dt_snapshot`.
+- UI must show all three time-type inputs without requiring all to be filled.
+- Line total = `(reg_hours × rate_reg) + (ot_hours × rate_ot) + (dt_hours × rate_dt)`, each component rounded before summing.
+
+### Links
+- Related decision: DEC-020, DEC-023
+
+## DEC-026: EWO approval authority
+- Status: accepted
+- Milestone: M2 / M4
+- Owner: TBD
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+EWOs must be reviewed before being sent to the GC. Approval authority and dual-approval requirements must be defined before building the state machine.
+
+### Decision
+PM role only has approval authority in v1. Single approval is sufficient — no dual approval. "Approved" means the EWO is ready to send to the GC; it does not mean the GC has accepted it. GC submission happens outside the system via email or the GC's own portal.
+
+### Consequences
+- Role matrix for M4 must grant `approve` and `reject` actions to PM role only.
+- Foreman and office roles cannot approve.
+- The `sent` state (EWO transmitted to GC) is tracked separately from `approved` (see DEC-016).
+
+### Links
+- Related decision: DEC-016
+
+## DEC-027: Post-approval edit model
+- Status: accepted
+- Milestone: M2
+- Owner: TBD
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+Approved EWOs occasionally need correction after approval. A strategy is needed that preserves the audit trail while allowing corrections.
+
+### Options considered
+1. Reopen and edit the approved EWO directly.
+   - Pros: Simple.
+   - Cons: Destroys the audit record; original approved version is lost.
+2. Clone to a revision; lock original.
+   - Pros: Original is preserved; revision has its own lifecycle.
+   - Cons: Slightly more model complexity.
+3. Admin override with audit reason.
+   - Pros: Keeps single record.
+   - Cons: Muddies the immutable record principle.
+
+### Decision
+Revision model with decimal suffix. Original approved EWO is locked permanently and never edited. A revision is a new `ExtraWorkOrder` record linked to its parent via a `parent_ewo` FK, with all lines cloned as a starting point. `revision` integer field: 0 = original, 1 = first revision, etc. EWO display number: `1886-001.1`, `1886-001.2`. Revisions go through the full lifecycle the same as original EWOs.
+
+### Consequences
+- `ExtraWorkOrder` needs `parent_ewo` FK (nullable, self-referential) and `revision` integer field.
+- Locking logic must prevent any edits to EWOs in `approved` state or later.
+- Reporting should identify the "current" revision of a given EWO chain.
+
+### Links
+- Related decision: DEC-016, DEC-018
+
+## DEC-028: Auth model
+- Status: accepted
+- Milestone: M2 / M4
+- Owner: TBD
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+Django provides a built-in User model. Custom AppUser models add complexity; the alternative is to extend via a profile model.
+
+### Options considered
+1. Custom `AppUser` swapping out Django's `AUTH_USER_MODEL`.
+   - Pros: Full control over user fields.
+   - Cons: Requires setting `AUTH_USER_MODEL` before first migration; hard to change later; unnecessary for v1 needs.
+2. Django built-in `User` + one-to-one `UserProfile`.
+   - Pros: Standard pattern; avoids auth model swap complexity; easy to extend.
+   - Cons: Two models instead of one.
+
+### Decision
+No custom AppUser. Extend Django's built-in `User` with a one-to-one `UserProfile`:
+
+```python
+class UserProfile(models.Model):
+    user   = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    role   = models.CharField(max_length=50)  # 'foreman', 'pm', 'office', 'admin'
+    active = models.BooleanField(default=True)
+```
+
+`ExtraWorkOrder.created_by` points to Django `User` directly.
+
+### Consequences
+- No `AUTH_USER_MODEL` setting needed; Django default applies.
+- Role-based access control in M4 reads from `UserProfile.role`.
+
+### Links
+- Related decision: DEC-026
+
+## DEC-029: Named vs generic labor
+- Status: accepted
+- Milestone: M2
+- Owner: TBD
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+EWOs are sometimes built from actual crew records (named labor) and sometimes from estimates or placeholders (generic labor). The model must support both without requiring an employee record for every line.
+
+### Decision
+`LaborLine` supports two labor types via a `labor_type` field:
+- `named` — specific employee; `employee` FK populated
+- `generic` — placeholder for estimating or T&M where the specific crew member isn't known; `employee` FK null
+
+One line per worker per day always — no quantity field on labor lines.
+
+### Consequences
+- `employee` FK on `LaborLine` is nullable.
+- Rate lookup for generic lines requires `trade_classification` to be specified directly.
+- Generic labor is valid in both T&M and change order EWOs.
+
+### Links
+- Related decision: DEC-030
+
+## DEC-030: Trade classification override
+- Status: accepted
+- Milestone: M2
+- Owner: TBD
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+Employees normally bill under their default trade classification, but field conditions sometimes require billing under a different classification (e.g. an Operator Foreman acting as Superintendent for the day). The override must be auditable.
+
+### Decision
+Lock to employee's default trade classification but allow override per line with a required reason. `LaborLine` carries:
+- `employee_default_trade` FK — snapshot of employee's trade at line creation (denormalized; protects against future employee record changes rewriting history)
+- `trade_classification` FK — the trade actually billed (may differ from default)
+- `trade_override_reason` — required when the two differ, blank otherwise
+
+The `is_trade_override` property returns `True` when `trade_classification != employee_default_trade` for named labor lines.
+
+### Consequences
+- `employee_default_trade` is set automatically on save from the employee record when `labor_type = 'named'`.
+- UI must surface an override reason field when the user selects a non-default trade.
+
+### Links
+- Related decision: DEC-029
+
+## DEC-031: EWO calculation timing and lock
+- Status: accepted
+- Milestone: M2
+- Owner: TBD
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+This is the implementation detail for DEC-003's accepted approach: when exactly calculations run, what gets stored, and how the lock is enforced.
+
+### Decision
+On `open → submitted` transition:
+1. `calculate_ewo_totals(ewo)` runs once in `ewo/services.py`
+2. All rate snapshots and computed totals are written to the EWO record atomically
+3. EWO status becomes `submitted`; lines and totals lock — no further edits permitted
+
+Required service functions in `ewo/services.py`:
+- `get_labor_rate(trade_classification, work_date)`
+- `get_equipment_rates(caltrans_rate_line, work_date)`
+- `calculate_labor_line(line)`
+- `calculate_equipment_line(line)`
+- `calculate_material_line(line)`
+- `calculate_ewo_totals(ewo)` — labor subtotal, labor OH&P, equip+mat subtotal, equip+mat OH&P, bond, total
+
+After submission, stored values are the permanent record. Rate changes, CBA negotiations, and Caltrans schedule updates never affect a submitted EWO.
+
+### Consequences
+- Write `ewo/services.py` and test it exhaustively with `freezegun` before building any views or serializers.
+- The transition function must wrap snapshot + status change in a single database transaction.
+- Open EWO total is not stored — the UI shows a live preview computed client-side for display only.
+
+### Links
+- Related decision: DEC-003, DEC-015, DEC-023
+
+## DEC-032: Django app structure and package selection
+- Status: accepted
+- Milestone: M2
+- Owner: TBD
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+Before writing any models, the Django project needs a stable app boundary layout and a confirmed package set. App structure is expensive to change after migrations exist.
+
+### Decision
+
+**App structure — 4 apps:**
+
+| App | Responsibility | Models |
+|-----|---------------|--------|
+| `accounts` | User extension and role management | `UserProfile` |
+| `resources` | All reference/master data — the building blocks that populate EWOs | `TradeClassification`, `LaborRate`, `Employee`, `CaltransSchedule`, `CaltransRateLine`, `EquipmentType`, `EquipmentUnit`, `MaterialCategory`, `MaterialCatalog` |
+| `jobs` | Job reference; lightweight v1, future home for customer/job hierarchy | `Job` |
+| `ewo` | EWO transactions and calculation logic | `ExtraWorkOrder`, `LaborLine`, `EquipmentLine`, `MaterialLine`, `services.py` |
+
+Dependency direction: `ewo` imports from `resources`, `jobs`, `accounts`. No reverse imports.
+
+**Package selection:**
+
+Installed for M2:
+- `djangorestframework` — API endpoints
+- `django-cors-headers` — cross-origin requests from React frontend
+- `drf-spectacular` — OpenAPI schema generation from serializers
+- `django-simple-history` — audit trail on key models (added at model definition time, not retrofitted)
+- `django-import-export` — CSV import for Caltrans rate schedule and employee seed data
+- `pytest-django` — test runner (CI gate before M2 closeout per DEC-001)
+- `model-bakery` — test fixture generation
+- `freezegun` — freeze time for rate effective-date tests
+- `django-extensions` — dev tooling (`shell_plus`, etc.)
+- `django-debug-toolbar` — SQL query inspection during development
+
+Deferred to M4:
+- `djangorestframework-simplejwt` — JWT auth; not needed until auth milestone
+
+Explicitly rejected:
+- `django-money` — single-currency (USD) app; `MoneyField` overhead not justified; rounding policy enforced in `ewo/services.py` per DEC-023
+- `django-environ` — already using `python-dotenv` with custom helpers in `settings.py`
+- `psycopg2-binary` — already on psycopg3 (`psycopg` + `psycopg-binary`), which is newer and preferred
+
+### Consequences
+- All 4 apps created before any model code is written.
+- `django-simple-history` `HistoricalRecords()` added to models at definition time — not retrofitted.
+- `ewo/services.py` is the only file that performs currency arithmetic; all `DecimalField` currency fields use `max_digits=10, decimal_places=2`.
+
+### Links
+- Related decisions: DEC-003, DEC-011, DEC-028, DEC-031

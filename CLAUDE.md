@@ -69,19 +69,27 @@ frontend/
 
 **Environment:** `backend/.env` (gitignored); copy from `backend/.env.example`. Required vars: `SECRET_KEY`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`.
 
-## Domain Rules (from CHARTER.md)
+## Domain Rules (from CHARTER.md and DECISIONS.md)
 
 These rules govern the core EWO data model — implement them precisely:
 
 - **Two EWO types:** T&M (time-and-materials, tracked in real-time) and Change Order/Quote (pre-approved estimate)
 - **Cost components:** Labor (crew + trade + time-type + hours), Equipment (Caltrans rental rates), Materials (description + qty + cost)
-- **Labor rates:** Sourced from union CBAs (IUOE, LIUNA, OPCMIA, IBT); versioned with effective dates
-- **Equipment rates:** Caltrans rental schedule identified by Class/Make/Model; three rate components per record: `Rental_Rate` (operating), `Rw_Delay` (standby), `Overtime` (adder); versioned by schedule period
-- **Rate snapshots:** All applicable rate components snapshotted at EWO submission — immutable for historical records
+- **Labor rates:** Sourced from union CBAs (IUOE, LIUNA, OPCMIA, IBT); versioned with effective dates (DEC-014)
+- **Equipment rates:** Caltrans rental schedule identified by Class/Make/Model; three rate components per record: `Rental_Rate` (operating), `Rw_Delay` (standby), `Overtime` (adder); versioned by schedule period (DEC-021)
+- **Rate snapshots:** All applicable rate components snapshotted at EWO submission — immutable for historical records (DEC-015, DEC-031)
 - **Billing:** Labor subtotal + Labor OH&P (15%); Equipment+Materials combined subtotal + Equipment+Materials OH&P (15%); optional Bond (1%); all markup rates stored per-EWO at submission
 - **GC acknowledgment** tracked per EWO: who, when, method (signature/email/verbal) — absence is itself recordable
-- **Money calculations:** Server-side only, using decimal arithmetic (no floating point)
-- **EWO lifecycle:** States with field-lock rules (specific states TBD in DEC-016)
+- **Money calculations:** Server-side only in `ewo/services.py`, triggered on `open → submitted` transition; `decimal.ROUND_UP` to nearest cent at every calculation point — line totals, OH&P, bond, final total; never use float (DEC-003, DEC-023, DEC-031)
+- **Tax:** Excluded entirely from the system — CP performs installed work, no sales tax on billings; receipts with embedded tax are entered as LS lines at full invoice cost (DEC-024)
+- **EWO numbering:** `{job_number}-{3-digit sequence}` per job (e.g. `1886-003`); atomic increment; revisions use decimal suffix `1886-003.1` (DEC-018, DEC-027)
+- **Job number formats:** Regular = `^\d+$`; small/misc = `^\d{2}[A-Z]+$` (DEC-019)
+- **Labor model:** Single `LaborLine` per worker per day; fields `reg_hours`, `ot_hours`, `dt_hours` (half-hour increments, `DecimalField(decimal_places=1)`); named or generic (`labor_type`); trade classification override allowed with required reason (DEC-020, DEC-025, DEC-029, DEC-030)
+- **Equipment usage:** Time-based only, no quantity field; `usage_type` = `operating` / `standby` / `overtime`; standby is a separate line record (DEC-021)
+- **Material pricing:** Always `unit_cost × quantity`; lump-sum = `LS` unit type, qty `1`; no manual total override (DEC-022)
+- **Auth model:** Django built-in `User` + one-to-one `UserProfile` (role, active); no custom `AUTH_USER_MODEL` (DEC-028)
+- **EWO lifecycle:** `open → submitted → approved → sent → billed`; `rejected → open` for corrections; post-approval changes create a new revision record with `parent_ewo` FK (DEC-016, DEC-026, DEC-027)
+- **Approval:** PM role only; single approval; "approved" = ready to send to GC — GC submission happens outside the system (DEC-026)
 
 ## Decision Log
 
