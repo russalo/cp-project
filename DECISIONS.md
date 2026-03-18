@@ -58,6 +58,8 @@ Use it to record what was considered, what was chosen, and why.
 | DEC-040 | M2 | Job CRUD ownership | accepted | TBD | 2026-03-18 |
 | DEC-041 | M2 | EWO description field structure | accepted | TBD | 2026-03-18 |
 | DEC-042 | M2 | Audit log visibility | accepted | TBD | 2026-03-18 |
+| DEC-043 | post-v1 | Daily report feature | deferred | TBD | TBD |
+| DEC-044 | post-v1 | Crew builder feature | deferred | TBD | TBD |
 
 ## Decision Template
 
@@ -1196,3 +1198,74 @@ admin only.
 
 ### Links
 - Related decisions: DEC-032, DEC-033
+
+## DEC-043: Daily report feature
+- Status: deferred
+- Milestone: post-v1
+- Owner: TBD
+- Date proposed: 2026-03-18
+- Date decided: TBD
+
+### Context
+Foremen currently track daily field activity (crew, hours, equipment, and notes) outside the system.
+A future Daily Report feature would let foremen log this directly, pulling from the employee and
+equipment database, and flag any work as "extra" — creating or linking to an EWO. This mirrors the
+EWO `WorkDay` structure closely: one report per calendar date, with labor lines, equipment lines,
+and a narrative.
+
+### Deferred because
+Core EWO workflow must be stable and in production use before adding a parallel data entry workflow.
+The exact relationship between daily reports and EWOs (flag → auto-draft vs. manual link) needs
+discovery with foremen users before being designed.
+
+### V1 model constraints to preserve this option
+- `Employee` and `EquipmentUnit` in the `resources` app must not be designed in a way that prevents
+  their reuse as the population source for daily report lines.
+- `WorkDay` field names (`work_date`, `location`, `description`, `LaborLine`, `EquipmentLine`)
+  should be named consistently with what a daily report day will look like — these may share a
+  common base structure or simply maintain consistent naming conventions.
+- The EWO → job relationship must stay clean enough for a daily report entry to reference a job
+  and generate an EWO stub.
+
+### Open questions (resolve before implementation)
+- Does a daily report "extra work" flag auto-draft an EWO, or does the foreman manually promote it?
+- Are daily report labor/equipment lines separate model records, or do they reuse `LaborLine`/`EquipmentLine`?
+- Is the daily report a separate app or part of `ewo`?
+- What happens to daily report records that are never flagged as extra — are they retained for payroll reference?
+
+### Links
+- Related decisions: DEC-037, DEC-044
+
+## DEC-044: Crew builder feature
+- Status: deferred
+- Milestone: post-v1
+- Owner: TBD
+- Date proposed: 2026-03-18
+- Date decided: TBD
+
+### Context
+Foremen work with largely consistent crews day to day. A Crew Builder would let them define a
+named crew (a set of employees and equipment units) once, then apply that crew to a daily report
+or EWO `WorkDay` to pre-populate the labor and equipment lines — reducing repetitive data entry.
+
+### Deferred because
+The core data entry workflow must be usable before optimizing it with crew shortcuts.
+The right UX for applying a crew (replace all lines vs. append vs. diff) needs user testing.
+
+### V1 model constraints to preserve this option
+- `Employee` and `EquipmentUnit` in `resources` must be designed to support a future `Crew` M2M
+  relationship. Do not add fields or constraints that would make a `Crew` → `Employee` through-table
+  awkward (e.g. avoid composite unique constraints on employee fields that would conflict with
+  crew membership).
+- A `Crew` model will live in the `resources` app alongside `Employee` and `EquipmentUnit`.
+- v1 should not hard-code "one employee, one trade" assumptions that would prevent a crew from
+  carrying mixed-trade rosters.
+
+### Open questions (resolve before implementation)
+- Does applying a crew replace the current WorkDay lines, append to them, or show a diff for confirmation?
+- Can a crew be a template (no dates, just membership) or does it carry a default schedule?
+- Who can create/edit/delete crew definitions — foreman only, or PM/office as well?
+- Are crews job-specific or company-wide?
+
+### Links
+- Related decisions: DEC-029, DEC-032, DEC-043
