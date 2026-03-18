@@ -1256,8 +1256,9 @@ Implied model requirements:
 - Is the daily report a separate app or part of `ewo`?
 - What happens to daily report records that are never flagged as extra — are they retained for payroll reference?
 - How does the PM review queue surface — dashboard widget, email notification, or both?
-- "Copy from previous workday" — does it copy the submitted lines exactly, or does it offer a
-  diff view so the foreman can see what is being carried forward?
+- **"Copy from previous workday" UX — requires formal pros/cons review before implementation:**
+  silent clone (lines appear pre-filled, foreman edits) vs. preview/diff view (foreman confirms
+  what is being carried forward before lines are written). Do not implement without a decision.
 
 ### Links
 - Related decisions: DEC-037, DEC-044
