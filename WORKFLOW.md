@@ -60,7 +60,7 @@ Test gate alignment:
 Local parity commands:
 
 ```bash
-cd /home/russellp/Projects/cp-project
+cd ~/Projects/cp-project
 make backend-check
 make frontend-build
 ```

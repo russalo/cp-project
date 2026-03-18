@@ -19,7 +19,7 @@ Work these in order to complete `Milestone 1` from `MILESTONES.md` with minimal 
 Verification (Terminal, local):
 
 ```bash
-cd /home/russellp/Projects/cp-project
+cd ~/Projects/cp-project
 git status -sb
 git remote -v
 make continuity-status
@@ -34,7 +34,7 @@ make continuity-status
 Verification (Terminal, local):
 
 ```bash
-cd /home/russellp/Projects/cp-project
+cd ~/Projects/cp-project
 make setup
 make dev-check
 ```
@@ -119,7 +119,7 @@ Note: this section is intentionally not part of the baseline or v1 completion de
 - [ ] Run backend baseline check with PostgreSQL env loaded:
 
 ```bash
-cd /home/russellp/Projects/cp-project/backend
+cd ~/Projects/cp-project/backend
 .venv/bin/python manage.py check
 .venv/bin/python manage.py migrate
 ```
@@ -127,7 +127,7 @@ cd /home/russellp/Projects/cp-project/backend
 - [ ] Run frontend baseline check:
 
 ```bash
-cd /home/russellp/Projects/cp-project/frontend
+cd ~/Projects/cp-project/frontend
 npm ci
 npm run lint
 npm run build
