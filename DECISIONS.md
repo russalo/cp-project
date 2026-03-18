@@ -1227,11 +1227,21 @@ discovery with foremen users before being designed.
 - The EWO → job relationship must stay clean enough for a daily report entry to reference a job
   and generate an EWO stub.
 
+### Escalation flow (resolved 2026-03-18)
+When a foreman flags a daily report entry as "extra work", it escalates to a PM for review.
+The PM decides whether to create an EWO from it. The foreman does not create the EWO directly.
+
+Implied model requirements:
+- Daily report entries need an `extra_work_flag` boolean and an `escalated_to_pm_at` timestamp.
+- A PM review queue or notification mechanism is needed (design TBD).
+- Once the PM acts, the daily report entry should carry either a FK to the resulting
+  `ExtraWorkOrder` (if approved) or a `dismissed_at` / `dismissed_by` record (if rejected).
+
 ### Open questions (resolve before implementation)
-- Does a daily report "extra work" flag auto-draft an EWO, or does the foreman manually promote it?
 - Are daily report labor/equipment lines separate model records, or do they reuse `LaborLine`/`EquipmentLine`?
 - Is the daily report a separate app or part of `ewo`?
 - What happens to daily report records that are never flagged as extra — are they retained for payroll reference?
+- How does the PM review queue surface — dashboard widget, email notification, or both?
 
 ### Links
 - Related decisions: DEC-037, DEC-044
