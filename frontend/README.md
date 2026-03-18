@@ -14,7 +14,7 @@ The repo includes `.nvmrc` for machine-to-machine consistency.
 If you use `nvm`:
 
 ```bash
-cd /home/russellp/Projects/cp-project
+cd ~/Projects/cp-project
 nvm install
 nvm use
 ```
@@ -30,7 +30,7 @@ make frontend-install
 Or directly:
 
 ```bash
-cd /home/russellp/Projects/cp-project/frontend
+cd ~/Projects/cp-project/frontend
 npm ci
 ```
 

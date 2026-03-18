@@ -9,14 +9,14 @@ This file focuses on the backend-specific pieces.
 From the project root:
 
 ```bash
-cd /home/russellp/Projects/cp-project
+cd ~/Projects/cp-project
 make setup-backend
 ```
 
 If you also want frontend dependencies installed, use:
 
 ```bash
-cd /home/russellp/Projects/cp-project
+cd ~/Projects/cp-project
 make setup
 ```
 
@@ -34,7 +34,7 @@ Note: the repository target is Python `3.12` to match CI/production. The script 
 ## 1) Install backend dependencies manually
 
 ```bash
-cd /home/russellp/Projects/cp-project/backend
+cd ~/Projects/cp-project/backend
 .venv/bin/pip install -r requirements.txt
 ```
 
@@ -77,7 +77,7 @@ GRANT ALL PRIVILEGES ON DATABASE cp_project TO cp_project_user;
 ## 4) Configure environment variables
 
 ```bash
-cd /home/russellp/Projects/cp-project/backend
+cd ~/Projects/cp-project/backend
 cp .env.example .env
 ```
 
@@ -103,7 +103,7 @@ Optional but commonly needed:
 ## 5) Verify Django is using PostgreSQL
 
 ```bash
-cd /home/russellp/Projects/cp-project/backend
+cd ~/Projects/cp-project/backend
 .venv/bin/python manage.py check --database default
 .venv/bin/python manage.py migrate
 .venv/bin/python manage.py shell -c "from django.db import connection; print(connection.vendor)"
