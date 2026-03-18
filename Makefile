@@ -16,6 +16,7 @@ backend-check:
 		exit 1; \
 	fi
 	cd backend && "$(VENV_PYTHON)" manage.py check
+	cd backend && "$(VENV_PYTHON)" manage.py migrate --check
 
 frontend-install:
 	cd frontend && npm ci
@@ -44,13 +45,24 @@ continuity-status:
 
 start-session:
 	@echo "[session] Syncing and verifying local environment"
+	@if ! git diff --quiet || ! git diff --cached --quiet; then \
+		echo "[session] WARNING: working tree is dirty — commit or stash before pulling."; \
+		git --no-pager status --short; \
+		exit 1; \
+	fi
 	git pull --rebase
 	$(MAKE) continuity-status
 	$(MAKE) dev-check
+	cd backend && "$(VENV_PYTHON)" -m pytest
 
 stop-session:
 	@echo "[session] Preparing end-of-session checkpoint"
+	@if [ "$$(git rev-parse --abbrev-ref HEAD)" = "main" ]; then \
+		echo "[session] ERROR: you are on main — create a feature/fix branch before committing."; \
+		exit 1; \
+	fi
 	@echo "[session] Reminder: update DEV-SESSION.md and DECISIONS.md (if needed) before commit"
+	$(MAKE) backend-check
 	python3 scripts/homework_rollover.py
 	git status
 	git add -A
