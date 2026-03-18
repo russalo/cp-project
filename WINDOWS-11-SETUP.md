@@ -64,7 +64,7 @@ wsl -l -v
 
 ```bash
 sudo apt update
-sudo apt install -y git make curl build-essential postgresql postgresql-contrib
+sudo apt install -y git make curl build-essential python3.12 python3.12-venv postgresql postgresql-contrib
 ```
 
 Install Node 22 with `nvm`:

@@ -83,6 +83,9 @@ cp .env.example .env
 
 Then edit `.env` with real values.
 
+The template includes local-development defaults (`cp_project`, `cp_project_user`, `change-me`) so `make setup` can bootstrap quickly on a fresh machine.
+Update these values if your local PostgreSQL config is different.
+
 The required database variables are:
 
 - `DB_NAME`
