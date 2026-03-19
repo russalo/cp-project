@@ -25,8 +25,8 @@ backend/.venv/bin/pytest backend/
 **CI parity command:**
 
 ```bash
-make backend-check         # manage.py check + migrate --check (not the test suite)
-cd backend && pytest       # run the test suite
+make backend-check   # manage.py check + migrate --check (not the test suite)
+pytest backend/      # run the test suite
 ```
 
 > Note: `make backend-check` runs Django system checks and migration checks but does NOT run
@@ -39,7 +39,7 @@ cd backend && pytest       # run the test suite
 - Framework: `pytest` + `pytest-django`
 - Fixtures: `model_bakery` (factory-style object creation without fixtures)
 - Time freezing: `freezegun` (for rate effective-date lookups)
-- Config: `backend/pytest.ini`
+- Config: `backend/pytest.ini` (or `pyproject.toml` `[tool.pytest.ini_options]` — check the file)
 - Database: uses the Django test runner's temporary database; requires a running PostgreSQL
   instance configured via `backend/.env`
 
