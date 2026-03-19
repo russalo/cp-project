@@ -9,6 +9,8 @@ export default function EquipmentList() {
 
   useEffect(() => {
     let cancelled = false
+    setLoading(true)
+    setError(null)
     fetchEquipment(showInactive)
       .then(data => {
         if (!cancelled) { setEquipment(data); setError(null); setLoading(false) }
