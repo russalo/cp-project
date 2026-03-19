@@ -64,7 +64,7 @@ Local parity commands:
 ```bash
 cd ~/Projects/cp-project
 make backend-check       # manage.py check + migrate --check
-pytest backend/          # run backend test suite
+cd backend && pytest     # run backend test suite
 make frontend-build      # eslint + vite build
 ```
 
