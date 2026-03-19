@@ -14,52 +14,52 @@ Use it to record what was considered, what was chosen, and why.
 
 ## Decision Index
 
-| ID | Milestone | Topic | Status | Owner | Target Date |
+| ID | Milestone | Topic | Status | Date | Summary |
 |---|---|---|---|---|---|
-| DEC-001 | M1 | CI gate strategy | accepted | TBD | 2026-03-14 |
-| DEC-002 | M1 | Production Python/runtime pinning | accepted | TBD | 2026-03-13 |
-| DEC-003 | M2 | Source of truth and calculation boundary | accepted | TBD | 2026-03-18 |
-| DEC-004 | M2 | API contract conventions | proposed | TBD | TBD |
-| DEC-005 | M2 | Duplicate-prevention/idempotency approach | proposed | TBD | TBD |
-| DEC-006 | M3 | TypeScript migration strategy | proposed | TBD | TBD |
-| DEC-007 | M4 | Auth architecture | proposed | TBD | TBD |
-| DEC-008 | M5 | Deployment strategy | proposed | TBD | TBD |
-| DEC-009 | M5 | Rollback model | proposed | TBD | TBD |
-| DEC-010 | M6 | Dropbox integration strategy | accepted | TBD | 2026-03-14 |
-| DEC-011 | M2 | v1 EWO minimum context | accepted | TBD | 2026-03-14 |
-| DEC-012 | M2 | People model boundary | accepted | TBD | 2026-03-14 |
-| DEC-013 | M6 | Material evidence and PDF feature boundary | accepted | TBD | 2026-03-14 |
-| DEC-014 | M2 | Rate precedence and history | accepted | TBD | 2026-03-14 |
-| DEC-015 | M2 | Submitted EWO rate snapshot behavior | accepted | TBD | 2026-03-14 |
-| DEC-016 | M2 | v1 EWO lifecycle baseline | accepted | TBD | 2026-03-14 |
-| DEC-017 | M6 | Document storage strategy | proposed | TBD | TBD |
-| DEC-018 | M2 | EWO numbering format | accepted | TBD | 2026-03-18 |
-| DEC-019 | M2 | Job number validation format | accepted | TBD | 2026-03-18 |
-| DEC-020 | M2 | Labor hours precision | accepted | TBD | 2026-03-18 |
-| DEC-021 | M2 | Equipment usage model | accepted | TBD | 2026-03-18 |
-| DEC-022 | M2 | Material pricing rule | accepted | TBD | 2026-03-18 |
-| DEC-023 | M2 | Currency rounding policy | accepted | TBD | 2026-03-18 |
-| DEC-024 | M2 | Tax policy | accepted | TBD | 2026-03-18 |
-| DEC-025 | M2 | Overtime labor model | accepted | TBD | 2026-03-18 |
-| DEC-026 | M2 | EWO approval authority | accepted | TBD | 2026-03-18 |
-| DEC-027 | M2 | Post-approval edit model | accepted | TBD | 2026-03-18 |
-| DEC-028 | M2 | Auth model | accepted | TBD | 2026-03-18 |
-| DEC-029 | M2 | Named vs generic labor | accepted | TBD | 2026-03-18 |
-| DEC-030 | M2 | Trade classification override | accepted | TBD | 2026-03-18 |
-| DEC-031 | M2 | EWO calculation timing and lock | accepted | TBD | 2026-03-18 |
-| DEC-032 | M2 | Django app structure and package selection | accepted | TBD | 2026-03-18 |
-| DEC-033 | M4 | Role permissions matrix | accepted | TBD | 2026-03-18 |
-| DEC-034 | M2 | Sent status fields | accepted | TBD | 2026-03-18 |
-| DEC-035 | M2 | GC acknowledgment fields | accepted | TBD | 2026-03-18 |
-| DEC-036 | M2 | Billed status definition and fields | accepted | TBD | 2026-03-18 |
-| DEC-037 | M2 | Multi-date EWOs | accepted | TBD | 2026-03-18 |
-| DEC-038 | M2 | Employee CSV seed format | accepted | TBD | 2026-03-18 |
-| DEC-039 | M2 | Equipment type seed approach | accepted | TBD | 2026-03-18 |
-| DEC-040 | M2 | Job CRUD ownership | accepted | TBD | 2026-03-18 |
-| DEC-041 | M2 | EWO description field structure | accepted | TBD | 2026-03-18 |
-| DEC-042 | M2 | Audit log visibility | accepted | TBD | 2026-03-18 |
-| DEC-043 | post-v1 | Daily report feature | deferred | TBD | TBD |
-| DEC-044 | post-v1 | Crew builder feature | deferred | TBD | TBD |
+| DEC-001 | M1 | CI gate strategy | accepted | 2026-03-14 | Lint/build/check gates now; backend tests before M2 closeout |
+| DEC-002 | M1 | Production Python/runtime pinning | accepted | 2026-03-13 | Pin Python 3.12.x, Node 22.x, PostgreSQL major; allow patch updates |
+| DEC-003 | M2 | Source of truth and calculation boundary | accepted | 2026-03-18 | Server-only in `ewo/services.py`; never in views, serializers, or client |
+| DEC-004 | M2 | API contract conventions | proposed | TBD | Error format, pagination, filtering style, versioning — to be decided |
+| DEC-005 | M2 | Duplicate-prevention/idempotency approach | proposed | TBD | EWO creation idempotency strategy — to be decided |
+| DEC-006 | M3 | TypeScript migration strategy | proposed | TBD | Big-bang vs incremental TS migration — to be decided in M3 |
+| DEC-007 | M4 | Auth architecture (mechanism) | proposed | TBD | Session cookies vs JWT — to be decided in M4; see also DEC-028 |
+| DEC-008 | M5 | Deployment strategy | proposed | TBD | Git pull on host vs artifact/release deployment — to be decided |
+| DEC-009 | M5 | Rollback model | proposed | TBD | Previous-commit checkout vs release-symlink switch — to be decided |
+| DEC-010 | M6 | Dropbox integration strategy | accepted | 2026-03-14 | Deferred to M6 or post-v1; no Dropbox in v1 |
+| DEC-011 | M2 | v1 EWO minimum context | accepted | 2026-03-14 | Store job number only; defer Customer/Job/Site modeling to post-v1 |
+| DEC-012 | M2 | People model boundary | accepted | 2026-03-14 | Field crew as name strings; no relational Person model in v1 |
+| DEC-013 | M6 | Material evidence and PDF feature boundary | accepted | 2026-03-14 | PDF upload/output deferred to M6 |
+| DEC-014 | M2 | Rate precedence and history | accepted | 2026-03-14 | Latest LaborRate/CaltransRateLine effective on or before work_date wins |
+| DEC-015 | M2 | Submitted EWO rate snapshot behavior | accepted | 2026-03-14 | All rate components snapshotted at submission; immutable thereafter |
+| DEC-016 | M2 | v1 EWO lifecycle baseline | accepted | 2026-03-14 | open→submitted→approved→sent→billed; rejected→open for corrections |
+| DEC-017 | M6 | Document storage strategy | proposed | TBD | Where to store PDF attachments — to be decided before M6 upload work |
+| DEC-018 | M2 | EWO numbering format | accepted | 2026-03-18 | `{job_number}-{3-digit-seq}`; revisions use decimal suffix `.1`, `.2` |
+| DEC-019 | M2 | Job number validation format | accepted | 2026-03-18 | Regular: `^\d+$`; small/misc: `^\d{2}[A-Z]+$` |
+| DEC-020 | M2 | Labor hours precision | accepted | 2026-03-18 | `DecimalField(decimal_places=1)`; half-hour increments; reg/OT/DT fields |
+| DEC-021 | M2 | Equipment usage model | accepted | 2026-03-18 | Time-based only; `usage_type` = operating/standby/overtime; no quantity |
+| DEC-022 | M2 | Material pricing rule | accepted | 2026-03-18 | Always `unit_cost × quantity`; LS unit = qty 1; no manual total override |
+| DEC-023 | M2 | Currency rounding policy | accepted | 2026-03-18 | `decimal.ROUND_UP` to nearest cent at every calculation point; no float |
+| DEC-024 | M2 | Tax policy | accepted | 2026-03-18 | Tax excluded from system; receipts with embedded tax entered as LS lines |
+| DEC-025 | M2 | Overtime labor model | accepted | 2026-03-18 | Single LaborLine per worker per day with reg/OT/DT hour fields |
+| DEC-026 | M2 | EWO approval authority | accepted | 2026-03-18 | PM role only; single approval; "approved" = ready to send to GC |
+| DEC-027 | M2 | Post-approval edit model | accepted | 2026-03-18 | Revision with decimal suffix; original locked; revision goes full lifecycle |
+| DEC-028 | M2 | Auth model (data layer) | accepted | 2026-03-18 | Django built-in User + one-to-one UserProfile; no custom AUTH_USER_MODEL |
+| DEC-029 | M2 | Named vs generic labor | accepted | 2026-03-18 | LaborLine supports named (Employee FK) or generic (labor_type string) |
+| DEC-030 | M2 | Trade classification override | accepted | 2026-03-18 | Override allowed on LaborLine with required reason field |
+| DEC-031 | M2 | EWO calculation timing and lock | accepted | 2026-03-18 | Calculations run at open→submitted; atomic with select_for_update |
+| DEC-032 | M2 | Django app structure and package selection | accepted | 2026-03-18 | Four apps: accounts, jobs, ewo, resources; simple-history, DRF, drf-spectacular |
+| DEC-033 | M4 | Role permissions matrix | accepted | 2026-03-18 | Foreman/PM/Office/Admin role matrix defined for all EWO actions |
+| DEC-034 | M2 | Sent status fields | accepted | 2026-03-18 | sent_date, sent_by, sent_method, sent_reference on ExtraWorkOrder |
+| DEC-035 | M2 | GC acknowledgment fields | accepted | 2026-03-18 | gc_acknowledged_by/at/method as metadata; absence is itself recordable |
+| DEC-036 | M2 | Billed status definition and fields | accepted | 2026-03-18 | billed = included in pay app; pay_app_reference, billed_date, billed_by |
+| DEC-037 | M2 | Multi-date EWOs | accepted | 2026-03-18 | EWO can span multiple dates; work_date lives on each line, not the header |
+| DEC-038 | M2 | Employee CSV seed format | accepted | 2026-03-18 | CSV via django-import-export; template at resources/seed/employees_template.csv |
+| DEC-039 | M2 | Equipment type seed approach | accepted | 2026-03-18 | Caltrans schedule → CSV → admin import; committed at resources/seed/ |
+| DEC-040 | M2 | Job CRUD ownership | accepted | 2026-03-18 | PM and Office create/edit/deactivate jobs; Foreman read-only |
+| DEC-041 | M2 | EWO description field structure | accepted | 2026-03-18 | Two fields: location (CharField) + description (TextField); both required at submission |
+| DEC-042 | M2 | Audit log visibility | accepted | 2026-03-18 | All authenticated users can read history; admin-only for Django admin history view |
+| DEC-043 | post-v1 | Daily report feature | deferred | TBD | Full daily report module deferred post-v1 |
+| DEC-044 | post-v1 | Crew builder feature | deferred | TBD | Crew builder/template feature deferred post-v1 |
 
 ## Decision Template
 
@@ -99,7 +99,6 @@ Use it to record what was considered, what was chosen, and why.
 ## DEC-001: CI gate strategy
 - Status: accepted
 - Milestone: M1
-- Owner: TBD
 - Date proposed: 2026-03-13
 - Date decided: 2026-03-14
 
@@ -141,7 +140,6 @@ This balances immediate delivery readiness with a clear, time-bound path to stro
 ## DEC-002: Production Python/runtime pinning
 - Status: accepted
 - Milestone: M1
-- Owner: TBD
 - Date proposed: 2026-03-13
 - Date decided: 2026-03-13
 
@@ -180,10 +178,40 @@ Allow patch-version updates within the pinned major/minor line after CI passes. 
 - Related workflow/pipeline notes: `WORKFLOW.md`
 - Related implementation PR(s): TBD
 
+## DEC-007: Auth architecture (mechanism)
+- Status: proposed
+- Milestone: M4
+- Date proposed: 2026-03-13
+
+### Context
+DEC-028 (M2, accepted) settled the user data model: Django built-in `User` + one-to-one
+`UserProfile`. This decision addresses the *mechanism*: how client requests prove identity to
+the API — session cookies vs. token/JWT.
+
+### Options considered
+1. Django session-based auth — browser cookie managed by Django's session framework.
+   - Pros: Standard for same-origin SPAs; built into Django; no token refresh logic needed.
+   - Cons: Stateful; requires session store consideration at scale.
+2. JWT (djangorestframework-simplejwt) — stateless tokens returned at login.
+   - Pros: Stateless; better suited for mobile or multi-origin deployments; standard for SPA+API separation.
+   - Cons: Requires access/refresh token rotation; token revocation is non-trivial.
+
+### Decision
+Deferred to M4. DEC-028's `User + UserProfile` choice is compatible with both options — no
+custom `AUTH_USER_MODEL` means simplejwt or session auth can be added without model changes.
+
+### Consequences
+- No auth implementation until M4; current API endpoints are unauthenticated in development.
+- Whichever mechanism is chosen, `UserProfile.role` (from DEC-028) is the single source of
+  permissions truth (role matrix: DEC-033).
+
+### Links
+- Complements DEC-028 (auth data model — accepted)
+- Related: DEC-033 (role permissions matrix)
+
 ## DEC-010: Dropbox integration strategy
 - Status: accepted
 - Milestone: M6
-- Owner: TBD
 - Date proposed: 2026-03-13
 - Date decided: 2026-03-14
 
@@ -217,7 +245,6 @@ Do not include Dropbox integration in v1. Revisit it after the core EWO workflow
 ## DEC-011: v1 EWO minimum context
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-14
 - Date decided: 2026-03-14
 
@@ -248,7 +275,6 @@ For v1, only the job number needs to be tracked on the EWO. Full `Job`, `Custome
 ## DEC-012: People model boundary
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-14
 - Date decided: 2026-03-14
 
@@ -279,7 +305,6 @@ Treat these as separate concepts. In v1, include only application users and trac
 ## DEC-013: Material evidence and PDF feature boundary
 - Status: accepted
 - Milestone: M6
-- Owner: TBD
 - Date proposed: 2026-03-14
 - Date decided: 2026-03-14
 
@@ -310,7 +335,6 @@ Do not require PDF upload capability in v1, and do not make final EWO PDF packag
 ## DEC-014: Rate precedence and history
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-14
 - Date decided: 2026-03-14
 
@@ -341,7 +365,6 @@ The latest rate entry is the rate used for new work. The system should preserve 
 ## DEC-015: Submitted EWO rate snapshot behavior
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-14
 - Date decided: 2026-03-14
 
@@ -372,7 +395,6 @@ The rate used when an EWO is submitted becomes the rate for that EWO. Later glob
 ## DEC-016: v1 EWO lifecycle baseline
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-14
 - Date decided: 2026-03-18
 
@@ -414,7 +436,6 @@ Post-approval edits use a revision model: original approved EWO is locked perman
 ## DEC-017: Document storage strategy
 - Status: proposed
 - Milestone: M6
-- Owner: TBD
 - Date proposed: 2026-03-14
 - Date decided: TBD
 
@@ -444,7 +465,6 @@ TBD after a focused pros/cons review closer to document-feature implementation.
 ## DEC-003: Source of truth and calculation boundary
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-14
 - Date decided: 2026-03-18
 
@@ -477,7 +497,6 @@ Recalculate on status transition (option 3). When an EWO transitions from `open`
 ## DEC-018: EWO numbering format
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -497,7 +516,6 @@ EWO number = job number + hyphen + zero-padded 3-digit sequence per job (e.g. `2
 ## DEC-019: Job number validation format
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -519,7 +537,6 @@ Two job categories:
 ## DEC-020: Labor hours precision
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -539,7 +556,6 @@ Labor stored in half-hour increments only. Field: `DecimalField(decimal_places=1
 ## DEC-021: Equipment usage model
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -564,7 +580,6 @@ Standby/delay time is a separate `EquipmentLine` record with `usage_type = 'stan
 ## DEC-022: Material pricing rule
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -584,7 +599,6 @@ Material line total is always `unit_cost × quantity`. No manual total override.
 ## DEC-023: Currency rounding policy
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -605,7 +619,6 @@ Round UP to the nearest cent (`decimal.ROUND_UP`) at every point where a calcula
 ## DEC-024: Tax policy
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -625,7 +638,6 @@ Tax is excluded entirely from the system. CP performs installed work — no sale
 ## DEC-025: Overtime labor model
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -648,7 +660,6 @@ Each time type is calculated independently, rounded per DEC-023, then summed to 
 ## DEC-026: EWO approval authority
 - Status: accepted
 - Milestone: M2 / M4
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -669,7 +680,6 @@ PM role only has approval authority in v1. Single approval is sufficient — no 
 ## DEC-027: Post-approval edit model
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -701,7 +711,6 @@ Revision model with decimal suffix. Original approved EWO is locked permanently 
 ## DEC-028: Auth model
 - Status: accepted
 - Milestone: M2 / M4
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -734,11 +743,14 @@ class UserProfile(models.Model):
 
 ### Links
 - Related decision: DEC-026
+- Pending decision: DEC-007 (auth mechanism — session vs JWT; to be resolved in M4). DEC-028
+  settles the *data model* layer; DEC-007 will settle the *request authentication* mechanism.
+  The two decisions are complementary: `User + UserProfile` is compatible with both session
+  auth and JWT without model changes.
 
 ## DEC-029: Named vs generic labor
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -763,7 +775,6 @@ One line per worker per day always — no quantity field on labor lines.
 ## DEC-030: Trade classification override
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -788,7 +799,6 @@ The `is_trade_override` property returns `True` when `trade_classification != em
 ## DEC-031: EWO calculation timing and lock
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -822,7 +832,6 @@ After submission, stored values are the permanent record. Rate changes, CBA nego
 ## DEC-032: Django app structure and package selection
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -875,7 +884,6 @@ Explicitly rejected:
 ## DEC-033: Role permissions matrix
 - Status: accepted
 - Milestone: M4
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -914,7 +922,6 @@ Four roles (foreman, pm, office, admin) with the following permissions:
 ## DEC-034: Sent status fields
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -942,7 +949,6 @@ No separate model. PM and office roles can trigger this transition (per DEC-033)
 ## DEC-035: GC acknowledgment fields
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -971,7 +977,6 @@ recordable. Fields are editable by PM and office after the `sent` transition.
 ## DEC-036: Billed status definition and fields
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -998,7 +1003,6 @@ No payment-received tracking in v1 — that is an accounting system concern outs
 ## DEC-037: Multi-date EWOs and WorkDay model
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -1043,7 +1047,6 @@ No `ewo_date` header field — the date range is derived from `WorkDay.work_date
 ## DEC-038: Employee CSV seed format
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -1074,7 +1077,6 @@ the Django admin `django-import-export` mixin on the `Employee` model admin.
 ## DEC-039: Equipment type seed approach
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -1112,7 +1114,6 @@ the full schedule. PM or office provides the list of active codes before the see
 ## DEC-040: Job CRUD ownership
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -1141,7 +1142,6 @@ system. No external sync in v1. `Job` model fields:
 ## DEC-041: EWO description field structure
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -1176,7 +1176,6 @@ No `reason_for_extra` field in v1 — justification context goes in `description
 ## DEC-042: Audit log visibility
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -1202,7 +1201,6 @@ admin only.
 ## DEC-043: Daily report feature
 - Status: deferred
 - Milestone: post-v1
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: TBD
 
@@ -1266,7 +1264,6 @@ Implied model requirements:
 ## DEC-044: Crew builder feature
 - Status: deferred
 - Milestone: post-v1
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: TBD
 

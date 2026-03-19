@@ -6,6 +6,15 @@ Issue sync note:
 
 - GitHub TODO issue automation uses `PROJECT_TODOS.py` as the canonical source for synced TODO items.
 - Keep this file planning-first and human-readable.
+- Edit MILESTONES.md for human-readable planning. Edit `PROJECT_TODOS.py` only when adding or
+  removing TODO marker items for GitHub issue sync. Both files are kept in sync manually in the
+  same commit. See `CONTRIBUTING.md` for the full workflow.
+
+Progress note (2026-03-19): M2 backend foundations are substantially built ahead of formal M1
+closeout — Django app structure (DEC-032), domain models (EWO, Labor, Equipment, Material, Rates),
+services layer (`ewo/services.py`), and a 41-test pytest suite are all in place. M2 checklist
+items will be ticked at milestone closeout review; this note exists so the doc does not appear
+abandoned.
 
 - [ ] Milestone 1: Project Setup and Baseline
   - [ ] Dev machine setup (Fedora + PyCharm)
@@ -16,20 +25,20 @@ Issue sync note:
   - [ ] Decision: CI gate strategy (smoke checks only vs immediate backend/frontend tests) after pros/cons review
   - [ ] Decision: production Python/runtime pinning strategy (strict pin vs minor-range updates) after pros/cons review
 - [ ] Milestone 2: Core Backend Functionality
-    - [ ] Define Django project/app structure and settings (bear future growth in mind)
-    - [ ] Define Django models for Labor, Equipment, Materials, and Extra Work Orders
-    - [ ] Keep v1 context intentionally small: store the EWO job number now; defer full Customer/Job/JobSite/Location modeling
-    - [ ] Keep application users and tracked labor as separate concepts in v1
+    - [ ] Define Django project/app structure and settings (bear future growth in mind) (→ DEC-032)
+    - [ ] Define Django models for Labor, Equipment, Materials, and Extra Work Orders (→ DEC-020, DEC-021, DEC-022, DEC-029)
+    - [ ] Keep v1 context intentionally small: store the EWO job number now; defer full Customer/Job/JobSite/Location modeling (→ DEC-011)
+    - [ ] Keep application users and tracked labor as separate concepts in v1 (→ DEC-012)
     - [ ] Implement API endpoints for CRUD operations on these models
     - [ ] Add basic validation and error handling
-    - [ ] Define money and costing rules (Decimal-only arithmetic, rounding policy, tax/overtime rules)
-    - [ ] Design rate history handling for Equipment and LaborTrade records
-    - [ ] Snapshot applied rates onto submitted EWO line items
-    - [ ] Define Extra Work Order lifecycle states (draft, submitted, approved/rejected, billed) and field lock rules
-    - [ ] Implement audit trail for critical record changes (who, when, what changed)
-    - [ ] Decision: source of truth and calculation boundary (server-only calculations vs shared client/server logic) after pros/cons review
-    - [ ] Decision: API contract conventions (error format, pagination pattern, filtering style, versioning policy) after pros/cons review
-    - [ ] Decision: duplicate-prevention/idempotency approach for EWO creation (client keys, server constraints, or hybrid) after pros/cons review
+    - [ ] Define money and costing rules (Decimal-only arithmetic, rounding policy, tax/overtime rules) (→ DEC-003, DEC-023, DEC-024)
+    - [ ] Design rate history handling for Equipment and LaborTrade records (→ DEC-014, DEC-015)
+    - [ ] Snapshot applied rates onto submitted EWO line items (→ DEC-015, DEC-031)
+    - [ ] Define Extra Work Order lifecycle states (draft, submitted, approved/rejected, billed) and field lock rules (→ DEC-016)
+    - [ ] Implement audit trail for critical record changes (who, when, what changed) (→ DEC-042)
+    - [ ] Decision: source of truth and calculation boundary (server-only calculations vs shared client/server logic) after pros/cons review (accepted: DEC-003)
+    - [ ] Decision: API contract conventions (error format, pagination pattern, filtering style, versioning policy) after pros/cons review (proposed: DEC-004)
+    - [ ] Decision: duplicate-prevention/idempotency approach for EWO creation (client keys, server constraints, or hybrid) after pros/cons review (proposed: DEC-005)
 - [ ] Milestone 3: Frontend Development
   - [ ] Set up React project with TypeScript
   - [ ] Create UI components for listing and managing Extra Work Orders

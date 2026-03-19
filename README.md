@@ -1,5 +1,12 @@
 # cp-project
 
+> **cp-project** is a full-stack web application for an underground wet utility pipeline contractor.
+> It manages **Extra Work Orders (EWOs)** — capturing, costing, reviewing, and billing work that
+> falls outside original job contracts. Replaces fragmented Excel files and email chains with a
+> single source of truth for Foremen, Project Managers, and Office/Accounting staff.
+>
+> Stack: Django 6 + PostgreSQL (backend) · React 19 + Vite (frontend) · Python 3.12 · Node 22
+
 This repository is being prepared so you can open it on another machine, bootstrap it quickly, and keep continuity between development environments.
 
 ## Start Session / Stop Session (Quick Card)
@@ -60,8 +67,13 @@ git branch -d <merged-branch>
 
 - `backend/` — Django + PostgreSQL backend
 - `frontend/` — React + Vite frontend
+- `ARCHITECTURE.md` — system shape, app structure, services layer overview
+- `CHARTER.md` — project charter and domain rules
+- `CONTRIBUTING.md` — branch naming, commit format, PR process
 - `DECISIONS.md` — accepted and pending project decisions
 - `DEV-SESSION.md` — running session notes and recent discoveries
+- `MILESTONES.md` — milestone breakdown and progress
+- `TESTING.md` — how to run tests and test coverage policy
 - `WORKFLOW.md` — branch / CI / deploy workflow
 - `WORKFLOW-SETUP.md` — outstanding setup checklist
 
@@ -92,7 +104,7 @@ Before starting, make sure the machine has these basic host tools:
 
 ```bash
 cd ~/Projects
-git clone <your-repo-url> cp-project
+git clone https://github.com/russalo/cp-project cp-project
 cd cp-project
 ```
 
