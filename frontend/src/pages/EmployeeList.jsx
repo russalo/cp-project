@@ -9,6 +9,8 @@ export default function EmployeeList() {
 
   useEffect(() => {
     let cancelled = false
+    setLoading(true)
+    setError(null)
     fetchEmployees(showInactive)
       .then(data => {
         if (!cancelled) { setEmployees(data); setError(null); setLoading(false) }
