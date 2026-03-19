@@ -14,40 +14,52 @@ Use it to record what was considered, what was chosen, and why.
 
 ## Decision Index
 
-| ID | Milestone | Topic | Status | Owner | Target Date |
+| ID | Milestone | Topic | Status | Date | Summary |
 |---|---|---|---|---|---|
-| DEC-001 | M1 | CI gate strategy | accepted | TBD | 2026-03-14 |
-| DEC-002 | M1 | Production Python/runtime pinning | accepted | TBD | 2026-03-13 |
-| DEC-003 | M2 | Source of truth and calculation boundary | accepted | TBD | 2026-03-18 |
-| DEC-004 | M2 | API contract conventions | proposed | TBD | TBD |
-| DEC-005 | M2 | Duplicate-prevention/idempotency approach | proposed | TBD | TBD |
-| DEC-006 | M3 | TypeScript migration strategy | proposed | TBD | TBD |
-| DEC-007 | M4 | Auth architecture | proposed | TBD | TBD |
-| DEC-008 | M5 | Deployment strategy | proposed | TBD | TBD |
-| DEC-009 | M5 | Rollback model | proposed | TBD | TBD |
-| DEC-010 | M6 | Dropbox integration strategy | accepted | TBD | 2026-03-14 |
-| DEC-011 | M2 | v1 EWO minimum context | accepted | TBD | 2026-03-14 |
-| DEC-012 | M2 | People model boundary | accepted | TBD | 2026-03-14 |
-| DEC-013 | M6 | Material evidence and PDF feature boundary | accepted | TBD | 2026-03-14 |
-| DEC-014 | M2 | Rate precedence and history | accepted | TBD | 2026-03-14 |
-| DEC-015 | M2 | Submitted EWO rate snapshot behavior | accepted | TBD | 2026-03-14 |
-| DEC-016 | M2 | v1 EWO lifecycle baseline | accepted | TBD | 2026-03-14 |
-| DEC-017 | M6 | Document storage strategy | proposed | TBD | TBD |
-| DEC-018 | M2 | EWO numbering format | accepted | TBD | 2026-03-18 |
-| DEC-019 | M2 | Job number validation format | accepted | TBD | 2026-03-18 |
-| DEC-020 | M2 | Labor hours precision | accepted | TBD | 2026-03-18 |
-| DEC-021 | M2 | Equipment usage model | accepted | TBD | 2026-03-18 |
-| DEC-022 | M2 | Material pricing rule | accepted | TBD | 2026-03-18 |
-| DEC-023 | M2 | Currency rounding policy | accepted | TBD | 2026-03-18 |
-| DEC-024 | M2 | Tax policy | accepted | TBD | 2026-03-18 |
-| DEC-025 | M2 | Overtime labor model | accepted | TBD | 2026-03-18 |
-| DEC-026 | M2 | EWO approval authority | accepted | TBD | 2026-03-18 |
-| DEC-027 | M2 | Post-approval edit model | accepted | TBD | 2026-03-18 |
-| DEC-028 | M2 | Auth model | accepted | TBD | 2026-03-18 |
-| DEC-029 | M2 | Named vs generic labor | accepted | TBD | 2026-03-18 |
-| DEC-030 | M2 | Trade classification override | accepted | TBD | 2026-03-18 |
-| DEC-031 | M2 | EWO calculation timing and lock | accepted | TBD | 2026-03-18 |
-| DEC-032 | M2 | Django app structure and package selection | accepted | TBD | 2026-03-18 |
+| DEC-001 | M1 | CI gate strategy | accepted | 2026-03-14 | Lint/build/check gates now; backend tests before M2 closeout |
+| DEC-002 | M1 | Production Python/runtime pinning | accepted | 2026-03-13 | Pin Python 3.12.x, Node 22.x, PostgreSQL major; allow patch updates |
+| DEC-003 | M2 | Source of truth and calculation boundary | accepted | 2026-03-18 | Server-only in `ewo/services.py`; never in views, serializers, or client |
+| DEC-004 | M2 | API contract conventions | proposed | TBD | Error format, pagination, filtering style, versioning — to be decided |
+| DEC-005 | M2 | Duplicate-prevention/idempotency approach | proposed | TBD | EWO creation idempotency strategy — to be decided |
+| DEC-006 | M3 | TypeScript migration strategy | proposed | TBD | Big-bang vs incremental TS migration — to be decided in M3 |
+| DEC-007 | M4 | Auth architecture (mechanism) | proposed | TBD | Session cookies vs JWT — to be decided in M4; see also DEC-028 |
+| DEC-008 | M5 | Deployment strategy | proposed | TBD | Git pull on host vs artifact/release deployment — to be decided |
+| DEC-009 | M5 | Rollback model | proposed | TBD | Previous-commit checkout vs release-symlink switch — to be decided |
+| DEC-010 | M6 | Dropbox integration strategy | accepted | 2026-03-14 | Deferred to M6 or post-v1; no Dropbox in v1 |
+| DEC-011 | M2 | v1 EWO minimum context | accepted | 2026-03-14 | Store job number only; defer Customer/Job/Site modeling to post-v1 |
+| DEC-012 | M2 | People model boundary | accepted | 2026-03-14 | Field crew as name strings; no relational Person model in v1 |
+| DEC-013 | M6 | Material evidence and PDF feature boundary | accepted | 2026-03-14 | PDF upload/output deferred to M6 |
+| DEC-014 | M2 | Rate precedence and history | accepted | 2026-03-14 | Latest LaborRate/CaltransRateLine effective on or before work_date wins |
+| DEC-015 | M2 | Submitted EWO rate snapshot behavior | accepted | 2026-03-14 | All rate components snapshotted at submission; immutable thereafter |
+| DEC-016 | M2 | v1 EWO lifecycle baseline | accepted | 2026-03-14 | open→submitted→approved→sent→billed; rejected→open for corrections |
+| DEC-017 | M6 | Document storage strategy | proposed | TBD | Where to store PDF attachments — to be decided before M6 upload work |
+| DEC-018 | M2 | EWO numbering format | accepted | 2026-03-18 | `{job_number}-{3-digit-seq}`; revisions use decimal suffix `.1`, `.2` |
+| DEC-019 | M2 | Job number validation format | accepted | 2026-03-18 | Regular: `^\d+$`; small/misc: `^\d{2}[A-Z]+$` |
+| DEC-020 | M2 | Labor hours precision | accepted | 2026-03-18 | `DecimalField(decimal_places=1)`; half-hour increments; reg/OT/DT fields |
+| DEC-021 | M2 | Equipment usage model | accepted | 2026-03-18 | Time-based only; `usage_type` = operating/standby/overtime; no quantity |
+| DEC-022 | M2 | Material pricing rule | accepted | 2026-03-18 | Always `unit_cost × quantity`; LS unit = qty 1; no manual total override |
+| DEC-023 | M2 | Currency rounding policy | accepted | 2026-03-18 | `decimal.ROUND_UP` to nearest cent at every calculation point; no float |
+| DEC-024 | M2 | Tax policy | accepted | 2026-03-18 | Tax excluded from system; receipts with embedded tax entered as LS lines |
+| DEC-025 | M2 | Overtime labor model | accepted | 2026-03-18 | Single LaborLine per worker per day with reg/OT/DT hour fields |
+| DEC-026 | M2 | EWO approval authority | accepted | 2026-03-18 | PM role only; single approval; "approved" = ready to send to GC |
+| DEC-027 | M2 | Post-approval edit model | accepted | 2026-03-18 | Revision with decimal suffix; original locked; revision goes full lifecycle |
+| DEC-028 | M2 | Auth model (data layer) | accepted | 2026-03-18 | Django built-in User + one-to-one UserProfile; no custom AUTH_USER_MODEL |
+| DEC-029 | M2 | Named vs generic labor | accepted | 2026-03-18 | LaborLine supports named (Employee FK) or generic (labor_type string) |
+| DEC-030 | M2 | Trade classification override | accepted | 2026-03-18 | Override allowed on LaborLine with required reason field |
+| DEC-031 | M2 | EWO calculation timing and lock | accepted | 2026-03-18 | Calculations run at open→submitted; atomic with select_for_update |
+| DEC-032 | M2 | Django app structure and package selection | accepted | 2026-03-18 | Four apps: accounts, jobs, ewo, resources; simple-history, DRF, drf-spectacular |
+| DEC-033 | M4 | Role permissions matrix | accepted | 2026-03-18 | Foreman/PM/Office/Admin role matrix defined for all EWO actions |
+| DEC-034 | M2 | Sent status fields | accepted | 2026-03-18 | sent_date, sent_by, sent_method, sent_reference on ExtraWorkOrder |
+| DEC-035 | M2 | GC acknowledgment fields | accepted | 2026-03-18 | gc_acknowledged_by/at/method as metadata; absence is itself recordable |
+| DEC-036 | M2 | Billed status definition and fields | accepted | 2026-03-18 | billed = included in pay app; pay_app_reference, billed_date, billed_by |
+| DEC-037 | M2 | Multi-date EWOs | accepted | 2026-03-18 | EWO can span multiple dates; work_date lives on each line, not the header |
+| DEC-038 | M2 | Employee CSV seed format | accepted | 2026-03-18 | CSV via django-import-export; template at resources/seed/employees_template.csv |
+| DEC-039 | M2 | Equipment type seed approach | accepted | 2026-03-18 | Caltrans schedule → CSV → admin import; committed at resources/seed/ |
+| DEC-040 | M2 | Job CRUD ownership | accepted | 2026-03-18 | PM and Office create/edit/deactivate jobs; Foreman read-only |
+| DEC-041 | M2 | EWO description field structure | accepted | 2026-03-18 | Two fields: location (CharField) + description (TextField); both required at submission |
+| DEC-042 | M2 | Audit log visibility | accepted | 2026-03-18 | All authenticated users can read history; admin-only for Django admin history view |
+| DEC-043 | post-v1 | Daily report feature | deferred | TBD | Full daily report module deferred post-v1 |
+| DEC-044 | post-v1 | Crew builder feature | deferred | TBD | Crew builder/template feature deferred post-v1 |
 
 ## Decision Template
 
@@ -87,7 +99,6 @@ Use it to record what was considered, what was chosen, and why.
 ## DEC-001: CI gate strategy
 - Status: accepted
 - Milestone: M1
-- Owner: TBD
 - Date proposed: 2026-03-13
 - Date decided: 2026-03-14
 
@@ -129,7 +140,6 @@ This balances immediate delivery readiness with a clear, time-bound path to stro
 ## DEC-002: Production Python/runtime pinning
 - Status: accepted
 - Milestone: M1
-- Owner: TBD
 - Date proposed: 2026-03-13
 - Date decided: 2026-03-13
 
@@ -168,10 +178,40 @@ Allow patch-version updates within the pinned major/minor line after CI passes. 
 - Related workflow/pipeline notes: `WORKFLOW.md`
 - Related implementation PR(s): TBD
 
+## DEC-007: Auth architecture (mechanism)
+- Status: proposed
+- Milestone: M4
+- Date proposed: 2026-03-13
+
+### Context
+DEC-028 (M2, accepted) settled the user data model: Django built-in `User` + one-to-one
+`UserProfile`. This decision addresses the *mechanism*: how client requests prove identity to
+the API — session cookies vs. token/JWT.
+
+### Options considered
+1. Django session-based auth — browser cookie managed by Django's session framework.
+   - Pros: Standard for same-origin SPAs; built into Django; no token refresh logic needed.
+   - Cons: Stateful; requires session store consideration at scale.
+2. JWT (djangorestframework-simplejwt) — stateless tokens returned at login.
+   - Pros: Stateless; better suited for mobile or multi-origin deployments; standard for SPA+API separation.
+   - Cons: Requires access/refresh token rotation; token revocation is non-trivial.
+
+### Decision
+Deferred to M4. DEC-028's `User + UserProfile` choice is compatible with both options — no
+custom `AUTH_USER_MODEL` means simplejwt or session auth can be added without model changes.
+
+### Consequences
+- No auth implementation until M4; current API endpoints are unauthenticated in development.
+- Whichever mechanism is chosen, `UserProfile.role` (from DEC-028) is the single source of
+  permissions truth (role matrix: DEC-033).
+
+### Links
+- Complements DEC-028 (auth data model — accepted)
+- Related: DEC-033 (role permissions matrix)
+
 ## DEC-010: Dropbox integration strategy
 - Status: accepted
 - Milestone: M6
-- Owner: TBD
 - Date proposed: 2026-03-13
 - Date decided: 2026-03-14
 
@@ -205,7 +245,6 @@ Do not include Dropbox integration in v1. Revisit it after the core EWO workflow
 ## DEC-011: v1 EWO minimum context
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-14
 - Date decided: 2026-03-14
 
@@ -236,7 +275,6 @@ For v1, only the job number needs to be tracked on the EWO. Full `Job`, `Custome
 ## DEC-012: People model boundary
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-14
 - Date decided: 2026-03-14
 
@@ -267,7 +305,6 @@ Treat these as separate concepts. In v1, include only application users and trac
 ## DEC-013: Material evidence and PDF feature boundary
 - Status: accepted
 - Milestone: M6
-- Owner: TBD
 - Date proposed: 2026-03-14
 - Date decided: 2026-03-14
 
@@ -298,7 +335,6 @@ Do not require PDF upload capability in v1, and do not make final EWO PDF packag
 ## DEC-014: Rate precedence and history
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-14
 - Date decided: 2026-03-14
 
@@ -329,7 +365,6 @@ The latest rate entry is the rate used for new work. The system should preserve 
 ## DEC-015: Submitted EWO rate snapshot behavior
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-14
 - Date decided: 2026-03-14
 
@@ -360,7 +395,6 @@ The rate used when an EWO is submitted becomes the rate for that EWO. Later glob
 ## DEC-016: v1 EWO lifecycle baseline
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-14
 - Date decided: 2026-03-18
 
@@ -402,7 +436,6 @@ Post-approval edits use a revision model: original approved EWO is locked perman
 ## DEC-017: Document storage strategy
 - Status: proposed
 - Milestone: M6
-- Owner: TBD
 - Date proposed: 2026-03-14
 - Date decided: TBD
 
@@ -432,7 +465,6 @@ TBD after a focused pros/cons review closer to document-feature implementation.
 ## DEC-003: Source of truth and calculation boundary
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-14
 - Date decided: 2026-03-18
 
@@ -465,7 +497,6 @@ Recalculate on status transition (option 3). When an EWO transitions from `open`
 ## DEC-018: EWO numbering format
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -485,7 +516,6 @@ EWO number = job number + hyphen + zero-padded 3-digit sequence per job (e.g. `2
 ## DEC-019: Job number validation format
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -507,7 +537,6 @@ Two job categories:
 ## DEC-020: Labor hours precision
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -527,7 +556,6 @@ Labor stored in half-hour increments only. Field: `DecimalField(decimal_places=1
 ## DEC-021: Equipment usage model
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -552,7 +580,6 @@ Standby/delay time is a separate `EquipmentLine` record with `usage_type = 'stan
 ## DEC-022: Material pricing rule
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -572,7 +599,6 @@ Material line total is always `unit_cost × quantity`. No manual total override.
 ## DEC-023: Currency rounding policy
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -593,7 +619,6 @@ Round UP to the nearest cent (`decimal.ROUND_UP`) at every point where a calcula
 ## DEC-024: Tax policy
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -613,7 +638,6 @@ Tax is excluded entirely from the system. CP performs installed work — no sale
 ## DEC-025: Overtime labor model
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -636,7 +660,6 @@ Each time type is calculated independently, rounded per DEC-023, then summed to 
 ## DEC-026: EWO approval authority
 - Status: accepted
 - Milestone: M2 / M4
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -657,7 +680,6 @@ PM role only has approval authority in v1. Single approval is sufficient — no 
 ## DEC-027: Post-approval edit model
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -689,7 +711,6 @@ Revision model with decimal suffix. Original approved EWO is locked permanently 
 ## DEC-028: Auth model
 - Status: accepted
 - Milestone: M2 / M4
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -722,11 +743,14 @@ class UserProfile(models.Model):
 
 ### Links
 - Related decision: DEC-026
+- Pending decision: DEC-007 (auth mechanism — session vs JWT; to be resolved in M4). DEC-028
+  settles the *data model* layer; DEC-007 will settle the *request authentication* mechanism.
+  The two decisions are complementary: `User + UserProfile` is compatible with both session
+  auth and JWT without model changes.
 
 ## DEC-029: Named vs generic labor
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -751,7 +775,6 @@ One line per worker per day always — no quantity field on labor lines.
 ## DEC-030: Trade classification override
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -776,7 +799,6 @@ The `is_trade_override` property returns `True` when `trade_classification != em
 ## DEC-031: EWO calculation timing and lock
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -810,7 +832,6 @@ After submission, stored values are the permanent record. Rate changes, CBA nego
 ## DEC-032: Django app structure and package selection
 - Status: accepted
 - Milestone: M2
-- Owner: TBD
 - Date proposed: 2026-03-18
 - Date decided: 2026-03-18
 
@@ -826,7 +847,7 @@ Before writing any models, the Django project needs a stable app boundary layout
 | `accounts` | User extension and role management | `UserProfile` |
 | `resources` | All reference/master data — the building blocks that populate EWOs | `TradeClassification`, `LaborRate`, `Employee`, `CaltransSchedule`, `CaltransRateLine`, `EquipmentType`, `EquipmentUnit`, `MaterialCategory`, `MaterialCatalog` |
 | `jobs` | Job reference; lightweight v1, future home for customer/job hierarchy | `Job` |
-| `ewo` | EWO transactions and calculation logic | `ExtraWorkOrder`, `LaborLine`, `EquipmentLine`, `MaterialLine`, `services.py` |
+| `ewo` | EWO transactions and calculation logic | `ExtraWorkOrder`, `WorkDay`, `LaborLine`, `EquipmentLine`, `MaterialLine`, `services.py` |
 
 Dependency direction: `ewo` imports from `resources`, `jobs`, `accounts`. No reverse imports.
 
@@ -859,3 +880,428 @@ Explicitly rejected:
 
 ### Links
 - Related decisions: DEC-003, DEC-011, DEC-028, DEC-031
+
+## DEC-033: Role permissions matrix
+- Status: accepted
+- Milestone: M4
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+Before building any permission checks, view guards, or API authorization, the exact set of allowed
+actions per role must be defined. DEC-026 established PM-only approval authority; this decision
+extends that to a full matrix covering all lifecycle transitions and data management actions.
+
+### Decision
+Four roles (foreman, pm, office, admin) with the following permissions:
+
+| Action                                   | foreman | pm | office | admin |
+|------------------------------------------|---------|----|--------|-------|
+| Create EWO                               | ✓       | ✓  | ✓      | ✓     |
+| Edit lines on own open EWO               | ✓       | ✓  | ✓      | ✓     |
+| Edit lines on any open EWO               | —       | ✓  | ✓      | ✓     |
+| Submit EWO (open → submitted)            | ✓       | ✓  | ✓      | ✓     |
+| Approve EWO (submitted → approved)       | —       | ✓  | —      | ✓     |
+| Reject EWO (submitted → open)            | —       | ✓  | —      | ✓     |
+| Mark sent (approved → sent)              | —       | ✓  | ✓      | ✓     |
+| Mark billed (sent → billed)              | —       | —  | ✓      | ✓     |
+| Manage reference data                    | —       | —  | ✓      | ✓     |
+| Manage users / UserProfile               | —       | —  | —      | ✓     |
+| Read any EWO                             | ✓       | ✓  | ✓      | ✓     |
+| View audit history                       | ✓       | ✓  | ✓      | ✓     |
+
+### Consequences
+- Permission checks in M4 read from `UserProfile.role` (per DEC-028).
+- "Edit any open EWO" is given to PM and office to allow data entry assistance for foremen.
+- Foreman cannot approve, reject, or advance past `submitted`.
+- Office does not approve or reject — that responsibility remains with PM only.
+
+### Links
+- Related decisions: DEC-026, DEC-028, DEC-016
+
+## DEC-034: Sent status fields
+- Status: accepted
+- Milestone: M2
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+When an EWO is marked `sent`, the system should capture how it was transmitted to the GC
+for audit and follow-up purposes. DEC-016 defines the `sent` state; this decision defines
+what data is collected at that transition.
+
+### Decision
+Four fields on `ExtraWorkOrder`, all nullable, populated atomically on `approved → sent`:
+- `sent_date` — DateField, auto-set to today
+- `sent_by` — FK to `User`, auto-set to current user
+- `sent_method` — CharField choices: `email` / `gc_portal` / `hand_delivered` / `other`
+- `sent_reference` — CharField optional (email thread subject, portal confirmation number, etc.)
+
+No separate model. PM and office roles can trigger this transition (per DEC-033).
+
+### Consequences
+- `sent_method` is required on the transition form — the user must choose one option.
+- `sent_reference` is optional; leave blank if no reference number exists.
+
+### Links
+- Related decisions: DEC-016, DEC-033
+
+## DEC-035: GC acknowledgment fields
+- Status: accepted
+- Milestone: M2
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+The charter (CLAUDE.md) explicitly requires: "GC acknowledgment tracked per EWO: who, when,
+method (signature/email/verbal) — absence is itself recordable." This is distinct from the `sent`
+state — it tracks the GC's receipt/acknowledgment of the EWO, not CP's act of sending it.
+
+### Decision
+Three fields on `ExtraWorkOrder` as metadata (not a lifecycle state):
+- `gc_acknowledged_by` — CharField (name string per DEC-012; not a User FK)
+- `gc_acknowledged_at` — DateTimeField nullable
+- `gc_acknowledgment_method` — CharField choices: `signature` / `email` / `verbal` / `none_recorded`
+
+An EWO can be `sent` with `gc_acknowledgment_method = 'none_recorded'` — absence is explicitly
+recordable. Fields are editable by PM and office after the `sent` transition.
+
+### Consequences
+- These fields are not part of the state machine; they can be updated at any time after `sent`.
+- `gc_acknowledged_by` is a free-text name, not a FK, consistent with DEC-012 (people as name strings in v1).
+- `none_recorded` is a valid, intentional choice — not a null/unknown.
+
+### Links
+- Related decisions: DEC-016, DEC-012, DEC-033
+
+## DEC-036: Billed status definition and fields
+- Status: accepted
+- Milestone: M2
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+DEC-016 defines `billed` as included in a pay application, but did not specify what data to
+capture at that transition or what the pay application reference should look like.
+
+### Decision
+`billed` = included in a pay application. The `sent → billed` transition is triggered by office
+or admin only (per DEC-033). Fields populated atomically on transition:
+- `billed_date` — DateField, auto-set to today
+- `billed_by` — FK to `User`, auto-set to current user
+- `pay_app_reference` — CharField optional (e.g. "PA-14", "March 2026 Pay App")
+
+No payment-received tracking in v1 — that is an accounting system concern outside this app.
+
+### Consequences
+- `pay_app_reference` is optional; some offices may track pay app numbers, others may not.
+- Payment confirmation, lien waivers, and AR tracking are explicitly out of scope for v1.
+
+### Links
+- Related decisions: DEC-016, DEC-033
+
+## DEC-037: Multi-date EWOs and WorkDay model
+- Status: accepted
+- Milestone: M2
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+T&M extra work often spans multiple consecutive days. The printed EWO output has one page per
+calendar day (with that day's specific work description, crew, and equipment) plus a summary cover
+page. This output structure drives the data model — day-level grouping is a first-class concept.
+
+### Decision
+Introduce a `WorkDay` model as the grouping unit between `ExtraWorkOrder` and line items:
+
+```
+ExtraWorkOrder  (cover page — summary description, totals)
+  └── WorkDay   (one per calendar date — date-specific location + description + lines)
+        ├── LaborLine
+        └── EquipmentLine
+MaterialLine    (stays at EWO level — not tied to a specific day)
+```
+
+`WorkDay` fields:
+- `ewo` — FK to `ExtraWorkOrder`
+- `work_date` — DateField required
+- `location` — CharField (where the work occurred that day)
+- `description` — TextField (what was done that day)
+
+`LaborLine` and `EquipmentLine` FK to `WorkDay` (not directly to `ExtraWorkOrder`).
+`MaterialLine` FK remains directly on `ExtraWorkOrder`.
+
+`ExtraWorkOrder` header carries a summary `description` (TextField) for the cover page.
+No `ewo_date` header field — the date range is derived from `WorkDay.work_date` values.
+
+### Consequences
+- `work_date` lives on `WorkDay`, not on individual `LaborLine`/`EquipmentLine` records.
+- Rate lookup uses `WorkDay.work_date` to find the effective rate per DEC-014.
+- Both `WorkDay.location` and `WorkDay.description` are required at submission (optional while open).
+- Printed output: cover page from EWO header; one page per `WorkDay` ordered by `work_date`.
+- `WorkDay` is in the `ewo` app (DEC-032) alongside the line models.
+
+### Links
+- Related decisions: DEC-014, DEC-025, DEC-041
+
+## DEC-038: Employee CSV seed format
+- Status: accepted
+- Milestone: M2
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+The `Employee` model (in the `resources` app per DEC-032) needs to be populated before EWOs with
+named labor can be created. The company already has employee/trade data in an Excel rate sheet —
+the seed import should draw from that source.
+
+### Decision
+Source: existing Excel rate sheet. CSV columns for employee seed import via `django-import-export`:
+- `employee_id` — optional internal identifier string; blank = auto-assign
+- `first_name` — required
+- `last_name` — required
+- `default_trade_code` — required; must match a `TradeClassification.code` already in the system
+- `union` — required; choices: `IUOE` / `LIUNA` / `OPCMIA` / `IBT`
+
+A blank template is committed at `backend/resources/seed/employees_template.csv`. Import runs via
+the Django admin `django-import-export` mixin on the `Employee` model admin.
+
+### Consequences
+- `TradeClassification` records must be seeded before the employee CSV import runs.
+- The template CSV must be filled out by PM or office before the first data load.
+- Employee photos, phone numbers, and other HR fields are not in scope for v1.
+
+### Links
+- Related decisions: DEC-012, DEC-029, DEC-032
+
+## DEC-039: Equipment type seed approach
+- Status: accepted
+- Milestone: M2
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+`CaltransRateLine` records (in the `resources` app per DEC-032) are the source for equipment billing
+rates. The Caltrans Equipment Rental Rate schedule is published periodically as a PDF table. An import
+approach is needed before equipment lines can be added to EWOs.
+
+### Decision
+Convert the relevant pages of the Caltrans schedule to CSV (one-time manual step). Import via
+`django-import-export` admin action on `CaltransRateLine`. CSV committed at
+`backend/resources/seed/caltrans_rates_<year>.csv`.
+
+CSV columns:
+- `schedule_year` — e.g. `2025`
+- `class_code` — Caltrans equipment class identifier
+- `make` — manufacturer name
+- `model` — model description
+- `rental_rate` — operating rate (Rental_Rate column in Caltrans schedule)
+- `rw_delay_rate` — standby rate (Rw_Delay column)
+- `overtime_rate` — overtime adder (Overtime column)
+- `effective_date` — start date of this rate period
+
+Only the Caltrans codes CP actively uses are included in the initial seed — a filtered subset of
+the full schedule. PM or office provides the list of active codes before the seed file is built.
+
+### Consequences
+- Full Caltrans schedule import is not required — targeted subset only.
+- New rate periods (annual Caltrans updates) are imported the same way as new CSV rows.
+- `django-import-export` is already selected in DEC-032; no new package needed.
+
+### Links
+- Related decisions: DEC-014, DEC-021, DEC-032
+
+## DEC-040: Job CRUD ownership
+- Status: accepted
+- Milestone: M2
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+DEC-011 established a lightweight `Job` model (job number only in v1). The access pattern for who
+can create and manage jobs must be defined before building the jobs app.
+
+### Decision
+PM and office roles can create, edit, and deactivate `Job` records. Foreman is read-only (can select
+a job when creating an EWO but cannot create or modify jobs). Admin has full access.
+
+Jobs are entered manually in-app — job numbers come from the estimating/bidding process outside this
+system. No external sync in v1. `Job` model fields:
+- `job_number` — validated per DEC-019
+- `job_name` — CharField optional (free-text description)
+- `active` — BooleanField default True; deactivation hides the job from new-EWO dropdowns without deleting it
+
+### Consequences
+- Job creation permission gates match the office/PM split from DEC-033.
+- Soft deactivation (not deletion) prevents orphaning EWOs tied to a job number.
+- Future job hierarchy (customer, site, location per DEC-011) extends this model rather than replacing it.
+
+### Links
+- Related decisions: DEC-011, DEC-019, DEC-033
+
+## DEC-041: EWO description field structure
+- Status: accepted
+- Milestone: M2
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+The printed EWO has a summary cover page and one page per work day. Each day's page must carry
+a description of that day's specific work. This means description is a two-level concept:
+a summary at the EWO header (cover page) and a day-specific narrative at the `WorkDay` level.
+
+### Decision
+Description lives at two levels:
+
+**On `WorkDay`** (drives each day's printed page):
+- `location` — CharField (where the work occurred that day; e.g. "Sta. 42+00, south trench wall")
+- `description` — TextField (what was done that day and why it qualifies as extra work)
+- Both required at submission; optional while EWO is open.
+
+**On `ExtraWorkOrder` header** (drives the cover page):
+- `description` — TextField (summary of the overall extra work scope)
+- `location` — CharField optional (general area; often redundant with WorkDay locations)
+- Header `description` required at submission.
+
+No `reason_for_extra` field in v1 — justification context goes in `description` at the day level.
+
+### Consequences
+- UI must present per-day description entry alongside line item entry for each `WorkDay`.
+- Cover page summary `description` is a separate input at the EWO header level.
+- `location` CharField max length TBD at implementation (suggest 200 chars).
+
+### Links
+- Related decisions: DEC-016, DEC-037
+
+## DEC-042: Audit log visibility
+- Status: accepted
+- Milestone: M2
+- Date proposed: 2026-03-18
+- Date decided: 2026-03-18
+
+### Context
+`django-simple-history` is already committed to (DEC-032) and will be applied to key models at
+definition time. The access policy for who can read the history trail must be decided before
+building the history API endpoint.
+
+### Decision
+All authenticated users can read the `django-simple-history` trail for any EWO they can view.
+History records are read-only for all roles. The Django admin history interface is restricted to
+admin only.
+
+### Consequences
+- The history API endpoint applies the same object-level read permission as the EWO itself —
+  if you can read the EWO, you can read its history.
+- No separate permission check is needed for history vs. EWO reads.
+- Admin-only Django admin history is the default `django-simple-history` behavior; no override needed.
+
+### Links
+- Related decisions: DEC-032, DEC-033
+
+## DEC-043: Daily report feature
+- Status: deferred
+- Milestone: post-v1
+- Date proposed: 2026-03-18
+- Date decided: TBD
+
+### Context
+Foremen currently track daily field activity (crew, hours, equipment, and notes) outside the system.
+A future Daily Report feature would let foremen log this directly, pulling from the employee and
+equipment database, and flag any work as "extra" — creating or linking to an EWO. This mirrors the
+EWO `WorkDay` structure closely: one report per calendar date, with labor lines, equipment lines,
+and a narrative.
+
+### Deferred because
+Core EWO workflow must be stable and in production use before adding a parallel data entry workflow.
+The exact relationship between daily reports and EWOs (flag → auto-draft vs. manual link) needs
+discovery with foremen users before being designed.
+
+### V1 model constraints to preserve this option
+- `Employee` and `EquipmentUnit` in the `resources` app must not be designed in a way that prevents
+  their reuse as the population source for daily report lines.
+- `WorkDay` field names (`work_date`, `location`, `description`, `LaborLine`, `EquipmentLine`)
+  should be named consistently with what a daily report day will look like — these may share a
+  common base structure or simply maintain consistent naming conventions.
+- The EWO → job relationship must stay clean enough for a daily report entry to reference a job
+  and generate an EWO stub.
+
+### Population mechanisms (resolved 2026-03-18)
+Two fast-entry paths for foremen, both producing an editable starting point:
+
+1. **Apply a saved crew** — foreman or PM has pre-built a crew for the job (see DEC-044);
+   applying it pre-fills the day's labor and equipment lines. Foreman then adds or removes
+   what is different for that day.
+
+2. **Copy from previous workday** — for daily reports in particular, the system can
+   auto-populate lines by copying the most recent workday entry for the same job. Foreman
+   adjusts the delta. This is the primary fast-entry path when the crew hasn't changed.
+
+Both mechanisms produce editable lines, not locked records. The foreman is always the one
+who confirms and submits the final daily entry.
+
+### Escalation flow (resolved 2026-03-18)
+When a foreman flags a daily report entry as "extra work", it escalates to a PM for review.
+The PM decides whether to create an EWO from it. The foreman does not create the EWO directly.
+
+Implied model requirements:
+- Daily report entries need an `extra_work_flag` boolean and an `escalated_to_pm_at` timestamp.
+- A PM review queue or notification mechanism is needed (design TBD).
+- Once the PM acts, the daily report entry should carry either a FK to the resulting
+  `ExtraWorkOrder` (if approved) or a `dismissed_at` / `dismissed_by` record (if rejected).
+
+### Open questions (resolve before implementation)
+- Are daily report labor/equipment lines separate model records, or do they reuse `LaborLine`/`EquipmentLine`?
+- Is the daily report a separate app or part of `ewo`?
+- What happens to daily report records that are never flagged as extra — are they retained for payroll reference?
+- How does the PM review queue surface — dashboard widget, email notification, or both?
+- **"Copy from previous workday" UX — requires formal pros/cons review before implementation:**
+  silent clone (lines appear pre-filled, foreman edits) vs. preview/diff view (foreman confirms
+  what is being carried forward before lines are written). Do not implement without a decision.
+
+### Links
+- Related decisions: DEC-037, DEC-044
+
+## DEC-044: Crew builder feature
+- Status: deferred
+- Milestone: post-v1
+- Date proposed: 2026-03-18
+- Date decided: TBD
+
+### Context
+Foremen work with largely consistent crews day to day. A Crew Builder would let them define a
+named crew (a set of employees and equipment units) once, then apply that crew to a daily report
+or EWO `WorkDay` to pre-populate the labor and equipment lines — reducing repetitive data entry.
+
+### Deferred because
+The core data entry workflow must be usable before optimizing it with crew shortcuts.
+The right UX for applying a crew (replace all lines vs. append vs. diff) needs user testing.
+
+### V1 model constraints to preserve this option
+- `Employee` and `EquipmentUnit` in `resources` must be designed to support a future `Crew` M2M
+  relationship. Do not add fields or constraints that would make a `Crew` → `Employee` through-table
+  awkward (e.g. avoid composite unique constraints on employee fields that would conflict with
+  crew membership).
+- A `Crew` model will live in the `resources` app alongside `Employee` and `EquipmentUnit`.
+- v1 should not hard-code "one employee, one trade" assumptions that would prevent a crew from
+  carrying mixed-trade rosters.
+
+### Clarifications (resolved 2026-03-18)
+- **Purpose:** Crews are a population mechanism — a saved starting point, not a locked template.
+  Applying a crew pre-fills the day's labor and equipment lines; the foreman then adds or removes
+  what is different for that specific day. Speed of adjustment, not exact repeatability, is the goal.
+- **Job association:** Crews are typically built around a specific job ("the usual crew for job 1886").
+  A crew should carry a reference to the job it was built for, though applying it to a different
+  job should not be blocked.
+- **Who can build crews:** Both foreman and PM can create and edit crew definitions.
+- **Apply behavior:** Applying a crew replaces the current empty day lines with the crew's roster
+  as a starting point. If lines already exist, the UI should confirm before overwriting.
+- **No schedule:** A crew is a membership list (employees + equipment units) with no date or
+  schedule attached — it is purely a template for population.
+
+### Open questions (resolve before implementation)
+- Are crews job-specific (one crew per job) or can multiple named crews exist per job?
+- Is the `Crew` model in `resources` or in the future `dailyreport` app?
+- What happens to a crew definition when an employee leaves or equipment is retired?
+
+### Links
+- Related decisions: DEC-029, DEC-032, DEC-043

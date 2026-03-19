@@ -53,16 +53,19 @@ Frontend required checks:
 - Run `npm run build`
 
 Test gate alignment:
-- Milestone 1 calls for linting and tests.
-- Current state: CI has lint/build/check gates and no test suite yet.
-- Target state: require backend tests (for example `pytest`) and frontend tests (for example `vitest`) once test scaffolding is added.
+- Backend: `pytest` suite exists (`backend/ewo/tests.py`, 41 tests covering the services layer —
+  labor, equipment, and material calculations and EWO submission). Adding `pytest` to the CI
+  backend job is tracked as M2 work (DEC-001).
+- Frontend: no test suite yet. Target: add `vitest` baseline in Milestone 3.
+- Current CI gates: `manage.py check` + `migrate --check` (backend) · `eslint` + `vite build` (frontend).
 
 Local parity commands:
 
 ```bash
 cd ~/Projects/cp-project
-make backend-check
-make frontend-build
+make backend-check       # manage.py check + migrate --check
+pytest backend/          # run backend test suite
+make frontend-build      # eslint + vite build
 ```
 
 ## CD Policy (Production)
