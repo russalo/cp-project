@@ -25,8 +25,8 @@ backend/.venv/bin/pytest backend/
 **CI parity command:**
 
 ```bash
-make backend-check   # manage.py check + migrate --check (not the test suite)
-pytest backend/      # run the test suite
+make backend-check         # manage.py check + migrate --check (not the test suite)
+cd backend && pytest       # run the test suite
 ```
 
 > Note: `make backend-check` runs Django system checks and migration checks but does NOT run
