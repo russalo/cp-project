@@ -50,7 +50,7 @@ integer (e.g. `1886`) or two-digit year + letters (e.g. `26A`) — validated per
 
 The core domain. Contains:
 
-- **`models.py`** — `ExtraWorkOrder`, `LaborLine`, `EquipmentLine`, `MaterialLine`
+- **`models.py`** — `ExtraWorkOrder`, `WorkDay`, `LaborLine`, `EquipmentLine`, `MaterialLine`
 - **`services.py`** — the only file that performs currency arithmetic (DEC-003)
 
 ### `resources` app
