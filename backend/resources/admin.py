@@ -1,6 +1,8 @@
 from django.contrib import admin
 from import_export.admin import ImportExportMixin
 from unfold.admin import ModelAdmin, TabularInline
+import datetime
+from ewo.services import get_labor_rate
 
 from .models import (
     CaltransRateLine,
@@ -44,13 +46,36 @@ class EmployeeAdmin(ImportExportMixin, ModelAdmin):
 
     @admin.display(description='Current Rates (Reg / OT / DT)')
     def current_rates_display(self, obj):
-        import datetime
-        from ewo.services import get_labor_rate
-        try:
-            rate = get_labor_rate(obj.trade_classification, datetime.date.today())
-            return f'${rate.rate_reg} / ${rate.rate_ot} / ${rate.rate_dt}'
-        except ValueError:
+        """
+        Display the current labor rates for the employee's trade classification.
+
+        Results are memoized per-request on the admin instance by trade_classification_id
+        to avoid repeated lookups (and database queries) for employees sharing the same
+        trade classification on the changelist.
+        """
+        # Initialize the per-request cache lazily.
+        if not hasattr(self, '_current_rate_cache'):
+            self._current_rate_cache = {}
+
+        trade_classification_id = obj.trade_classification_id
+
+        # Return cached result if available.
+        if trade_classification_id in self._current_rate_cache:
+            rate = self._current_rate_cache[trade_classification_id]
+        else:
+            try:
+                rate = get_labor_rate(obj.trade_classification, datetime.date.today())
+            except ValueError:
+                # Cache the absence of a rate as None to avoid repeated failed lookups.
+                self._current_rate_cache[trade_classification_id] = None
+                return '— no rate on file —'
+            else:
+                self._current_rate_cache[trade_classification_id] = rate
+
+        if rate is None:
             return '— no rate on file —'
+
+        return f'${rate.rate_reg} / ${rate.rate_ot} / ${rate.rate_dt}'
 
 
 class CaltransRateLineInline(TabularInline):
