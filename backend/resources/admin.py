@@ -111,15 +111,41 @@ class EquipmentTypeAdmin(ModelAdmin):
     search_fields = ('name',)
     inlines = [EquipmentUnitInline]
 
-    @admin.display(description='Oper / Stby / OT Rates')
-    def current_rates_display(self, obj):
+    def changelist_view(self, request, extra_context=None):
+        # Initialize a per-request cache for equipment rates to avoid N+1 lookups
+        self._current_rates_cache = {}
+        return super().changelist_view(request, extra_context=extra_context)
+
+    def _get_current_rate_for_obj(self, obj):
         import datetime
         from ewo.services import get_equipment_rates
+
+        # Use a simple in-memory cache on the admin instance keyed by (pk, date)
+        cache = getattr(self, '_current_rates_cache', None)
+        if cache is None:
+            cache = {}
+            self._current_rates_cache = cache
+
+        today = datetime.date.today()
+        cache_key = (obj.pk, today)
+
+        if cache_key in cache:
+            return cache[cache_key]
+
         try:
-            rl = get_equipment_rates(obj, datetime.date.today())
-            return f'${rl.rental_rate} / ${rl.rw_delay_rate} + ${rl.overtime_rate} OT ({rl.unit})'
+            rl = get_equipment_rates(obj, today)
         except ValueError:
+            rl = None
+
+        cache[cache_key] = rl
+        return rl
+
+    @admin.display(description='Oper / Stby / OT Rates')
+    def current_rates_display(self, obj):
+        rl = self._get_current_rate_for_obj(obj)
+        if rl is None:
             return '— no Caltrans rate linked —'
+        return f'${rl.rental_rate} / ${rl.rw_delay_rate} + ${rl.overtime_rate} OT ({rl.unit})'
 
 
 @admin.register(EquipmentUnit)
