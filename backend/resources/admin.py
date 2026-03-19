@@ -38,9 +38,19 @@ class LaborRateAdmin(ModelAdmin):
 
 @admin.register(Employee)
 class EmployeeAdmin(ImportExportMixin, ModelAdmin):
-    list_display = ('code', 'full_name', 'trade_classification', 'active')
+    list_display = ('code', 'full_name', 'trade_classification', 'current_rates_display', 'active')
     list_filter = ('trade_classification', 'active')
     search_fields = ('code', 'full_name')
+
+    @admin.display(description='Current Rates (Reg / OT / DT)')
+    def current_rates_display(self, obj):
+        import datetime
+        from ewo.services import get_labor_rate
+        try:
+            rate = get_labor_rate(obj.trade_classification, datetime.date.today())
+            return f'${rate.rate_reg} / ${rate.rate_ot} / ${rate.rate_dt}'
+        except ValueError:
+            return '— no rate on file —'
 
 
 class CaltransRateLineInline(TabularInline):
@@ -71,10 +81,20 @@ class EquipmentUnitInline(TabularInline):
 
 @admin.register(EquipmentType)
 class EquipmentTypeAdmin(ModelAdmin):
-    list_display = ('name', 'caltrans_rate_line', 'active')
+    list_display = ('name', 'current_rates_display', 'active')
     list_filter = ('active',)
     search_fields = ('name',)
     inlines = [EquipmentUnitInline]
+
+    @admin.display(description='Oper / Stby / OT Rates')
+    def current_rates_display(self, obj):
+        import datetime
+        from ewo.services import get_equipment_rates
+        try:
+            rl = get_equipment_rates(obj, datetime.date.today())
+            return f'${rl.rental_rate} / ${rl.rw_delay_rate} + ${rl.overtime_rate} OT ({rl.unit})'
+        except ValueError:
+            return '— no Caltrans rate linked —'
 
 
 @admin.register(EquipmentUnit)
