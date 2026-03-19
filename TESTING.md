@@ -39,7 +39,7 @@ pytest backend/      # run the test suite
 - Framework: `pytest` + `pytest-django`
 - Fixtures: `model_bakery` (factory-style object creation without fixtures)
 - Time freezing: `freezegun` (for rate effective-date lookups)
-- Config: `backend/pytest.ini` (or `pyproject.toml` `[tool.pytest.ini_options]` — check the file)
+- Config: `backend/pytest.ini`
 - Database: uses the Django test runner's temporary database; requires a running PostgreSQL
   instance configured via `backend/.env`
 
