@@ -9,15 +9,20 @@ export default function EquipmentList() {
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
-    setError(null)
-    fetchEquipment(showInactive)
-      .then(data => {
-        if (!cancelled) { setEquipment(data); setError(null); setLoading(false) }
-      })
-      .catch(err => {
-        if (!cancelled) { setError(err.message); setLoading(false) }
-      })
+    const load = async () => {
+      if (cancelled) return
+      setLoading(true)
+      setError(null)
+      try {
+        const data = await fetchEquipment(showInactive)
+        if (!cancelled) setEquipment(data)
+      } catch (err) {
+        if (!cancelled) setError(err.message)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    load()
     return () => { cancelled = true }
   }, [showInactive])
 

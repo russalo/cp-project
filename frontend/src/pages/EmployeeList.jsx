@@ -9,15 +9,20 @@ export default function EmployeeList() {
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
-    setError(null)
-    fetchEmployees(showInactive)
-      .then(data => {
-        if (!cancelled) { setEmployees(data); setError(null); setLoading(false) }
-      })
-      .catch(err => {
-        if (!cancelled) { setError(err.message); setLoading(false) }
-      })
+    const load = async () => {
+      if (cancelled) return
+      setLoading(true)
+      setError(null)
+      try {
+        const data = await fetchEmployees(showInactive)
+        if (!cancelled) setEmployees(data)
+      } catch (err) {
+        if (!cancelled) setError(err.message)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    load()
     return () => { cancelled = true }
   }, [showInactive])
 
