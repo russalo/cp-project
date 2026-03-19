@@ -92,7 +92,7 @@ History tracked via `django-simple-history`.
 One record per worker per day (DEC-025). Supports named (Employee FK) or generic (labor type
 string) labor (DEC-029).
 
-Key fields: `work_date`, `employee` (nullable FK), `labor_type`, `trade_classification` (FK,
+Key fields: `work_day` (FK → WorkDay), `employee` (nullable FK), `labor_type`, `trade_classification` (FK,
 overridable with reason per DEC-030), `reg_hours`, `ot_hours`, `dt_hours`
 (`DecimalField(decimal_places=1)`, half-hour increments per DEC-020), rate snapshot fields
 (null until submission), `line_total` (null until submission).
