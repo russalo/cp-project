@@ -166,3 +166,92 @@ class MaterialCatalogAdmin(ModelAdmin):
     list_display = ('description', 'category', 'default_unit', 'last_unit_cost', 'last_cost_date', 'use_count', 'is_boilerplate', 'active')
     list_filter = ('category', 'is_boilerplate', 'active')
     search_fields = ('description',)
+
+
+# ==============================================================================
+# Override the Admin Site index page to organize resources into groups
+# ==============================================================================
+from django.urls import reverse
+
+_original_get_app_list = admin.site.get_app_list
+
+def custom_get_app_list(self, request, app_label=None):
+    """
+    Groups the models in the 'resources' app into 'Employee', 'Equipment',
+    and 'Materials' sections on the Django Admin index page (dashboard).
+    """
+    app_dict = self._build_app_dict(request, app_label)
+
+    # Standard ordering by verbose_name
+    app_list = sorted(app_dict.values(), key=lambda x: x['name'].lower())
+
+    for app in app_list:
+        app['models'].sort(key=lambda x: x['name'])
+
+    new_app_list = []
+    for app in app_list:
+        if app['app_label'] == 'resources':
+            employee_models = []
+            equipment_models = []
+            material_models = []
+
+            for m in app['models']:
+                # The object_name inside models list is mapped to the URL component.
+                # However, it doesn't store object_name directly in Django 3+.
+                # We can check the model class name via the URL or admin path, but
+                # an easier way is to check the 'object_name' that we can get from model.__name__
+                # 'models' list contains: name, object_name, perms, admin_url, add_url
+                code = m.get('object_name', '')
+                if not code:
+                    # In some versions it's not present, let's extract from admin_url
+                    admin_url = m.get('admin_url', '')
+                    if 'tradeclassification' in admin_url or 'employee' in admin_url or 'laborrate' in admin_url:
+                        employee_models.append(m)
+                    elif 'equipment' in admin_url or 'caltrans' in admin_url:
+                        equipment_models.append(m)
+                    elif 'material' in admin_url:
+                        material_models.append(m)
+                    else:
+                        employee_models.append(m)
+                else:
+                    if code in ['Employee', 'TradeClassification', 'LaborRate']:
+                        employee_models.append(m)
+                    elif code in ['EquipmentType', 'EquipmentUnit', 'CaltransSchedule', 'CaltransRateLine']:
+                        equipment_models.append(m)
+                    elif code in ['MaterialCategory', 'MaterialCatalog']:
+                        material_models.append(m)
+                    else:
+                        employee_models.append(m)
+
+            # Add them as distinct pseudo-apps
+            if employee_models:
+                new_app_list.append({
+                    'name': 'Employee',
+                    'app_label': 'resources_employee',
+                    'app_url': '',
+                    'has_module_perms': True,
+                    'models': employee_models,
+                })
+            if equipment_models:
+                new_app_list.append({
+                    'name': 'Equipment',
+                    'app_label': 'resources_equipment',
+                    'app_url': '',
+                    'has_module_perms': True,
+                    'models': equipment_models,
+                })
+            if material_models:
+                new_app_list.append({
+                    'name': 'Materials',
+                    'app_label': 'resources_materials',
+                    'app_url': '',
+                    'has_module_perms': True,
+                    'models': material_models,
+                })
+        else:
+            new_app_list.append(app)
+
+    return new_app_list
+
+# Monkey-patch the bound method onto the admin.site instance
+admin.site.get_app_list = custom_get_app_list.__get__(admin.site)
