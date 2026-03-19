@@ -221,11 +221,16 @@ def custom_get_app_list(self, request, app_label=None):
                         employee_models.append(m)
 
             # Add them as distinct pseudo-apps
+            # Use the first model's admin_url as the pseudo-app URL so the header link is meaningful.
+            employee_app_url = employee_models[0].get('admin_url', '') if employee_models else ''
+            equipment_app_url = equipment_models[0].get('admin_url', '') if equipment_models else ''
+            material_app_url = material_models[0].get('admin_url', '') if material_models else ''
+
             if employee_models:
                 new_app_list.append({
                     'name': 'Employee',
                     'app_label': 'resources_employee',
-                    'app_url': '',
+                    'app_url': employee_app_url,
                     'has_module_perms': True,
                     'models': employee_models,
                 })
@@ -233,7 +238,7 @@ def custom_get_app_list(self, request, app_label=None):
                 new_app_list.append({
                     'name': 'Equipment',
                     'app_label': 'resources_equipment',
-                    'app_url': '',
+                    'app_url': equipment_app_url,
                     'has_module_perms': True,
                     'models': equipment_models,
                 })
@@ -241,7 +246,7 @@ def custom_get_app_list(self, request, app_label=None):
                 new_app_list.append({
                     'name': 'Materials',
                     'app_label': 'resources_materials',
-                    'app_url': '',
+                    'app_url': material_app_url,
                     'has_module_perms': True,
                     'models': material_models,
                 })
