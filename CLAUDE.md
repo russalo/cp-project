@@ -120,3 +120,31 @@ This repo is designed for development across multiple machines. Before switching
 3. On next machine: `make start-session`
 
 Homework batches (10-item work lists) are managed via `scripts/homework_rollover.py` and tracked in `HOMEWORK.md`.
+
+## Pull Request Descriptions
+
+**After every `git push`, always output a ready-to-paste PR title and body — without being asked.**
+
+The PR description should cover all commits on the branch since it diverged from `main`. Use `git log main..HEAD --oneline` and `git diff main..HEAD --stat` to gather the full picture before writing.
+
+Format:
+
+```
+**Title:**
+<concise title, under 70 chars, conventional-commit style>
+
+**Body:**
+## What's in this PR
+<1–3 sentence summary of the overall change>
+
+### <Section per logical workstream, e.g. "Backend API", "Frontend", "Docs">
+- Bullet points covering the key changes, decisions referenced where relevant
+
+## Test plan
+- [ ] Checklist items for verifying the PR works correctly
+```
+
+Rules:
+- Title uses conventional-commit prefix (`feat`, `fix`, `docs`, `refactor`, `chore`) and a milestone/scope tag where useful, e.g. `feat(M2): …`
+- Body sections match the logical workstreams in the PR — don't list every file, summarise what changed and why
+- Test plan items should be concrete and runnable, not generic ("tests pass")
