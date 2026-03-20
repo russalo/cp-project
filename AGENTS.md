@@ -8,7 +8,7 @@ A full-stack web application for an underground wet utility pipeline contractor 
 
 **Target users:** Foremen/Superintendents, Project Managers, Office/Accounting staff
 
-**Current status:** Early Milestone 1 (project setup). CI is in place; backend models and frontend features not yet built.
+**Current status:** Milestone 1 in progress. CI is in place; core backend API surfaces and an initial Jobs UI page are implemented, with additional models and features still under active development.
 
 ## Commands
 
