@@ -83,7 +83,7 @@ established in DEC-003.
 | `accounts` models / UserProfile | API endpoints not yet built (M2/M4 work) |
 | `resources` models | Reference data models; import logic not yet built |
 | `resources` API endpoints | Employee/equipment reference endpoints are wired but not directly tested yet |
-| EWO API endpoints | Core EWO CRUD and lifecycle endpoints are not wired yet |
+| EWO API endpoints | `/api/ewo/...` routes are wired and basic CRUD API tests exist in `backend/ewo/tests.py`; lifecycle/state-transition flows and negative cases are not yet covered |
 | Frontend | No test suite yet; `vitest` planned for M3 |
 
 ---
