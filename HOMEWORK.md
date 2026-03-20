@@ -177,3 +177,28 @@ Created automatically during stop-session rollover on 2026-03-19.
    - Answer: TBD
 10. **Post-approval edits:** if an approved EWO must change, should it reopen, clone to revision, or require admin override with audit reason?
    - Answer: TBD
+
+## Homework Batch 005 (Open)
+
+Created automatically during stop-session rollover on 2026-03-20.
+
+1. **Rejection workflow:** when rejected, should EWO return to draft, move to a rejected terminal state, or require explicit resubmission action?
+   - Answer: TBD
+2. **Billing handoff format:** what exact export/summary fields must be present for office billing handoff in v1?
+   - Answer: TBD
+3. **Audit event scope:** which actions must be audited in v1 (create/edit/delete/submit/approve/rate change/login)?
+   - Answer: TBD
+4. **Soft delete vs hard delete:** should core records use soft deletes for traceability, and who can perform permanent deletes?
+   - Answer: TBD
+5. **Attachment ownership model (future):** should uploaded documents belong to material lines, EWOs, or both with linkage metadata?
+   - Answer: TBD
+6. **Search v1 priority:** which 3 filters are mandatory first (job number, date range, status, customer, creator)?
+   - Answer: TBD
+7. **Pagination default:** what default page size should APIs and UI use, and should users be able to change it?
+   - Answer: TBD
+8. **Timezone policy:** should all timestamps be stored UTC and displayed in a single company timezone in v1?
+   - Answer: TBD
+9. **Concurrency handling:** how should conflicting edits be handled (last write wins, optimistic lock, manual merge warning)?
+   - Answer: TBD
+10. **Error handling standard:** what user-facing error format is required in UI for validation vs system errors?
+   - Answer: TBD

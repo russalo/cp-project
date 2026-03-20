@@ -27,16 +27,16 @@ make continuity-status
 
 ### Phase B - Dev Machine Baseline (Fedora + PyCharm)
 
-- [x] Bootstrap with `make setup`.
-- [x] Run `make dev-check` and resolve failures before proceeding.
+- [x] Bootstrap with `make setup-online`.
+- [x] Run `make local-check` and resolve failures before proceeding.
 - [x] Confirm PyCharm interpreter points to `./backend/.venv/bin/python`.
 
 Verification (Terminal, local):
 
 ```bash
 cd ~/Projects/cp-project
-make setup
-make dev-check
+make setup-online
+make local-check
 ```
 
 ### Phase C - GitHub Baseline and CI

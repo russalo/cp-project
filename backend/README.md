@@ -17,7 +17,7 @@ If you also want frontend dependencies installed, use:
 
 ```bash
 cd ~/Projects/cp-project
-make setup
+make setup-online
 ```
 
 The setup script will:
@@ -28,6 +28,17 @@ The setup script will:
 - install PostgreSQL packages on Fedora/Ubuntu unless skipped
 - bootstrap the app PostgreSQL role/database when env values are present
 - run Django checks and migrations
+
+If your normal network blocks `apt`, `pip`, or npm registry access, do the first bootstrap on a hotspot or other unrestricted connection. After that, most day-to-day backend work is local-only.
+
+Local-only backend verification after bootstrap:
+
+```bash
+cd ~/Projects/cp-project
+make db-check
+make backend-check
+make backend-test
+```
 
 Note: the repository target is Python `3.12` to match CI/production. The script will warn if a different Python version is detected.
 

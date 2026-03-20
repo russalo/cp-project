@@ -134,6 +134,11 @@
   font-style: italic;
 }
 
+.table-empty {
+  text-align: center;
+  padding: 32px;
+}
+
 /* ── Badges ─────────────────────────────────────────────────────────────────── */
 
 .badge {
