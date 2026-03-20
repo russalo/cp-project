@@ -14,7 +14,11 @@ setup-backend:
 	./setup.sh --skip-frontend
 
 deps-refresh:
-	cd backend && "$(BACKEND_PYTHON)" -m pip install -r requirements.txt
+	@if [ ! -x "$(VENV_PYTHON)" ]; then \
+		echo "backend/.venv is missing or not initialized. Run 'make setup-backend' (or './setup.sh --skip-frontend') first."; \
+		exit 1; \
+	fi
+	cd backend && "$(VENV_PYTHON)" -m pip install -r requirements.txt
 	cd frontend && npm ci
 
 db-check:
