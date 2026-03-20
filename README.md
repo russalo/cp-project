@@ -123,10 +123,12 @@ If you do not use `pyenv`/`nvm`, install Python 3.12, Node 22, and PostgreSQL wi
 
 ### 3) Run the bootstrap
 
+If this is the first run on a machine, or you need to download packages, connect to a network that allows package installs first.
+
 Full stack bootstrap:
 
 ```bash
-make setup
+make setup-online
 ```
 
 Backend-only bootstrap:
@@ -135,7 +137,7 @@ Backend-only bootstrap:
 make setup-backend
 ```
 
-What `make setup` does:
+What `make setup-online` does:
 
 - creates `backend/.venv/` if missing
 - installs Python dependencies from `backend/requirements.txt`
@@ -147,9 +149,39 @@ What `make setup` does:
 
 ### 4) Verify the project is healthy
 
+Local-only verification after dependencies are already installed:
+
+```bash
+make local-check
+```
+
+If you only want CI-parity checks and do not need pytest yet:
+
 ```bash
 make dev-check
 ```
+
+## Internet-sensitive vs local-only commands
+
+Use these when your normal network blocks `apt`, `pip`, or `npm`.
+
+Needs internet:
+
+- `make setup-online`
+- `make setup-backend`
+- `make frontend-install`
+- `make deps-refresh`
+
+Local only after the machine is bootstrapped:
+
+- `make db-check`
+- `make backend-check`
+- `make backend-test`
+- `make frontend-build`
+- `make local-check`
+- `make backend-run`
+- `make frontend-dev`
+- `make continuity-status`
 
 ## Day-to-day development
 
@@ -216,13 +248,13 @@ When moving to another machine, recreate `backend/.env` locally from the example
 cd ~/Projects/cp-project
 git pull
 make continuity-status
-make dev-check
+make local-check
 ```
 
 If `backend/.venv/` or frontend dependencies are missing, rerun:
 
 ```bash
-make setup
+make setup-online
 ```
 
 ---

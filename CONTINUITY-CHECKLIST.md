@@ -84,7 +84,7 @@ make stop-session MSG="WIP: <short summary>"
 cd ~/Projects/cp-project
 git pull --rebase
 make continuity-status
-make dev-check
+make local-check
 ```
 
 ### 2) Open project
@@ -92,7 +92,7 @@ make dev-check
 **Where:** PyCharm
 
 - Open `cp-project`
-- Confirm interpreter is `./.venv/bin/python`
+- Confirm interpreter is `./backend/.venv/bin/python`
 - Use integrated terminal at repo root for `make` commands
 
 ### 3) Pick work branch
@@ -177,9 +177,9 @@ Before switching machines, all should be true:
 cd ~/Projects
 git clone git@github.com:russalo/cp-project.git
 cd cp-project
-make setup
-make dev-check
+make setup-online
+make local-check
 make continuity-status
 ```
 
-Then open `cp-project` in PyCharm and set interpreter to `./.venv/bin/python`.
+Then open `cp-project` in PyCharm and set interpreter to `backend/.venv/bin/python`.

@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 from pathlib import Path
 from dotenv import load_dotenv
 import os
+from django.urls import reverse_lazy
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -254,4 +255,110 @@ UNFOLD = {
     'SITE_URL': '/',
     'SHOW_HISTORY': True,
     'SHOW_VIEW_ON_SITE': True,
+    'SIDEBAR': {
+        'show_search': True,
+        'show_all_applications': True,
+        'navigation': [
+            {
+                'title': 'Operations',
+                'separator': True,
+                'items': [
+                    {
+                        'title': 'Extra Work Orders',
+                        'icon': 'receipt_long',
+                        'link': reverse_lazy('admin:ewo_extraworkorder_changelist'),
+                    },
+                    {
+                        'title': 'Jobs',
+                        'icon': 'work',
+                        'link': reverse_lazy('admin:jobs_job_changelist'),
+                    },
+                ],
+            },
+            {
+                'title': 'Employee',
+                'separator': True,
+                'items': [
+                    {
+                        'title': 'Employees',
+                        'icon': 'people',
+                        'link': reverse_lazy('admin:resources_employee_changelist'),
+                    },
+                    {
+                        'title': 'Trade Classifications',
+                        'icon': 'badge',
+                        'link': reverse_lazy('admin:resources_tradeclassification_changelist'),
+                    },
+                    {
+                        'title': 'Labor Rates',
+                        'icon': 'attach_money',
+                        'link': reverse_lazy('admin:resources_laborrate_changelist'),
+                    },
+                ],
+            },
+            {
+                'title': 'Equipment',
+                'separator': True,
+                'items': [
+                    {
+                        'title': 'Equipment Units',
+                        'icon': 'directions_car',
+                        'link': reverse_lazy('admin:resources_equipmentunit_changelist'),
+                    },
+                    {
+                        'title': 'Equipment Types',
+                        'icon': 'category',
+                        'link': reverse_lazy('admin:resources_equipmenttype_changelist'),
+                    },
+                    {
+                        'title': 'Caltrans Schedules',
+                        'icon': 'calendar_today',
+                        'link': reverse_lazy('admin:resources_caltransschedule_changelist'),
+                    },
+                    {
+                        'title': 'Caltrans Rate Lines',
+                        'icon': 'list',
+                        'link': reverse_lazy('admin:resources_caltransrateline_changelist'),
+                    },
+                ],
+            },
+            {
+                'title': 'Materials',
+                'separator': True,
+                'items': [
+                    {
+                        'title': 'Material Catalog',
+                        'icon': 'inventory_2',
+                        'link': reverse_lazy('admin:resources_materialcatalog_changelist'),
+                    },
+                    {
+                        'title': 'Material Categories',
+                        'icon': 'category',
+                        'link': reverse_lazy('admin:resources_materialcategory_changelist'),
+                    },
+                ],
+            },
+            {
+                'title': 'Administration',
+                'separator': True,
+                'items': [
+                    {
+                        'title': 'Users',
+                        'icon': 'manage_accounts',
+                        'link': reverse_lazy('admin:auth_user_changelist'),
+                    },
+                    {
+                        'title': 'Groups',
+                        'icon': 'groups',
+                        'link': reverse_lazy('admin:auth_group_changelist'),
+                    },
+                    {
+                        'title': 'User Profiles',
+                        'icon': 'person',
+                        'link': reverse_lazy('admin:accounts_userprofile_changelist'),
+                    },
+                ],
+            },
+        ],
+    },
 }

@@ -20,6 +20,8 @@ from decimal import Decimal
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from rest_framework import status
+from rest_framework.test import APITestCase
 from freezegun import freeze_time
 from model_bakery import baker
 
@@ -720,3 +722,209 @@ class TestSubmitEwo:
         result.refresh_from_db()
         assert result.status == ExtraWorkOrder.Status.SUBMITTED
         assert result.total == Decimal('0.00')
+
+
+class EwoApiTests(APITestCase):
+    def setUp(self):
+        self.user = baker.make(User)
+        self.job = baker.make(Job, job_number='1886', name='Mainline Sewer')
+        self.trade = make_trade(name='Operator-api')
+        self.employee = baker.make(
+            'resources.Employee',
+            code='EMP-1',
+            full_name='Alice Operator',
+            trade_classification=self.trade,
+        )
+        schedule = make_schedule(date(2025, 1, 1), date(2025, 12, 31), year='2025-2026')
+        rate_line = make_rate_line(schedule, class_code='AA', make_code='CAT', model_code='D8')
+        self.equipment_type = baker.make('resources.EquipmentType', name='Dozer', caltrans_rate_line=rate_line)
+        self.catalog_item = baker.make(
+            'resources.MaterialCatalog',
+            description='Pipe',
+            default_unit='LF',
+        )
+        self.ewo = baker.make(
+            ExtraWorkOrder,
+            job=self.job,
+            created_by=self.user,
+            work_date=date(2025, 6, 15),
+            status=ExtraWorkOrder.Status.OPEN,
+            ewo_type=ExtraWorkOrder.EwoType.TM,
+            description='Open trench repair',
+        )
+        self.locked_ewo = baker.make(
+            ExtraWorkOrder,
+            job=self.job,
+            created_by=self.user,
+            work_date=date(2025, 6, 16),
+            status=ExtraWorkOrder.Status.SUBMITTED,
+            ewo_type=ExtraWorkOrder.EwoType.TM,
+            description='Locked repair',
+        )
+
+    def test_ewo_list(self):
+        response = self.client.get('/api/ewo/ewos/')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()), 2)
+
+    def test_create_ewo(self):
+        payload = {
+            'job': self.job.pk,
+            'created_by': self.user.pk,
+            'ewo_type': ExtraWorkOrder.EwoType.CHANGE_ORDER,
+            'work_date': '2025-06-20',
+            'description': 'Bypass line reroute',
+            'bond_required': True,
+        }
+
+        response = self.client.post('/api/ewo/ewos/', payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        body = response.json()
+        self.assertTrue(body['ewo_number'].startswith('1886-'))
+        self.assertEqual(body['status'], ExtraWorkOrder.Status.OPEN)
+
+    def test_patch_open_ewo(self):
+        response = self.client.patch(
+            f'/api/ewo/ewos/{self.ewo.pk}/',
+            {'description': 'Updated trench repair'},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.ewo.refresh_from_db()
+        self.assertEqual(self.ewo.description, 'Updated trench repair')
+
+    def test_patch_locked_ewo_is_rejected(self):
+        response = self.client.patch(
+            f'/api/ewo/ewos/{self.locked_ewo.pk}/',
+            {'description': 'Should fail'},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Locked EWOs', str(response.json()))
+
+    def test_delete_locked_ewo_is_rejected(self):
+        response = self.client.delete(f'/api/ewo/ewos/{self.locked_ewo.pk}/')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_labor_line(self):
+        payload = {
+            'ewo': self.ewo.pk,
+            'labor_type': LaborLine.LaborType.NAMED,
+            'employee': self.employee.pk,
+            'trade_classification': self.trade.pk,
+            'reg_hours': '8.0',
+            'ot_hours': '1.0',
+            'dt_hours': '0.0',
+        }
+
+        response = self.client.post('/api/ewo/labor-lines/', payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        line = LaborLine.objects.get(pk=response.json()['id'])
+        self.assertEqual(line.employee_default_trade_id, self.trade.pk)
+
+    def test_create_generic_labor_line_rejects_employee(self):
+        payload = {
+            'ewo': self.ewo.pk,
+            'labor_type': LaborLine.LaborType.GENERIC,
+            'employee': self.employee.pk,
+            'trade_classification': self.trade.pk,
+            'reg_hours': '8.0',
+            'ot_hours': '0.0',
+            'dt_hours': '0.0',
+        }
+
+        response = self.client.post('/api/ewo/labor-lines/', payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('employee', response.json())
+
+    def test_create_equipment_line(self):
+        payload = {
+            'ewo': self.ewo.pk,
+            'equipment_type': self.equipment_type.pk,
+            'usage_type': EquipmentLine.UsageType.OPERATING,
+            'hours': '4.0',
+            'unit': 'HR',
+        }
+
+        response = self.client.post('/api/ewo/equipment-lines/', payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(EquipmentLine.objects.count(), 1)
+
+    def test_create_material_line(self):
+        payload = {
+            'ewo': self.ewo.pk,
+            'catalog_item': self.catalog_item.pk,
+            'description': 'Pipe',
+            'quantity': '10.000',
+            'unit': 'LF',
+            'unit_cost': '12.50',
+            'is_subcontractor': False,
+            'reference_number': 'INV-100',
+        }
+
+        response = self.client.post('/api/ewo/material-lines/', payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(MaterialLine.objects.count(), 1)
+
+    def test_line_list_can_filter_by_ewo(self):
+        baker.make(
+            LaborLine,
+            ewo=self.ewo,
+            labor_type=LaborLine.LaborType.GENERIC,
+            trade_classification=self.trade,
+            reg_hours=Decimal('8.0'),
+            ot_hours=Decimal('0.0'),
+            dt_hours=Decimal('0.0'),
+        )
+        baker.make(
+            LaborLine,
+            ewo=self.locked_ewo,
+            labor_type=LaborLine.LaborType.GENERIC,
+            trade_classification=self.trade,
+            reg_hours=Decimal('4.0'),
+            ot_hours=Decimal('0.0'),
+            dt_hours=Decimal('0.0'),
+        )
+
+        response = self.client.get(f'/api/ewo/labor-lines/?ewo={self.ewo.pk}')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()), 1)
+        self.assertEqual(response.json()[0]['ewo'], self.ewo.pk)
+
+    def test_locked_ewo_blocks_line_creation(self):
+        payload = {
+            'ewo': self.locked_ewo.pk,
+            'equipment_type': self.equipment_type.pk,
+            'usage_type': EquipmentLine.UsageType.OPERATING,
+            'hours': '4.0',
+            'unit': 'HR',
+        }
+
+        response = self.client.post('/api/ewo/equipment-lines/', payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('locked EWOs', str(response.json()))
+
+    def test_locked_ewo_blocks_line_delete(self):
+        line = baker.make(
+            MaterialLine,
+            ewo=self.locked_ewo,
+            description='Pipe',
+            quantity=Decimal('1.000'),
+            unit='LS',
+            unit_cost=Decimal('100.00'),
+        )
+
+        response = self.client.delete(f'/api/ewo/material-lines/{line.pk}/')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
