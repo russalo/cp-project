@@ -59,10 +59,22 @@ class ExtraWorkOrderSerializer(serializers.ModelSerializer):
         ]
 
     def get_line_counts(self, obj):
+        labor_count = getattr(obj, 'labor_count', None)
+        if labor_count is None:
+            labor_count = obj.labor_lines.count()
+
+        equipment_count = getattr(obj, 'equipment_count', None)
+        if equipment_count is None:
+            equipment_count = obj.equipment_lines.count()
+
+        materials_count = getattr(obj, 'materials_count', None)
+        if materials_count is None:
+            materials_count = obj.material_lines.count()
+
         return {
-            'labor': obj.labor_lines.count(),
-            'equipment': obj.equipment_lines.count(),
-            'materials': obj.material_lines.count(),
+            'labor': labor_count,
+            'equipment': equipment_count,
+            'materials': materials_count,
         }
 
     def validate(self, attrs):
