@@ -22,7 +22,7 @@ make backend-run            # Django dev server → localhost:8000
 make frontend-dev           # Vite dev server → localhost:5173
 
 # Verification (runs in CI)
-make dev-check              # backend-check + frontend lint/build
+make local-check              # backend-check + frontend lint/build
 make backend-check          # manage.py check + migrate --check
 make frontend-build         # npm ci + eslint + vite build
 
