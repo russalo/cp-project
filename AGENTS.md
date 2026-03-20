@@ -27,7 +27,7 @@ make backend-check          # manage.py check + migrate --check
 make frontend-build         # npm ci + eslint + vite build
 
 # Setup
-make setup                  # Full bootstrap (runs setup.sh)
+make setup-online                  # Full bootstrap (runs setup.sh)
 make setup-backend          # Backend only
 make frontend-install       # npm ci only
 ```
