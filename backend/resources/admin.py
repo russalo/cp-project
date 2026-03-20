@@ -171,10 +171,6 @@ class MaterialCatalogAdmin(ModelAdmin):
 # ==============================================================================
 # Override the Admin Site index page to organize resources into groups
 # ==============================================================================
-from django.urls import reverse
-
-_original_get_app_list = admin.site.get_app_list
-
 def custom_get_app_list(self, request, app_label=None):
     """
     Groups the models in the 'resources' app into 'Employee', 'Equipment',
