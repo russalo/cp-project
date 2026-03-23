@@ -123,6 +123,7 @@ stop-session:
 	@if git diff --cached --quiet; then \
 		echo "[session] No staged changes to commit."; \
 	else \
+		branch="$$(git rev-parse --abbrev-ref HEAD)"; \
 		git commit -m "$(if $(MSG),$(MSG),WIP: session checkpoint)"; \
 		if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then \
 			echo "[session] Configuring git auth via GitHub CLI"; \
@@ -130,5 +131,10 @@ stop-session:
 		else \
 			echo "[session] GitHub CLI unavailable or not authenticated; using existing git remote auth"; \
 		fi; \
-		git push -u origin HEAD; \
+		if git push -u origin HEAD; then \
+			echo "[session] Push succeeded."; \
+		else \
+			echo "[session] Push rejected. Attempting pull --rebase and one retry."; \
+			git pull --rebase origin "$$branch" && git push -u origin HEAD; \
+		fi; \
 	fi
