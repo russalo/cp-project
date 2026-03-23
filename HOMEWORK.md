@@ -1,11 +1,12 @@
 # HOMEWORK
 
-This file is the live homework tracker for the next planning batch.
+This file is the live legacy homework tracker for planning batches. Completed homework archives now
+live under `docs/archive/homework/`.
 
 ## Current Status
 
-- Homework batch `001` is complete and preserved in `HOMEWORK-001.md`.
-- Homework batch `002` is complete and preserved in `HOMEWORK-002.md`; answers folded into `DECISIONS.md` as DEC-018 through DEC-027.
+- Homework batch `001` is complete and preserved in `docs/archive/homework/HOMEWORK-001.md`.
+- Homework batch `002` is complete and preserved in `docs/archive/homework/HOMEWORK-002.md`; answers folded into `DECISIONS.md` as DEC-018 through DEC-027.
 - Active homework batch: `003` in this file.
 
 ## How To Use
@@ -13,7 +14,7 @@ This file is the live homework tracker for the next planning batch.
 When a new batch of planning questions is created:
 
 1. Add the new questions here.
-2. Copy completed batches into numbered archives such as `HOMEWORK-002.md` when needed.
+2. Copy completed batches into numbered archives under `docs/archive/homework/` when needed.
 3. Record accepted answers in `DECISIONS.md` before implementation starts.
 4. Leave unresolved items open until pros/cons are reviewed and a decision is ready.
 
@@ -29,7 +30,7 @@ When a new batch of planning questions is created:
 
 ---
 
-## Homework Batch 002 (Complete — archived in HOMEWORK-002.md)
+## Homework Batch 002 (Complete — archived in docs/archive/homework/HOMEWORK-002.md)
 
 Answered: 2026-03-18. Decisions recorded as DEC-018 through DEC-027 in `DECISIONS.md`.
 
@@ -201,4 +202,29 @@ Created automatically during stop-session rollover on 2026-03-20.
 9. **Concurrency handling:** how should conflicting edits be handled (last write wins, optimistic lock, manual merge warning)?
    - Answer: TBD
 10. **Error handling standard:** what user-facing error format is required in UI for validation vs system errors?
+   - Answer: TBD
+
+## Homework Batch 006 (Open)
+
+Created automatically during stop-session rollover on 2026-03-23.
+
+1. **Health check definition:** what endpoint(s) define app health for deploy validation (DB connectivity required or app-only)?
+   - Answer: TBD
+2. **Backup retention baseline:** how many daily/weekly backups should be retained during Milestone 1 baseline?
+   - Answer: TBD
+3. **Restore RTO target:** what is the acceptable restore time target for the first production baseline?
+   - Answer: TBD
+4. **Environment promotion rule:** should changes flow strictly dev -> PR -> main -> production, or allow emergency direct hotfix paths?
+   - Answer: TBD
+5. **Release notes habit:** should each stop-session push include a short changelog line in `DEV-SESSION.md` for traceability?
+   - Answer: TBD
+6. **Testing minimum for M1:** should PRs require at least one backend smoke test before merge, or defer until M2?
+   - Answer: TBD
+7. **API versioning start:** should APIs start unversioned in v1 or use `/api/v1/` from day one?
+   - Answer: TBD
+8. **Idempotency policy:** should EWO create endpoints support idempotency keys in v1 or defer to later hardening?
+   - Answer: TBD
+9. **Role bootstrap:** who creates the first admin users in production and what is the secure bootstrap process?
+   - Answer: TBD
+10. **Data correction policy:** when financial data is wrong after billing, should corrections create adjustment EWOs instead of direct edits?
    - Answer: TBD

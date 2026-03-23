@@ -1,6 +1,7 @@
 # Frontend setup (React + Vite)
 
 For full project onboarding, start with the repo root `README.md`.
+For the documentation/source-of-truth model, read `KNOWLEDGE-PIPELINE.md`.
 
 This file covers the frontend-specific setup and daily commands.
 
@@ -61,3 +62,12 @@ This runs:
 - The frontend is currently JavaScript-based.
 - TypeScript migration is planned later and is tracked in `MILESTONES.md` / `DECISIONS.md`.
 - `node_modules/` and build artifacts should stay untracked.
+
+## Project Docs
+
+Use these root docs when frontend work touches workflow or roadmap:
+
+- `CHARTER.md` for active product boundaries
+- `DECISIONS.md` for accepted implementation decisions
+- `MILESTONES.md` for active sequencing
+- `MILESTONES_INBOX.md` for draft future sequencing

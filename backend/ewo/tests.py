@@ -796,6 +796,20 @@ class EwoApiTests(APITestCase):
         self.ewo.refresh_from_db()
         self.assertEqual(self.ewo.description, 'Updated trench repair')
 
+    def test_patch_ewo_cannot_change_job_after_number_assignment(self):
+        other_job = baker.make(Job, job_number='1999', name='Other Job')
+
+        response = self.client.patch(
+            f'/api/ewo/ewos/{self.ewo.pk}/',
+            {'job': other_job.pk},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('job', response.json())
+        self.ewo.refresh_from_db()
+        self.assertEqual(self.ewo.job_id, self.job.pk)
+
     def test_patch_locked_ewo_is_rejected(self):
         response = self.client.patch(
             f'/api/ewo/ewos/{self.locked_ewo.pk}/',
@@ -827,6 +841,28 @@ class EwoApiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         line = LaborLine.objects.get(pk=response.json()['id'])
         self.assertEqual(line.employee_default_trade_id, self.trade.pk)
+
+    def test_create_named_labor_override_requires_reason(self):
+        other_trade = baker.make(
+            TradeClassification,
+            name='Laborer',
+            union_name='LIUNA Local 777',
+            union_abbrev='LIUNA',
+        )
+        payload = {
+            'ewo': self.ewo.pk,
+            'labor_type': LaborLine.LaborType.NAMED,
+            'employee': self.employee.pk,
+            'trade_classification': other_trade.pk,
+            'reg_hours': '8.0',
+            'ot_hours': '0.0',
+            'dt_hours': '0.0',
+        }
+
+        response = self.client.post('/api/ewo/labor-lines/', payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('trade_override_reason', str(response.json()))
 
     def test_create_generic_labor_line_rejects_employee(self):
         payload = {
@@ -914,6 +950,28 @@ class EwoApiTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('locked EWOs', str(response.json()))
+
+    def test_locked_ewo_blocks_line_patch_even_if_payload_points_to_open_ewo(self):
+        line = baker.make(
+            LaborLine,
+            ewo=self.locked_ewo,
+            labor_type=LaborLine.LaborType.GENERIC,
+            trade_classification=self.trade,
+            reg_hours=Decimal('4.0'),
+            ot_hours=Decimal('0.0'),
+            dt_hours=Decimal('0.0'),
+        )
+
+        response = self.client.patch(
+            f'/api/ewo/labor-lines/{line.pk}/',
+            {'ewo': self.ewo.pk, 'reg_hours': '6.0'},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        line.refresh_from_db()
+        self.assertEqual(line.ewo_id, self.locked_ewo.pk)
+        self.assertEqual(line.reg_hours, Decimal('4.0'))
 
     def test_locked_ewo_blocks_line_delete(self):
         line = baker.make(

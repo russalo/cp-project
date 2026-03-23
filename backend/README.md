@@ -1,6 +1,7 @@
 # Backend setup (Django + PostgreSQL)
 
 For full project onboarding, start with the repo root `README.md`.
+For the documentation/source-of-truth model, read `KNOWLEDGE-PIPELINE.md`.
 
 This file focuses on the backend-specific pieces.
 
@@ -25,11 +26,14 @@ The setup script will:
 - create `backend/.venv/` if missing
 - install Python dependencies
 - create `backend/.env` from `backend/.env.example` if missing
-- install PostgreSQL packages on Fedora/Ubuntu unless skipped
+- install PostgreSQL and GitHub CLI packages on Fedora/Ubuntu unless skipped
 - bootstrap the app PostgreSQL role/database when env values are present
 - run Django checks and migrations
 
 If your normal network blocks `apt`, `pip`, or npm registry access, do the first bootstrap on a hotspot or other unrestricted connection. After that, most day-to-day backend work is local-only.
+
+The setup flow installs GitHub CLI (`gh`) on supported Fedora/Ubuntu machines so the session
+commands can prefer GitHub-aware sync and auth behavior.
 
 Local-only backend verification after bootstrap:
 
@@ -131,3 +135,12 @@ make backend-run
 ```
 
 `backend/config/settings.py` is now PostgreSQL-only and requires `DB_NAME`, `DB_USER`, and `DB_PASSWORD` to be set.
+
+## Project Docs
+
+Use these root docs when backend work touches scope or behavior:
+
+- `CHARTER.md` for active product rules
+- `DECISIONS.md` for accepted implementation decisions
+- `DECISIONS_INBOX.md` for pending design questions
+- `MILESTONES.md` for active sequencing

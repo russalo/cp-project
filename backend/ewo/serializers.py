@@ -82,6 +82,15 @@ class ExtraWorkOrderSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Locked EWOs cannot be edited through CRUD endpoints.'
             )
+        if (
+            self.instance
+            and 'job' in attrs
+            and attrs['job'] != self.instance.job
+            and self.instance.ewo_number
+        ):
+            raise serializers.ValidationError({
+                'job': 'Job cannot be changed after an EWO number is assigned.'
+            })
         return attrs
 
 
@@ -93,8 +102,14 @@ class EwoLockedModelSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
-        ewo = attrs.get('ewo') or getattr(self.instance, 'ewo', None)
-        if ewo and ewo.is_locked:
+        source_ewo = getattr(self.instance, 'ewo', None)
+        target_ewo = attrs.get('ewo') or source_ewo
+
+        if source_ewo and source_ewo.is_locked:
+            raise serializers.ValidationError(
+                'Line items on locked EWOs cannot be edited through CRUD endpoints.'
+            )
+        if target_ewo and target_ewo.is_locked:
             raise serializers.ValidationError(
                 'Line items on locked EWOs cannot be edited through CRUD endpoints.'
             )
@@ -107,6 +122,16 @@ class EwoLockedModelSerializer(serializers.ModelSerializer):
             instance = self.instance
             for field, value in attrs.items():
                 setattr(instance, field, value)
+
+        if isinstance(instance, LaborLine):
+            labor_type = attrs.get('labor_type', getattr(instance, 'labor_type', None))
+            employee = attrs.get('employee', getattr(instance, 'employee', None))
+            if (
+                labor_type == LaborLine.LaborType.NAMED
+                and employee is not None
+                and not getattr(instance, 'employee_default_trade_id', None)
+            ):
+                instance.employee_default_trade = employee.trade_classification
 
         try:
             instance.full_clean()

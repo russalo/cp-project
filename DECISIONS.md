@@ -953,7 +953,7 @@ No separate model. PM and office roles can trigger this transition (per DEC-033)
 - Date decided: 2026-03-18
 
 ### Context
-The charter (CLAUDE.md) explicitly requires: "GC acknowledgment tracked per EWO: who, when,
+The shared project guidance explicitly requires: "GC acknowledgment tracked per EWO: who, when,
 method (signature/email/verbal) — absence is itself recordable." This is distinct from the `sent`
 state — it tracks the GC's receipt/acknowledgment of the EWO, not CP's act of sending it.
 

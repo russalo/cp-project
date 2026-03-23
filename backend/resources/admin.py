@@ -16,6 +16,10 @@ from .models import (
     TradeClassification,
 )
 
+EMPLOYEE_MODEL_CODES = {'Employee', 'TradeClassification', 'LaborRate'}
+EQUIPMENT_MODEL_CODES = {'EquipmentType', 'EquipmentUnit', 'CaltransSchedule', 'CaltransRateLine'}
+MATERIAL_MODEL_CODES = {'MaterialCategory', 'MaterialCatalog'}
+
 
 @admin.register(TradeClassification)
 class TradeClassificationAdmin(ModelAdmin):
@@ -192,32 +196,13 @@ def custom_get_app_list(self, request, app_label=None):
             material_models = []
 
             for m in app['models']:
-                # The object_name inside models list is mapped to the URL component.
-                # However, it doesn't store object_name directly in Django 3+.
-                # We can check the model class name via the URL or admin path, but
-                # an easier way is to check the 'object_name' that we can get from model.__name__
-                # 'models' list contains: name, object_name, perms, admin_url, add_url
-                code = m.get('object_name', '')
-                if not code:
-                    # In some versions it's not present, let's extract from admin_url
-                    admin_url = m.get('admin_url', '')
-                    if 'tradeclassification' in admin_url or 'employee' in admin_url or 'laborrate' in admin_url:
-                        employee_models.append(m)
-                    elif 'equipment' in admin_url or 'caltrans' in admin_url:
-                        equipment_models.append(m)
-                    elif 'material' in admin_url:
-                        material_models.append(m)
-                    else:
-                        employee_models.append(m)
+                group = _resource_group_for_model(m)
+                if group == 'employee':
+                    employee_models.append(m)
+                elif group == 'equipment':
+                    equipment_models.append(m)
                 else:
-                    if code in ['Employee', 'TradeClassification', 'LaborRate']:
-                        employee_models.append(m)
-                    elif code in ['EquipmentType', 'EquipmentUnit', 'CaltransSchedule', 'CaltransRateLine']:
-                        equipment_models.append(m)
-                    elif code in ['MaterialCategory', 'MaterialCatalog']:
-                        material_models.append(m)
-                    else:
-                        employee_models.append(m)
+                    material_models.append(m)
 
             # Add them as distinct pseudo-apps
             if employee_models:
@@ -251,3 +236,23 @@ def custom_get_app_list(self, request, app_label=None):
 
 # Monkey-patch the bound method onto the admin.site instance
 admin.site.get_app_list = custom_get_app_list.__get__(admin.site)
+def _resource_group_for_model(model_dict):
+    code = model_dict.get('object_name', '')
+    admin_url = model_dict.get('admin_url', '')
+
+    if code in EMPLOYEE_MODEL_CODES:
+        return 'employee'
+    if code in EQUIPMENT_MODEL_CODES:
+        return 'equipment'
+    if code in MATERIAL_MODEL_CODES:
+        return 'material'
+
+    if not code:
+        if any(token in admin_url for token in ('tradeclassification', 'employee', 'laborrate')):
+            return 'employee'
+        if any(token in admin_url for token in ('equipment', 'caltrans')):
+            return 'equipment'
+        if 'material' in admin_url:
+            return 'material'
+
+    raise ValueError(f'Unhandled resources admin model grouping for: {model_dict!r}')

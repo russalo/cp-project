@@ -29,12 +29,15 @@ This document defines the baseline delivery workflow from local development to G
 - Keep machine-specific state out of Git: `.idea/`, `backend/.venv/`, `backend/.env`, and frontend build artifacts.
 - Use `make continuity-status` when resuming work on another machine.
 - Push active branches frequently so another machine can immediately continue from GitHub.
-- Capture important scope or architecture changes in `DECISIONS.md` and session context in `DEV-SESSION.md`.
+- Capture raw ideas in `INBOX.md`, pending decisions in `DECISIONS_INBOX.md`, and accepted changes in `DECISIONS.md`.
+- Capture session context in `DEV-SESSION.md`.
 - Use `CONTINUITY-CHECKLIST.md` as the step-by-step start/stop runbook.
+- Use `KNOWLEDGE-PIPELINE.md` when the documentation structure or routing rules are unclear.
 
 ## Decision Records
 
 - Decision items are tracked in `DECISIONS.md`.
+- Unapproved decision candidates should be drafted in `DECISIONS_INBOX.md` before promotion.
 - For milestone tasks marked `Decision:`, document options and pros/cons before implementation.
 - When a decision is accepted, reference its ID in the PR that applies the change.
 

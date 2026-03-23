@@ -7,7 +7,8 @@
 >
 > Stack: Django 6 + PostgreSQL (backend) · React 19 + Vite (frontend) · Python 3.12 · Node 22
 
-This repository is being prepared so you can open it on another machine, bootstrap it quickly, and keep continuity between development environments.
+This repository is organized to support both software delivery and long-lived project knowledge.
+For the documentation model and routing rules, start with `KNOWLEDGE-PIPELINE.md`.
 
 ## Start Session / Stop Session (Quick Card)
 
@@ -37,7 +38,7 @@ make continuity-status
 ### Stop Session (PyCharm + Terminal)
 
 1. In PyCharm, update `DEV-SESSION.md` with what changed, next step, and blockers.
-2. If you made a planning choice, update `DECISIONS.md`.
+2. If you made a planning choice, update `DECISIONS.md` or `DECISIONS_INBOX.md` as appropriate.
 
 Then in terminal:
 
@@ -49,6 +50,7 @@ make stop-session MSG="WIP: <short summary>"
 What `make stop-session` does:
 
 - runs homework rollover check (`scripts/homework_rollover.py`)
+- prints a documentation change summary
 - shows `git status`
 - stages changes, commits (if any), and pushes current branch
 
@@ -67,15 +69,21 @@ git branch -d <merged-branch>
 
 - `backend/` — Django + PostgreSQL backend
 - `frontend/` — React + Vite frontend
+- `KNOWLEDGE-PIPELINE.md` — human-readable guide to the documentation system
 - `ARCHITECTURE.md` — system shape, app structure, services layer overview
 - `CHARTER.md` — project charter and domain rules
 - `CONTRIBUTING.md` — branch naming, commit format, PR process
 - `DECISIONS.md` — accepted and pending project decisions
+- `DECISIONS_INBOX.md` — pending decisions waiting for review and promotion
 - `DEV-SESSION.md` — running session notes and recent discoveries
+- `INBOX.md` — raw capture layer for new ideas and notes
 - `MILESTONES.md` — milestone breakdown and progress
+- `MILESTONES_INBOX.md` — draft milestone sequencing waiting for review
 - `TESTING.md` — how to run tests and test coverage policy
+- `VISION.md` — long-horizon product scope and future direction
 - `WORKFLOW.md` — branch / CI / deploy workflow
 - `WORKFLOW-SETUP.md` — outstanding setup checklist
+- `docs/archive/` — preserved historical and superseded documentation
 
 ## Runtime targets
 
@@ -97,6 +105,7 @@ If your current machine uses newer versions, the project may still run, but the 
 Before starting, make sure the machine has these basic host tools:
 
 - `git`
+- `gh`
 - `make`
 - `sudo`
 

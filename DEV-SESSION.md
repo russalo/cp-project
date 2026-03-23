@@ -1,3 +1,38 @@
+# DEV SESSION - 2026-03-23
+
+## Goal For Today
+
+Implement the documentation knowledge-pipeline baseline, archive superseded planning notes, align
+AI guidance, and add audit/session scripts that keep the structure organized over time.
+
+## Key Accomplishments
+
+- Added active pipeline docs: `INBOX.md`, `VISION.md`, `DECISIONS_INBOX.md`,
+  `MILESTONES_INBOX.md`, and `KNOWLEDGE-PIPELINE.md`.
+- Added canonical AI guidance at `docs/reference/ai-guidance.md`.
+- Aligned AI note files around the same documentation structure and added supported tool mirrors
+  for Gemini and GitHub Copilot.
+- Created `docs/archive/` structure and moved historical planning/session artifacts out of the root.
+- Added documentation audit and session-feedback scripts plus Make targets.
+- Updated root, backend, and frontend documentation to reflect the new routing model.
+
+## Current Branch
+
+`codex/main` — sandbox prevented local branch creation, so work proceeded in-place.
+
+## Still Open / Next Session
+
+- Decide whether `HOMEWORK.md` remains an active planning mechanism or is retired into archive.
+- Expand docs audit heuristics if the first pass surfaces low-signal warnings.
+- If desired later, add stronger CI enforcement for documentation drift checks.
+
+## Notes
+
+- `KNOWLEDGE-PIPELINE.md` is the human-readable guide to the documentation system.
+- `docs/reference/ai-guidance.md` is the canonical shared AI documentation policy source.
+
+---
+
 # DEV SESSION - 2026-03-18
 
 ## Goal For Today
@@ -9,11 +44,11 @@ Integrate off-machine planning artifacts from the 2026-03-18 session on RUSS-DEL
 - Integrated `CHARTER.md` revision — rewritten from engineering spec into a document grounded in real EWO artifacts, with new sections: Immediate Value of a Unified Database, Current Process narrative, two EWO workflow types, and a full What the Data Model Must Capture section covering rate authorities and markup structure.
 - Added `cp_project_full_erd.html` (ERD v3) to `docs/` — standalone HTML, opens in any browser. ERD v3 covers: Django User/UserProfile, named/generic labor, trade override, EquipmentType/Unit split, ownership flag, MaterialCatalog with categories.
 - Folded Homework Batch 002 answers into `DECISIONS.md` — all 10 items answered and recorded as DEC-018 through DEC-027.
-- Added DEC-028 through DEC-031 from SESSION_SUMMARY planning decisions (auth model, named/generic labor, trade override, calculation timing and lock).
+- Added DEC-028 through DEC-031 from `docs/archive/session-notes/SESSION_SUMMARY.md` planning decisions (auth model, named/generic labor, trade override, calculation timing and lock).
 - Updated DEC-003 (calculation boundary) to accepted: recalculate on `open → submitted` transition in `ewo/services.py`.
 - Updated DEC-016 (lifecycle) to reflect confirmed states: `open → submitted → approved → sent → billed`, `rejected → open`; added revision model detail.
 - Updated `CLAUDE.md` Domain Rules section to reflect all accepted decisions.
-- Archived Homework Batch 002 to `HOMEWORK-002.md`; Batch 003 is now the active batch.
+- Archived Homework Batch 002 to `docs/archive/homework/HOMEWORK-002.md`; Batch 003 is now the active batch.
 
 ## Current Branch
 
@@ -24,13 +59,13 @@ Integrate off-machine planning artifacts from the 2026-03-18 session on RUSS-DEL
 - Homework Batch 003 (10 questions) fully unanswered — answer before triggering rollover.
   - Key items: role permissions matrix, sent-status tracking, GC response tracking, billed status definition, multi-date EWOs, seed data formats, job CRUD ownership, EWO description structure, audit log visibility.
 - DEC-004 (API contract conventions) and DEC-005 (idempotency) still proposed — both gate M2.
-- Build order from SESSION_SUMMARY is the M2 implementation roadmap (see `SESSION_SUMMARY.md`).
+- Build order from the session summary is the M2 implementation roadmap (see `docs/archive/session-notes/SESSION_SUMMARY.md`).
 - Production server outstanding items still open (authorized_keys, DB role, gunicorn, nginx vhost).
 
 ## Notes
 
-- `SESSION_SUMMARY.md` is retained in repo root as an archive of the off-machine planning session. Extract decisions to `DECISIONS.md` before starting M2 implementation.
-- Package recommendations from `SESSION_SUMMARY.md` (django-money, django-simple-history, drf-spectacular, etc.) are not yet recorded as a decision — add DEC-032 when package selection is confirmed.
+- `docs/archive/session-notes/SESSION_SUMMARY.md` is retained as an archive of the off-machine planning session. Extract decisions to `DECISIONS.md` before starting M2 implementation.
+- Package recommendations from `docs/archive/session-notes/SESSION_SUMMARY.md` (django-money, django-simple-history, drf-spectacular, etc.) are not yet recorded as a decision — add DEC-032 when package selection is confirmed.
 
 ---
 

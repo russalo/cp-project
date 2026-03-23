@@ -29,7 +29,8 @@ make continuity-status
 
 ### Stop Session
 
-Before running the command, update `DEV-SESSION.md` and `DECISIONS.md` (if a planning decision changed).
+Before running the command, update `DEV-SESSION.md` and the relevant decision docs (`DECISIONS.md`
+or `DECISIONS_INBOX.md`) if planning changed.
 
 ```bash
 cd ~/Projects/cp-project
@@ -94,6 +95,7 @@ make local-check
 - Open `cp-project`
 - Confirm interpreter is `./backend/.venv/bin/python`
 - Use integrated terminal at repo root for `make` commands
+- Check `gh auth status` if you want session commands to use GitHub CLI sync/auth automatically
 
 ### 3) Pick work branch
 
@@ -120,6 +122,7 @@ git pull --rebase
 
 - Read `DEV-SESSION.md` for recent progress and next actions
 - Check `DECISIONS.md` for accepted constraints before coding
+- Check `INBOX.md`, `DECISIONS_INBOX.md`, and `MILESTONES_INBOX.md` if documentation review is pending
 
 ## Stop Of Session
 
@@ -133,7 +136,7 @@ Update `DEV-SESSION.md` with:
 - What should be done next
 - Any blockers/questions
 
-If a planning/architecture choice was made, update `DECISIONS.md`.
+If a planning/architecture choice was made, update `DECISIONS.md` or `DECISIONS_INBOX.md`.
 
 Homework rollover rule:
 
@@ -165,7 +168,7 @@ Before switching machines, all should be true:
 
 - Latest work is committed and pushed
 - `DEV-SESSION.md` reflects where to resume
-- Any new decision is captured in `DECISIONS.md` (or clearly marked pending)
+- Any new decision is captured in `DECISIONS.md` or `DECISIONS_INBOX.md`
 - If previous homework is complete, the next 10 homework items are added to `HOMEWORK.md`
 - No secrets were committed (`backend/.env` stays local)
 

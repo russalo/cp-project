@@ -354,3 +354,19 @@ The project is moving in the right direction when it can:
 - Improve confidence that valid extra work gets billed — and can be defended if
   disputed
 - Add document evidence and PDF packaging later without undermining the core record
+
+---
+
+## Active Scope Constraints (v1 Explicit Rules)
+
+* **CP Role Assumption**: CP operates as a subcontractor on all v1 EWOs. The contracting party is always a GC or CM-at-risk.
+* **Public Works Toggle**: The `is_public_works` boolean on the Job record is a threshold field that determines the entire claims workflow (lien vs. stop notice, Miller Act vs. Little Miller Act).
+* **Money Calculation Rule**: All money calculations use Python `Decimal` only. No float exceptions.
+* **Rate Snapshot Rule**: Rates snapshot at EWO submission. This covers equipment rates and labor rates, and includes the CBA effective date and Caltrans rate schedule version.
+* **GC Acknowledgment**: The absence of GC acknowledgment is itself a recordable fact, not just a gap in the data.
+* **Role Association**: `cp_role` belongs on the Contract, not the Job. A single job can have multiple contracts.
+* **Billing Structures**: v1 supports `UNIT`, `LUMP_SUM`, and `TM` via the `billing_type` field, even if SOV import happens in a later milestone.
+* **Role Semantics**: `cp_role` changes the semantics of who receives notice and whose signature validates an EWO. It does not fork the data schema.
+* **Field UI Boundary**: The foreman-facing mobile interface (Tachometer, Daily Nut) is a separate future module. The current EWO API is the data layer it will eventually sit on top of.
+* **User Interactions**: Individual crew members do not interact with the system. Data enters via foreman selection.
+* **Offline Requirement**: Any field-facing screen must capture locally and sync when signal returns. This is a non-negotiable architectural constraint.
