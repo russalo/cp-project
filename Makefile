@@ -1,22 +1,43 @@
 SHELL := /bin/bash
 ROOT_DIR := $(abspath .)
 VENV_PYTHON := $(ROOT_DIR)/backend/.venv/bin/python
+BACKEND_PYTHON := $(if $(wildcard $(VENV_PYTHON)),$(VENV_PYTHON),$(shell command -v python3 2>/dev/null || printf python3))
 
-.PHONY: setup setup-backend backend-check frontend-install frontend-build dev-check backend-run frontend-dev continuity-status start-session stop-session
+.PHONY: setup setup-online setup-backend deps-refresh db-check backend-check backend-test frontend-install frontend-build local-check dev-check backend-run frontend-dev continuity-status start-session stop-session
 
 setup:
 	./setup.sh
 
+setup-online: setup
+
 setup-backend:
 	./setup.sh --skip-frontend
 
-backend-check:
-	@if [ ! -f backend/.env ]; then \
-		echo "backend/.env is missing. Run 'make setup' or copy backend/.env.example first."; \
+deps-refresh:
+	@if [ ! -x "$(VENV_PYTHON)" ]; then \
+		echo "backend/.venv is missing or not initialized. Run 'make setup-backend' (or './setup.sh --skip-frontend') first."; \
 		exit 1; \
 	fi
-	cd backend && "$(VENV_PYTHON)" manage.py check
-	cd backend && "$(VENV_PYTHON)" manage.py migrate --check
+	cd backend && "$(VENV_PYTHON)" -m pip install -r requirements.txt
+	cd frontend && npm ci
+
+db-check:
+	@cd backend && . .env && \
+	if command -v pg_isready >/dev/null 2>&1; then \
+		pg_isready -h "$${DB_HOST:-127.0.0.1}" -p "$${DB_PORT:-5432}" || \
+		( echo "PostgreSQL is not responding at $${DB_HOST:-127.0.0.1}:$${DB_PORT:-5432}. Start PostgreSQL or fix backend/.env."; exit 1 ); \
+	else \
+		echo "pg_isready not found; skipping socket-level PostgreSQL readiness check."; \
+	fi
+
+backend-check:
+	@if [ ! -f backend/.env ]; then \
+		echo "backend/.env is missing. Run 'make setup-online' or copy backend/.env.example first."; \
+		exit 1; \
+	fi
+	@$(MAKE) db-check
+	cd backend && "$(BACKEND_PYTHON)" manage.py check
+	cd backend && "$(BACKEND_PYTHON)" manage.py migrate --check
 
 frontend-install:
 	cd frontend && npm ci
@@ -28,8 +49,16 @@ dev-check:
 	$(MAKE) backend-check
 	$(MAKE) frontend-build
 
+backend-test:
+	cd backend && "$(BACKEND_PYTHON)" -m pytest
+
+local-check:
+	$(MAKE) backend-check
+	$(MAKE) backend-test
+	$(MAKE) frontend-build
+
 backend-run:
-	cd backend && "$(VENV_PYTHON)" manage.py runserver
+	cd backend && "$(BACKEND_PYTHON)" manage.py runserver
 
 frontend-dev:
 	cd frontend && npm run dev
@@ -52,8 +81,7 @@ start-session:
 	fi
 	git pull --rebase
 	$(MAKE) continuity-status
-	$(MAKE) dev-check
-	cd backend && "$(VENV_PYTHON)" -m pytest
+	$(MAKE) local-check
 
 stop-session:
 	@echo "[session] Preparing end-of-session checkpoint"
@@ -72,4 +100,3 @@ stop-session:
 		git commit -m "$(if $(MSG),$(MSG),WIP: session checkpoint)"; \
 		git push -u origin HEAD; \
 	fi
-

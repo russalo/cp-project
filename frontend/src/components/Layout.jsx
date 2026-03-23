@@ -8,6 +8,13 @@ export default function Layout({ tab, setTab, children }) {
       <nav className="tab-strip">
         <button
           type="button"
+          className={`tab-btn${tab === 'jobs' ? ' active' : ''}`}
+          onClick={() => setTab('jobs')}
+        >
+          Jobs
+        </button>
+        <button
+          type="button"
           className={`tab-btn${tab === 'employees' ? ' active' : ''}`}
           onClick={() => setTab('employees')}
         >

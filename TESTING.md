@@ -25,6 +25,7 @@ backend/.venv/bin/pytest backend/
 **CI parity command:**
 
 ```bash
+make db-check        # confirm PostgreSQL is responding at backend/.env host/port
 make backend-check   # manage.py check + migrate --check (not the test suite)
 pytest backend/      # run the test suite
 ```
@@ -69,14 +70,20 @@ established in DEC-003.
 | `calculate_ewo_totals` | OH&P applied correctly; bond on/off; return dict matches saved EWO fields (DEC-031) |
 | `submit_ewo` | `open → submitted` transition; `submitted_at` timestamp set; rejects non-open EWOs; atomic with `select_for_update` (DEC-016, DEC-031) |
 
+### What is also covered
+
+| Area | Reason |
+|---|---|
+| `jobs` API endpoints | CRUD coverage for list/create/retrieve/patch/delete plus job-number validation |
+
 ### What is NOT yet covered
 
 | Area | Reason |
 |---|---|
 | `accounts` models / UserProfile | API endpoints not yet built (M2/M4 work) |
-| `jobs` models | Lightweight model; no business logic yet |
 | `resources` models | Reference data models; import logic not yet built |
-| API endpoints (serializers, views) | Not yet wired; to be added alongside endpoint implementation |
+| `resources` API endpoints | Employee/equipment reference endpoints are wired but not directly tested yet |
+| EWO API endpoints | `/api/ewo/...` routes are wired and basic CRUD API tests exist in `backend/ewo/tests.py`; lifecycle/state-transition flows and negative cases are not yet covered |
 | Frontend | No test suite yet; `vitest` planned for M3 |
 
 ---
