@@ -1,5 +1,10 @@
+from datetime import date
+
+from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.test import APITestCase
+
+from ewo.models import ExtraWorkOrder
 
 from .models import Job
 
@@ -75,6 +80,22 @@ class JobApiTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Job.objects.filter(pk=job.pk).exists())
+
+    def test_delete_job_with_ewo_returns_validation_error(self):
+        job = Job.objects.create(job_number='1886', name='Mainline Sewer')
+        user = User.objects.create_user(username='job-delete-user')
+        ExtraWorkOrder.objects.create(
+            job=job,
+            created_by=user,
+            ewo_type=ExtraWorkOrder.EwoType.TM,
+            work_date=date(2025, 6, 15),
+            description='Existing work',
+        )
+
+        response = self.client.delete(f'/api/jobs/{job.pk}/')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Job cannot be deleted', str(response.json()))
 
     def test_create_rejects_invalid_job_number(self):
         response = self.client.post(

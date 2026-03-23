@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 
 from docs_common import ROOT, extract_headings, relpath, working_tree_changed_markdown
@@ -26,8 +27,6 @@ PIPELINE_RELATED = {
 
 
 def diff_numstat(path: str) -> str:
-    import subprocess
-
     result = subprocess.run(
         ["git", "diff", "--numstat", "--", path],
         cwd=ROOT,

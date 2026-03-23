@@ -116,7 +116,7 @@ stop-session:
 	fi
 	@echo "[session] Reminder: update DEV-SESSION.md and DECISIONS.md (if needed) before commit"
 	$(MAKE) backend-check
-	python3 scripts/homework_rollover.py
+	"$(BACKEND_PYTHON)" scripts/homework_rollover.py
 	"$(BACKEND_PYTHON)" scripts/docs_session_stop.py
 	git status
 	git add -A

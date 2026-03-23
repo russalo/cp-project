@@ -1,4 +1,5 @@
 from rest_framework import viewsets
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny
 
 from .models import EquipmentLine, ExtraWorkOrder, LaborLine, MaterialLine
@@ -13,8 +14,6 @@ from .serializers import (
 class EwoLockedDeleteMixin:
     def perform_destroy(self, instance):
         if getattr(instance, 'is_locked', False):
-            from rest_framework.exceptions import ValidationError
-
             raise ValidationError('Locked EWOs cannot be deleted through CRUD endpoints.')
         super().perform_destroy(instance)
 
@@ -22,8 +21,6 @@ class EwoLockedDeleteMixin:
 class ParentEwoLockedDeleteMixin:
     def perform_destroy(self, instance):
         if instance.ewo.is_locked:
-            from rest_framework.exceptions import ValidationError
-
             raise ValidationError(
                 'Line items on locked EWOs cannot be deleted through CRUD endpoints.'
             )
