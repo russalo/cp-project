@@ -56,8 +56,8 @@ by an accepted decision. This creates a navigable trail between the decision log
 
 When a PR introduces an architectural choice:
 
-1. **Before implementing:** add the decision to `DECISIONS.md` with at least two options and
-   pros/cons. Mark it `proposed`.
+1. **Before implementing:** draft the decision in `DECISIONS_INBOX.md` if it is not yet approved,
+   or add it to `DECISIONS.md` if the team is ready to track it formally with options and status.
 2. **In the PR:** link the decision ID in the PR description. Discuss if the options need review.
 3. **On merge:** update the decision status to `accepted` (or `deferred`/`rejected`) and add
    the `Date decided` field. Reference the PR.
@@ -65,7 +65,7 @@ When a PR introduces an architectural choice:
 The milestone items marked `Decision:` in `MILESTONES.md` call this out explicitly. Do not
 implement those items without a recorded decision.
 
-See `DECISIONS.md` for the full log and template.
+See `KNOWLEDGE-PIPELINE.md` for routing rules and `DECISIONS.md` for the canonical log and template.
 
 ---
 
@@ -93,6 +93,7 @@ Use the PR template (`.github/pull_request_template.md`) for every PR. Key point
 - Run `make dev-check` (or at minimum `make backend-check` + `pytest backend/`) before opening
 - Reference any decision IDs in the PR description and commit messages
 - Update `DECISIONS.md` if a new architectural choice was made
+- Update `DECISIONS_INBOX.md` if a new architectural choice was identified but not yet accepted
 - Update `DEV-SESSION.md` if the PR changes ongoing context for multi-machine continuity
 - Add or update tests for any changes to `ewo/services.py` or domain model logic (see `TESTING.md`)
 
@@ -102,7 +103,7 @@ Use the PR template (`.github/pull_request_template.md`) for every PR. Key point
 
 See `README.md` for machine setup and `WORKFLOW.md` for the branch/CI/deploy workflow.
 
-Required tools: `git`, `make`, `python 3.12`, `node 22`, `postgresql 14+`.
+Required tools: `git`, `gh`, `make`, `python 3.12`, `node 22`, `postgresql 14+`.
 
 ```bash
 make setup       # full bootstrap (venv, deps, db, migrations)

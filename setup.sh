@@ -78,7 +78,7 @@ install_postgresql() {
   case "${ID:-}" in
     fedora)
       log "Installing PostgreSQL on Fedora"
-      sudo dnf install -y postgresql-server postgresql-contrib
+      sudo dnf install -y postgresql-server postgresql-contrib gh
       if [[ ! -f /var/lib/pgsql/data/PG_VERSION ]]; then
         sudo postgresql-setup --initdb
       fi
@@ -87,7 +87,7 @@ install_postgresql() {
     ubuntu|debian)
       log "Installing PostgreSQL on Ubuntu/Debian"
       sudo apt update
-      sudo apt install -y postgresql postgresql-contrib
+      sudo apt install -y postgresql postgresql-contrib gh
       sudo systemctl enable --now postgresql
       ;;
     *)

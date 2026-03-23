@@ -3,7 +3,7 @@ ROOT_DIR := $(abspath .)
 VENV_PYTHON := $(ROOT_DIR)/backend/.venv/bin/python
 BACKEND_PYTHON := $(if $(wildcard $(VENV_PYTHON)),$(VENV_PYTHON),$(shell command -v python3 2>/dev/null || printf python3))
 
-.PHONY: setup setup-online setup-backend deps-refresh db-check backend-check backend-test frontend-install frontend-build local-check dev-check backend-run frontend-dev continuity-status start-session stop-session
+.PHONY: setup setup-online setup-backend deps-refresh db-check backend-check backend-test frontend-install frontend-build local-check dev-check backend-run frontend-dev continuity-status start-session stop-session docs-audit knowledge-pipeline-check inbox-status inbox-route-draft archive-audit assistant-doc-check
 
 setup:
 	./setup.sh
@@ -72,6 +72,24 @@ continuity-status:
 		echo "No commits yet on this clone."; \
 	fi
 
+docs-audit:
+	"$(BACKEND_PYTHON)" scripts/docs_audit.py --write-report
+
+knowledge-pipeline-check:
+	"$(BACKEND_PYTHON)" scripts/knowledge_pipeline_check.py --write-report
+
+inbox-status:
+	"$(BACKEND_PYTHON)" scripts/inbox_status.py --write-report
+
+inbox-route-draft:
+	"$(BACKEND_PYTHON)" scripts/inbox_route_draft.py --write-report
+
+archive-audit:
+	"$(BACKEND_PYTHON)" scripts/archive_candidates.py --write-report
+
+assistant-doc-check:
+	"$(BACKEND_PYTHON)" scripts/assistant_doc_diff.py --write-report
+
 start-session:
 	@echo "[session] Syncing and verifying local environment"
 	@if ! git diff --quiet || ! git diff --cached --quiet; then \
@@ -79,9 +97,16 @@ start-session:
 		git --no-pager status --short; \
 		exit 1; \
 	fi
-	git pull --rebase
+	@if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then \
+		echo "[session] Syncing via GitHub CLI"; \
+		gh repo sync --branch "$$(git rev-parse --abbrev-ref HEAD)" || git pull --rebase; \
+	else \
+		echo "[session] GitHub CLI unavailable or not authenticated; falling back to git pull --rebase"; \
+		git pull --rebase; \
+	fi
 	$(MAKE) continuity-status
 	$(MAKE) local-check
+	"$(BACKEND_PYTHON)" scripts/docs_session_start.py
 
 stop-session:
 	@echo "[session] Preparing end-of-session checkpoint"
@@ -92,11 +117,18 @@ stop-session:
 	@echo "[session] Reminder: update DEV-SESSION.md and DECISIONS.md (if needed) before commit"
 	$(MAKE) backend-check
 	python3 scripts/homework_rollover.py
+	"$(BACKEND_PYTHON)" scripts/docs_session_stop.py
 	git status
 	git add -A
 	@if git diff --cached --quiet; then \
 		echo "[session] No staged changes to commit."; \
 	else \
 		git commit -m "$(if $(MSG),$(MSG),WIP: session checkpoint)"; \
+		if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then \
+			echo "[session] Configuring git auth via GitHub CLI"; \
+			gh auth setup-git >/dev/null 2>&1 || true; \
+		else \
+			echo "[session] GitHub CLI unavailable or not authenticated; using existing git remote auth"; \
+		fi; \
 		git push -u origin HEAD; \
 	fi

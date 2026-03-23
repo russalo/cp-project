@@ -2,6 +2,8 @@ This is a list of target milestones for the project. These are not set in stone 
 
 Decision rule for items marked "Decision": evaluate options, capture pros/cons, then record the chosen approach in `DECISIONS.md` before implementation.
 
+Draft future sequencing that is not yet approved belongs in `MILESTONES_INBOX.md`, not here.
+
 Issue sync note:
 
 - GitHub TODO issue automation uses `PROJECT_TODOS.py` as the canonical source for synced TODO items.
