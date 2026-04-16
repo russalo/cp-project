@@ -149,8 +149,8 @@ class Command(BaseCommand):
                 continue
 
             # make_code/make_desc: use the Make column for both (no separate code)
-            make_code = _short_code(make)
-            model_code = _short_code(model_desc)[:50]
+            make_code = _short_code(make, max_len=20)
+            model_code = _short_code(model_desc, max_len=50)
 
             natural_key = (schedule.pk, class_code, make_code, model_code)
             if natural_key in seen:
@@ -195,9 +195,14 @@ class Command(BaseCommand):
             if not trade_name or reg is None:
                 continue
 
-            union_name, union_abbrev = TRADE_UNION_MAP.get(
-                trade_name, ('Unknown Union', 'UNK')
-            )
+            if trade_name not in TRADE_UNION_MAP:
+                raise CommandError(
+                    f'Unknown trade "{trade_name}" encountered in Union Rates sheet. '
+                    f'Add it to TRADE_UNION_MAP in '
+                    f'resources/management/commands/ingest_ewo_workbook.py '
+                    f'(supply union_name and union_abbrev) before re-running.'
+                )
+            union_name, union_abbrev = TRADE_UNION_MAP[trade_name]
             trade, was_created = TradeClassification.objects.update_or_create(
                 name=trade_name,
                 defaults={'union_name': union_name, 'union_abbrev': union_abbrev},
@@ -243,6 +248,8 @@ class Command(BaseCommand):
         Code follows ``[TRADE]-[LLFF]`` format.
         """
         ws = wb['Labor']
+        # Pre-fetch trades into a dict — tiny table, avoids a query per employee.
+        trade_by_name = {t.name: t for t in TradeClassification.objects.all()}
         created, updated, skipped = 0, 0, 0
         for i, row in enumerate(ws.iter_rows(values_only=True), 1):
             if i == 1:
@@ -255,9 +262,8 @@ class Command(BaseCommand):
                 skipped += 1
                 continue
 
-            try:
-                trade = TradeClassification.objects.get(name=trade_name)
-            except TradeClassification.DoesNotExist:
+            trade = trade_by_name.get(trade_name)
+            if trade is None:
                 skipped += 1
                 self.stdout.write(self.style.WARNING(
                     f'    skip employee {code!r}: trade {trade_name!r} not found'
@@ -318,22 +324,33 @@ class Command(BaseCommand):
                 ])
             )
 
-            _, was_created = EquipmentType.objects.update_or_create(
+            # Sheet-sourced fields are authoritative on every run. Fields
+            # populated later by admin or a follow-up linker (rate_ot,
+            # rate_standby, caltrans_rate_line) are only set on CREATE so
+            # re-running ingest never clobbers manual adjustments.
+            sheet_defaults = {
+                'rate_reg': rate_reg,
+                'fuel_surcharge_eligible': fuel_eligible,
+                'ct_match_quality': match_quality,
+                'notes': composed_notes,
+                'active': True,
+            }
+            et, was_created = EquipmentType.objects.get_or_create(
                 name=code,  # natural key: the CP equipment code
                 defaults={
-                    'rate_reg': rate_reg,
-                    'rate_ot': Decimal('0'),       # populate via admin or Caltrans-link follow-up
-                    'rate_standby': Decimal('0'),  # populate via admin or Caltrans-link follow-up
-                    'fuel_surcharge_eligible': fuel_eligible,
-                    'ct_match_quality': match_quality,
-                    'caltrans_rate_line': None,    # auto-link in a follow-up pass
-                    'notes': composed_notes,
-                    'active': True,
+                    **sheet_defaults,
+                    'rate_ot': Decimal('0'),       # admin/follow-up fills; never touched on update
+                    'rate_standby': Decimal('0'),  # admin/follow-up fills; never touched on update
+                    'caltrans_rate_line': None,    # admin/follow-up links; never touched on update
                 },
             )
             if was_created:
                 created += 1
             else:
+                # Update only the sheet-sourced fields.
+                for k, v in sheet_defaults.items():
+                    setattr(et, k, v)
+                et.save(update_fields=list(sheet_defaults.keys()))
                 updated += 1
             match_counts[match_quality] = match_counts.get(match_quality, 0) + 1
 
