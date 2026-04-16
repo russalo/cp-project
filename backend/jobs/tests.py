@@ -88,7 +88,6 @@ class JobApiTests(APITestCase):
             job=job,
             created_by=user,
             ewo_type=ExtraWorkOrder.EwoType.TM,
-            work_date=date(2025, 6, 15),
             description='Existing work',
         )
 

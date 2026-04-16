@@ -1,12 +1,13 @@
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
-from .models import EquipmentLine, ExtraWorkOrder, LaborLine, MaterialLine
+from .models import EquipmentLine, ExtraWorkOrder, LaborLine, MaterialLine, WorkDay
 
 
 class ExtraWorkOrderSerializer(serializers.ModelSerializer):
     job_number = serializers.CharField(source='job.job_number', read_only=True)
     line_counts = serializers.SerializerMethodField()
+    workday_count = serializers.SerializerMethodField()
 
     class Meta:
         model = ExtraWorkOrder
@@ -20,7 +21,6 @@ class ExtraWorkOrderSerializer(serializers.ModelSerializer):
             'parent_ewo',
             'revision',
             'ewo_type',
-            'work_date',
             'description',
             'status',
             'gc_ack_name',
@@ -33,13 +33,16 @@ class ExtraWorkOrderSerializer(serializers.ModelSerializer):
             'equip_mat_ohp_pct',
             'bond_pct',
             'bond_required',
+            'fuel_surcharge_pct',
             'labor_subtotal',
             'labor_ohp_amount',
             'equip_mat_subtotal',
             'equip_mat_ohp_amount',
+            'fuel_subtotal',
             'bond_amount',
             'total',
             'submitted_at',
+            'workday_count',
             'line_counts',
         ]
         read_only_fields = [
@@ -52,29 +55,41 @@ class ExtraWorkOrderSerializer(serializers.ModelSerializer):
             'labor_ohp_amount',
             'equip_mat_subtotal',
             'equip_mat_ohp_amount',
+            'fuel_subtotal',
             'bond_amount',
             'total',
             'submitted_at',
+            'workday_count',
             'line_counts',
         ]
 
+    def get_workday_count(self, obj):
+        """Prefer annotated count from the viewset queryset; fall back to a query."""
+        annotated = getattr(obj, 'workday_count', None)
+        if annotated is not None:
+            return annotated
+        return obj.work_days.count()
+
     def get_line_counts(self, obj):
-        labor_count = getattr(obj, 'labor_count', None)
-        if labor_count is None:
-            labor_count = obj.labor_lines.count()
+        """
+        Rolled-up line counts across all WorkDays for this EWO.
+        Prefer annotations if the viewset attached them; otherwise query.
+        """
+        labor = getattr(obj, 'labor_count', None)
+        equipment = getattr(obj, 'equipment_count', None)
+        materials = getattr(obj, 'materials_count', None)
 
-        equipment_count = getattr(obj, 'equipment_count', None)
-        if equipment_count is None:
-            equipment_count = obj.equipment_lines.count()
-
-        materials_count = getattr(obj, 'materials_count', None)
-        if materials_count is None:
-            materials_count = obj.material_lines.count()
+        if labor is None:
+            labor = LaborLine.objects.filter(work_day__ewo=obj).count()
+        if equipment is None:
+            equipment = EquipmentLine.objects.filter(work_day__ewo=obj).count()
+        if materials is None:
+            materials = MaterialLine.objects.filter(work_day__ewo=obj).count()
 
         return {
-            'labor': labor_count,
-            'equipment': equipment_count,
-            'materials': materials_count,
+            'labor': labor,
+            'equipment': equipment,
+            'materials': materials,
         }
 
     def validate(self, attrs):
@@ -94,25 +109,75 @@ class ExtraWorkOrderSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class EwoLockedModelSerializer(serializers.ModelSerializer):
-    """
-    Base serializer for line items. CRUD is allowed only while the parent EWO
-    remains editable (`open` or `rejected`).
-    """
+class WorkDaySerializer(serializers.ModelSerializer):
+    ewo_number = serializers.CharField(source='ewo.ewo_number', read_only=True)
+
+    class Meta:
+        model = WorkDay
+        fields = [
+            'id',
+            'ewo',
+            'ewo_number',
+            'work_date',
+            'location',
+            'weather',
+            'description',
+            'foreman_name',
+            'superintendent_name',
+            'labor_subtotal',
+            'equip_subtotal',
+            'material_subtotal',
+            'fuel_amount',
+            'labor_ohp_amount',
+            'equip_mat_ohp_amount',
+            'bond_amount',
+            'day_total',
+        ]
+        read_only_fields = [
+            'labor_subtotal',
+            'equip_subtotal',
+            'material_subtotal',
+            'fuel_amount',
+            'labor_ohp_amount',
+            'equip_mat_ohp_amount',
+            'bond_amount',
+            'day_total',
+        ]
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
         source_ewo = getattr(self.instance, 'ewo', None)
         target_ewo = attrs.get('ewo') or source_ewo
-
         if source_ewo and source_ewo.is_locked:
             raise serializers.ValidationError(
-                'Line items on locked EWOs cannot be edited through CRUD endpoints.'
+                'WorkDays on locked EWOs cannot be edited through CRUD endpoints.'
             )
         if target_ewo and target_ewo.is_locked:
             raise serializers.ValidationError(
-                'Line items on locked EWOs cannot be edited through CRUD endpoints.'
+                'WorkDays on locked EWOs cannot be edited through CRUD endpoints.'
             )
+        return attrs
+
+
+class LineLockedModelSerializer(serializers.ModelSerializer):
+    """
+    Base serializer for line items hanging off a WorkDay. CRUD is allowed
+    only while the owning EWO remains editable (open or rejected).
+    """
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        source_work_day = getattr(self.instance, 'work_day', None)
+        target_work_day = attrs.get('work_day') or source_work_day
+
+        def _check(wd):
+            if wd is not None and wd.ewo_id and wd.ewo.is_locked:
+                raise serializers.ValidationError(
+                    'Line items on locked EWOs cannot be edited through CRUD endpoints.'
+                )
+
+        _check(source_work_day)
+        _check(target_work_day)
         return attrs
 
     def _run_model_validation(self, attrs):
@@ -147,15 +212,17 @@ class EwoLockedModelSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
-class LaborLineSerializer(EwoLockedModelSerializer):
-    ewo_number = serializers.CharField(source='ewo.ewo_number', read_only=True)
+class LaborLineSerializer(LineLockedModelSerializer):
+    ewo_number = serializers.CharField(source='work_day.ewo.ewo_number', read_only=True)
+    work_date = serializers.DateField(source='work_day.work_date', read_only=True)
 
     class Meta:
         model = LaborLine
         fields = [
             'id',
-            'ewo',
+            'work_day',
             'ewo_number',
+            'work_date',
             'labor_type',
             'employee',
             'employee_default_trade',
@@ -192,20 +259,23 @@ class LaborLineSerializer(EwoLockedModelSerializer):
         return attrs
 
 
-class EquipmentLineSerializer(EwoLockedModelSerializer):
-    ewo_number = serializers.CharField(source='ewo.ewo_number', read_only=True)
+class EquipmentLineSerializer(LineLockedModelSerializer):
+    ewo_number = serializers.CharField(source='work_day.ewo.ewo_number', read_only=True)
+    work_date = serializers.DateField(source='work_day.work_date', read_only=True)
 
     class Meta:
         model = EquipmentLine
         fields = [
             'id',
-            'ewo',
+            'work_day',
             'ewo_number',
+            'work_date',
             'equipment_type',
             'caltrans_rate_line',
-            'usage_type',
-            'hours',
-            'unit',
+            'qty',
+            'reg_hours',
+            'ot_hours',
+            'standby_hours',
             'rental_rate_snapshot',
             'rw_delay_rate_snapshot',
             'ot_rate_snapshot',
@@ -220,15 +290,17 @@ class EquipmentLineSerializer(EwoLockedModelSerializer):
         ]
 
 
-class MaterialLineSerializer(EwoLockedModelSerializer):
-    ewo_number = serializers.CharField(source='ewo.ewo_number', read_only=True)
+class MaterialLineSerializer(LineLockedModelSerializer):
+    ewo_number = serializers.CharField(source='work_day.ewo.ewo_number', read_only=True)
+    work_date = serializers.DateField(source='work_day.work_date', read_only=True)
 
     class Meta:
         model = MaterialLine
         fields = [
             'id',
-            'ewo',
+            'work_day',
             'ewo_number',
+            'work_date',
             'catalog_item',
             'description',
             'quantity',

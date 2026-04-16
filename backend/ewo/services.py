@@ -5,15 +5,27 @@ All money math lives here. Never perform currency calculations in views,
 serializers, or models. Use decimal.ROUND_UP at every calculation step
 per DEC-023. See DEC-003 and DEC-031 for the calculation timing policy.
 
+Per DEC-064, daily dollar amounts (OH&P, fuel, bond) are computed on each
+WorkDay using the EWO-level percentages. The EWO's rolled-up totals are
+the sum across its WorkDays.
+
+Fuel surcharge math (DEC-062): the per-day fuel amount is
+``fuel_surcharge_pct × Σ(fuel-eligible equipment line totals on that day)``.
+Fuel is equipment-related, so it enters the Equipment+Materials OH&P base
+(chain B) — ``OH&P_EM = (equip + mat + fuel) × equip_mat_ohp_pct``. Bond
+applies on top of everything.
+
 Public API
 ----------
 get_labor_rate(trade_classification, work_date)   -> LaborRate
-get_equipment_rates(equipment_type, work_date)    -> CaltransRateLine
+get_equipment_rates(equipment_type, work_date)    -> (reg, ot, standby, ct_fk)
 calculate_labor_line(line)                        -> Decimal (line_total)
 calculate_equipment_line(line)                    -> Decimal (line_total)
 calculate_material_line(line)                     -> Decimal (line_total)
-calculate_ewo_totals(ewo)                         -> dict of computed totals
+calculate_workday_totals(work_day)                -> dict
+calculate_ewo_totals(ewo)                         -> dict of EWO rollups
 submit_ewo(ewo)                                   -> ExtraWorkOrder (submitted)
+create_ewo_from_job(...)                          -> ExtraWorkOrder (pct snapshotted)
 """
 
 from decimal import ROUND_UP, Decimal
@@ -24,6 +36,7 @@ from django.utils import timezone
 
 # All currency values are rounded to this precision using ROUND_UP (DEC-023).
 _CENT = Decimal('0.01')
+_ZERO = Decimal('0.00')
 
 
 def _round(value):
@@ -63,17 +76,12 @@ def get_equipment_rates(equipment_type, work_date):
     """
     Return the current rates for an EquipmentType (DEC-060).
 
-    Per DEC-060, ``EquipmentType`` owns authoritative billing rates. Annual
-    Caltrans re-ingest refreshes them from factors × rental_rate; items with
-    no CT match carry manually-entered (in-house / FMV) rates. ``work_date``
-    is preserved in the signature for API symmetry with ``get_labor_rate``
-    but historical effective-dating is provided by on-line snapshots, not by
-    stepping back through EquipmentType rate history.
+    ``work_date`` is preserved in the signature for symmetry with
+    ``get_labor_rate`` but does not drive a per-date Caltrans lookup —
+    historical effective-dating is provided by line-level snapshots.
 
-    Returns ``(rate_reg, rate_ot, rate_standby, caltrans_rate_line_or_None)``
-    where ``caltrans_rate_line`` is the provenance FK for audit, if any.
-
-    Raises ValueError if no rates are configured (all three fields are zero).
+    Returns ``(rate_reg, rate_ot, rate_standby, caltrans_rate_line_or_None)``.
+    Raises ValueError if the EquipmentType has no rates configured.
     """
     if (
         equipment_type.rate_reg == 0
@@ -106,7 +114,7 @@ def calculate_labor_line(line):
 
     Returns the calculated line_total (Decimal).
     """
-    rate = get_labor_rate(line.trade_classification, line.ewo.work_date)
+    rate = get_labor_rate(line.trade_classification, line.work_day.work_date)
 
     line.rate_reg_snapshot = rate.rate_reg
     line.rate_ot_snapshot = rate.rate_ot
@@ -125,23 +133,16 @@ def calculate_labor_line(line):
 
 def calculate_equipment_line(line):
     """
-    Snapshot rates and calculate line_total for an EquipmentLine.
+    Snapshot rates and calculate line_total for an EquipmentLine (DEC-066).
 
-    Rates come from the ``EquipmentType`` (DEC-060). All three components
-    are snapshotted regardless of ``usage_type`` so the full rate context is
-    preserved for audit (DEC-021, DEC-015).
+    line_total = qty × (reg_hrs × rate_reg + ot_hrs × rate_ot + standby_hrs × rate_standby)
 
-    usage_type determines which rate is applied (DEC-021):
-      operating → rate_reg
-      standby   → rate_standby
-      overtime  → rate_ot  (Caltrans OT is rental × ot_factor, not a surcharge)
-
-    Returns the calculated line_total (Decimal).
+    Each per-unit time-type component is rounded independently before
+    combining (DEC-023, DEC-025). The qty multiplier is applied to the
+    already-rounded per-unit total.
     """
-    from ewo.models import EquipmentLine
-
     rate_reg, rate_ot, rate_standby, caltrans_line = get_equipment_rates(
-        line.equipment_type, line.ewo.work_date
+        line.equipment_type, line.work_day.work_date
     )
 
     line.caltrans_rate_line = caltrans_line
@@ -149,16 +150,12 @@ def calculate_equipment_line(line):
     line.rw_delay_rate_snapshot = rate_standby
     line.ot_rate_snapshot = rate_ot
 
-    if line.usage_type == EquipmentLine.UsageType.OPERATING:
-        rate = rate_reg
-    elif line.usage_type == EquipmentLine.UsageType.STANDBY:
-        rate = rate_standby
-    elif line.usage_type == EquipmentLine.UsageType.OVERTIME:
-        rate = rate_ot
-    else:
-        raise ValueError(f'Unknown usage_type: {line.usage_type!r}')
+    reg_total = _round(line.reg_hours * rate_reg)
+    ot_total = _round(line.ot_hours * rate_ot)
+    standby_total = _round(line.standby_hours * rate_standby)
+    per_unit = reg_total + ot_total + standby_total
 
-    line.line_total = _round(line.hours * rate)
+    line.line_total = per_unit * line.qty
     line.save(update_fields=[
         'caltrans_rate_line', 'rental_rate_snapshot', 'rw_delay_rate_snapshot',
         'ot_rate_snapshot', 'line_total',
@@ -173,8 +170,6 @@ def calculate_material_line(line):
     Total is always unit_cost × quantity, rounded UP (DEC-022, DEC-023).
     If the line references a catalog item, updates that item's cost and
     usage stats so the catalog stays current.
-
-    Returns the calculated line_total (Decimal).
     """
     line.line_total = _round(line.quantity * line.unit_cost)
     line.save(update_fields=['line_total'])
@@ -186,105 +181,205 @@ def calculate_material_line(line):
 
 
 def _update_catalog_stats(material_line):
-    """
-    Refresh last_unit_cost, last_cost_date, use_count, and last_used on the
-    referenced MaterialCatalog item. Uses F() to avoid race conditions on use_count.
-    """
+    """Refresh catalog item cost / usage counters after a material line saves."""
     from django.db.models import F
     from resources.models import MaterialCatalog
 
     MaterialCatalog.objects.filter(pk=material_line.catalog_item_id).update(
         last_unit_cost=material_line.unit_cost,
-        last_cost_date=material_line.ewo.work_date,
+        last_cost_date=material_line.work_day.work_date,
         use_count=F('use_count') + 1,
-        last_used=material_line.ewo.work_date,
+        last_used=material_line.work_day.work_date,
     )
 
 
-# ─── EWO totals ───────────────────────────────────────────────────────────────
+# ─── WorkDay and EWO totals ───────────────────────────────────────────────────
 
 
-def calculate_ewo_totals(ewo):
+def calculate_workday_totals(work_day):
     """
-    Calculate and write all line totals and EWO-level totals.
+    Calculate and write daily totals for one WorkDay (DEC-064).
 
-    Order of operations (CHARTER billing structure):
-      1. Labor subtotal        — sum of labor line totals
-      2. Labor OH&P            — labor_subtotal × labor_ohp_pct, rounded UP
-      3. Equip+Mat subtotal    — sum of equipment and material line totals
-      4. Equip+Mat OH&P        — equip_mat_subtotal × equip_mat_ohp_pct, rounded UP
-      5. Bond (if required)    — (subtotal before bond) × bond_pct, rounded UP
-      6. Total
+    Order of operations — "chain B" per the fuel-surcharge design:
+      1. Labor subtotal       — sum of labor line totals
+      2. Labor OH&P           — labor_subtotal × EWO.labor_ohp_pct
+      3. Equip subtotal       — sum of equipment line totals (all equipment)
+      4. Material subtotal    — sum of material line totals
+      5. Fuel amount          — EWO.fuel_surcharge_pct × sum of fuel-eligible
+                                equipment line totals only (DEC-062)
+      6. Equip+Mat OH&P       — (equip + mat + fuel) × EWO.equip_mat_ohp_pct
+                                (fuel enters this OH&P base — chain B)
+      7. Bond (if required)   — (everything above) × EWO.bond_pct
+      8. day_total            — sum of all of the above
 
-    Does NOT change EWO status — call submit_ewo() for the full transition.
-    This separation keeps this function pure and independently testable.
-
-    Returns a dict of the computed totals for inspection/testing.
-    Raises ValueError if any rate lookup fails.
+    Returns a dict of the computed amounts. Does not change status.
     """
-    # Calculate all lines
-    for line in ewo.labor_lines.select_related('trade_classification', 'ewo').all():
+    ewo = work_day.ewo
+
+    # Fetch each line set once; reuse the objects for calculation + aggregation
+    # to avoid re-querying. equipment_type is selected so the fuel-eligible
+    # filter runs in-memory rather than spawning an extra query.
+    labor_lines = list(
+        work_day.labor_lines.select_related('trade_classification', 'work_day').all()
+    )
+    equipment_lines = list(
+        work_day.equipment_lines.select_related('equipment_type', 'work_day').all()
+    )
+    material_lines = list(
+        work_day.material_lines.select_related('catalog_item', 'work_day').all()
+    )
+
+    for line in labor_lines:
         calculate_labor_line(line)
-
-    for line in ewo.equipment_lines.select_related('equipment_type', 'ewo').all():
+    for line in equipment_lines:
         calculate_equipment_line(line)
-
-    for line in ewo.material_lines.select_related('catalog_item', 'ewo').all():
+    for line in material_lines:
         calculate_material_line(line)
 
-    # Aggregate subtotals (re-query after saves to get fresh values)
-    labor_subtotal = _sum_line_totals(ewo.labor_lines.all())
-    equip_subtotal = _sum_line_totals(ewo.equipment_lines.all())
-    mat_subtotal = _sum_line_totals(ewo.material_lines.all())
-    equip_mat_subtotal = equip_subtotal + mat_subtotal
+    labor_subtotal = _sum_line_totals(labor_lines)
+    equip_subtotal = _sum_line_totals(equipment_lines)
+    material_subtotal = _sum_line_totals(material_lines)
 
-    # Apply OH&P markups
+    # Fuel surcharge base: only equipment lines whose type is fuel_eligible.
+    # Filtered in Python since equipment_type is already joined.
+    fuel_base = _sum_line_totals(
+        [line for line in equipment_lines if line.equipment_type.fuel_surcharge_eligible]
+    )
+    fuel_amount = _round(fuel_base * ewo.fuel_surcharge_pct)
+
     labor_ohp_amount = _round(labor_subtotal * ewo.labor_ohp_pct)
-    equip_mat_ohp_amount = _round(equip_mat_subtotal * ewo.equip_mat_ohp_pct)
+    # Chain B: fuel enters the equip+mat OH&P base.
+    equip_mat_ohp_amount = _round(
+        (equip_subtotal + material_subtotal + fuel_amount) * ewo.equip_mat_ohp_pct
+    )
 
     subtotal_before_bond = (
         labor_subtotal + labor_ohp_amount
-        + equip_mat_subtotal + equip_mat_ohp_amount
+        + equip_subtotal + material_subtotal + fuel_amount
+        + equip_mat_ohp_amount
     )
-
-    # Bond is applied to the pre-bond total, not just the base (CHARTER)
     bond_amount = (
         _round(subtotal_before_bond * ewo.bond_pct)
         if ewo.bond_required
-        else Decimal('0.00')
+        else _ZERO
     )
+    day_total = subtotal_before_bond + bond_amount
 
-    total = subtotal_before_bond + bond_amount
-
-    # Write computed totals to the EWO record
-    ewo.labor_subtotal = labor_subtotal
-    ewo.labor_ohp_amount = labor_ohp_amount
-    ewo.equip_mat_subtotal = equip_mat_subtotal
-    ewo.equip_mat_ohp_amount = equip_mat_ohp_amount
-    ewo.bond_amount = bond_amount
-    ewo.total = total
-    ewo.save(update_fields=[
-        'labor_subtotal', 'labor_ohp_amount',
-        'equip_mat_subtotal', 'equip_mat_ohp_amount',
-        'bond_amount', 'total',
+    work_day.labor_subtotal = labor_subtotal
+    work_day.equip_subtotal = equip_subtotal
+    work_day.material_subtotal = material_subtotal
+    work_day.fuel_amount = fuel_amount
+    work_day.labor_ohp_amount = labor_ohp_amount
+    work_day.equip_mat_ohp_amount = equip_mat_ohp_amount
+    work_day.bond_amount = bond_amount
+    work_day.day_total = day_total
+    work_day.save(update_fields=[
+        'labor_subtotal', 'equip_subtotal', 'material_subtotal',
+        'fuel_amount', 'labor_ohp_amount', 'equip_mat_ohp_amount',
+        'bond_amount', 'day_total',
     ])
 
     return {
         'labor_subtotal': labor_subtotal,
+        'equip_subtotal': equip_subtotal,
+        'material_subtotal': material_subtotal,
+        'fuel_amount': fuel_amount,
         'labor_ohp_amount': labor_ohp_amount,
+        'equip_mat_ohp_amount': equip_mat_ohp_amount,
+        'bond_amount': bond_amount,
+        'day_total': day_total,
+    }
+
+
+def calculate_ewo_totals(ewo):
+    """
+    Calculate WorkDay totals and roll them up onto the EWO record (DEC-064).
+
+    Returns a dict of the rolled-up totals.
+    Raises ValueError if any rate lookup fails during line calculation.
+    """
+    for work_day in ewo.work_days.all():
+        calculate_workday_totals(work_day)
+
+    # Roll up from WorkDays (re-query for freshness)
+    days = list(ewo.work_days.all())
+
+    labor_subtotal = sum((d.labor_subtotal or _ZERO for d in days), _ZERO)
+    equip_subtotal = sum((d.equip_subtotal or _ZERO for d in days), _ZERO)
+    material_subtotal = sum((d.material_subtotal or _ZERO for d in days), _ZERO)
+    equip_mat_subtotal = equip_subtotal + material_subtotal
+    fuel_subtotal = sum((d.fuel_amount or _ZERO for d in days), _ZERO)
+    labor_ohp_amount = sum((d.labor_ohp_amount or _ZERO for d in days), _ZERO)
+    equip_mat_ohp_amount = sum((d.equip_mat_ohp_amount or _ZERO for d in days), _ZERO)
+    bond_amount = sum((d.bond_amount or _ZERO for d in days), _ZERO)
+    total = sum((d.day_total or _ZERO for d in days), _ZERO)
+
+    ewo.labor_subtotal = labor_subtotal
+    ewo.equip_mat_subtotal = equip_mat_subtotal
+    ewo.fuel_subtotal = fuel_subtotal
+    ewo.labor_ohp_amount = labor_ohp_amount
+    ewo.equip_mat_ohp_amount = equip_mat_ohp_amount
+    ewo.bond_amount = bond_amount
+    ewo.total = total
+    ewo.save(update_fields=[
+        'labor_subtotal', 'equip_mat_subtotal', 'fuel_subtotal',
+        'labor_ohp_amount', 'equip_mat_ohp_amount', 'bond_amount', 'total',
+    ])
+
+    return {
+        'labor_subtotal': labor_subtotal,
         'equip_mat_subtotal': equip_mat_subtotal,
+        'fuel_subtotal': fuel_subtotal,
+        'labor_ohp_amount': labor_ohp_amount,
         'equip_mat_ohp_amount': equip_mat_ohp_amount,
         'bond_amount': bond_amount,
         'total': total,
     }
 
 
-def _sum_line_totals(queryset):
-    """Sum line_total values from a queryset, treating None as zero."""
+def _sum_line_totals(lines):
+    """Sum line_total values from a queryset or iterable, treating None as zero."""
     return sum(
-        (line.line_total for line in queryset if line.line_total is not None),
-        Decimal('0.00'),
+        (line.line_total for line in lines if line.line_total is not None),
+        _ZERO,
     )
+
+
+# ─── Creation helpers ─────────────────────────────────────────────────────────
+
+
+def create_ewo_from_job(job, created_by, **fields):
+    """
+    Construct an EWO with Job-level defaults snapshotted onto it (DEC-063).
+
+    Fuel surcharge % is seeded from the most recent EWO on the same Job
+    (DEC-062 — last-used default); falls back to zero if this is the first
+    EWO on the job.
+
+    Any explicit ``labor_ohp_pct`` / ``equip_mat_ohp_pct`` / ``bond_pct`` /
+    ``fuel_surcharge_pct`` passed in ``fields`` overrides the snapshot.
+    """
+    from ewo.models import ExtraWorkOrder
+
+    # Last-used fuel % on this job
+    previous_fuel_pct = (
+        ExtraWorkOrder.objects
+        .filter(job=job)
+        .order_by('-ewo_sequence')
+        .values_list('fuel_surcharge_pct', flat=True)
+        .first()
+    )
+
+    defaults = {
+        'labor_ohp_pct': job.labor_ohp_pct,
+        'equip_mat_ohp_pct': job.equip_mat_ohp_pct,
+        'bond_pct': job.bond_pct,
+        'fuel_surcharge_pct': (
+            previous_fuel_pct if previous_fuel_pct is not None else Decimal('0.0000')
+        ),
+    }
+    defaults.update(fields)
+    return ExtraWorkOrder.objects.create(job=job, created_by=created_by, **defaults)
 
 
 # ─── State transition ─────────────────────────────────────────────────────────
@@ -294,11 +389,12 @@ def submit_ewo(ewo):
     """
     Transition an EWO from open → submitted (DEC-016, DEC-031).
 
-    Wraps calculate_ewo_totals() and the status change in a single database
-    transaction. After this call, the EWO and all its lines are locked.
+    Wraps ``calculate_ewo_totals`` and the status change in a single
+    database transaction. After this call, the EWO and all its lines
+    are locked.
 
     Raises ValidationError if the EWO is not in open status.
-    Raises ValueError if any rate lookup fails (propagated from line calculators).
+    Raises ValueError if any rate lookup fails.
     """
     from ewo.models import ExtraWorkOrder
 
@@ -309,10 +405,8 @@ def submit_ewo(ewo):
         )
 
     with transaction.atomic():
-        # Re-fetch with a lock to prevent concurrent submission
         ewo = ExtraWorkOrder.objects.select_for_update().get(pk=ewo.pk)
 
-        # Double-check status inside the lock
         if ewo.status != ExtraWorkOrder.Status.OPEN:
             raise ValidationError(
                 f'EWO {ewo.ewo_number} was already submitted by another process.'
