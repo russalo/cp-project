@@ -39,6 +39,9 @@ db.sqlite3-journal
 .github-copilot/*.xlsx
 .github-copilot/*.pdf
 
+# Local scratch / working material (reference only, not committed)
+/scratch/
+
 # OS
 .DS_Store
 Thumbs.db
