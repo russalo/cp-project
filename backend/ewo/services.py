@@ -44,10 +44,6 @@ def _round(value):
     return value.quantize(_CENT, rounding=ROUND_UP)
 
 
-def _decimal_or_zero(value):
-    return value if value is not None else _ZERO
-
-
 # ─── Rate lookups ─────────────────────────────────────────────────────────────
 
 
@@ -220,26 +216,34 @@ def calculate_workday_totals(work_day):
     """
     ewo = work_day.ewo
 
-    # Calculate each line first
-    for line in work_day.labor_lines.select_related('trade_classification', 'work_day').all():
+    # Fetch each line set once; reuse the objects for calculation + aggregation
+    # to avoid re-querying. equipment_type is selected so the fuel-eligible
+    # filter runs in-memory rather than spawning an extra query.
+    labor_lines = list(
+        work_day.labor_lines.select_related('trade_classification', 'work_day').all()
+    )
+    equipment_lines = list(
+        work_day.equipment_lines.select_related('equipment_type', 'work_day').all()
+    )
+    material_lines = list(
+        work_day.material_lines.select_related('catalog_item', 'work_day').all()
+    )
+
+    for line in labor_lines:
         calculate_labor_line(line)
-
-    for line in work_day.equipment_lines.select_related('equipment_type', 'work_day').all():
+    for line in equipment_lines:
         calculate_equipment_line(line)
-
-    for line in work_day.material_lines.select_related('catalog_item', 'work_day').all():
+    for line in material_lines:
         calculate_material_line(line)
 
-    # Aggregate subtotals (re-query after saves to get fresh values)
-    labor_subtotal = _sum_line_totals(work_day.labor_lines.all())
-    equip_subtotal = _sum_line_totals(work_day.equipment_lines.all())
-    material_subtotal = _sum_line_totals(work_day.material_lines.all())
+    labor_subtotal = _sum_line_totals(labor_lines)
+    equip_subtotal = _sum_line_totals(equipment_lines)
+    material_subtotal = _sum_line_totals(material_lines)
 
-    # Fuel surcharge base: only equipment lines whose type is fuel_eligible
+    # Fuel surcharge base: only equipment lines whose type is fuel_eligible.
+    # Filtered in Python since equipment_type is already joined.
     fuel_base = _sum_line_totals(
-        work_day.equipment_lines
-        .filter(equipment_type__fuel_surcharge_eligible=True)
-        .all()
+        [line for line in equipment_lines if line.equipment_type.fuel_surcharge_eligible]
     )
     fuel_amount = _round(fuel_base * ewo.fuel_surcharge_pct)
 
@@ -333,10 +337,10 @@ def calculate_ewo_totals(ewo):
     }
 
 
-def _sum_line_totals(queryset):
-    """Sum line_total values from a queryset, treating None as zero."""
+def _sum_line_totals(lines):
+    """Sum line_total values from a queryset or iterable, treating None as zero."""
     return sum(
-        (line.line_total for line in queryset if line.line_total is not None),
+        (line.line_total for line in lines if line.line_total is not None),
         _ZERO,
     )
 

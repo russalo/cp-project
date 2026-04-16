@@ -34,7 +34,12 @@ _MARKUP_VALIDATORS = [
 
 
 def forward_reparent(apps, schema_editor):
-    """Create a WorkDay per legacy EWO.work_date; move all lines under it."""
+    """
+    Create a WorkDay per legacy EWO.work_date; move all lines under it.
+    Uses ``.save()`` (not ``.update()``) so django-simple-history records each
+    transition — audit trails win over perf here. ``.iterator()`` streams rows
+    to keep memory bounded on larger deploys.
+    """
     ExtraWorkOrder = apps.get_model('ewo', 'ExtraWorkOrder')
     WorkDay = apps.get_model('ewo', 'WorkDay')
     LaborLine = apps.get_model('ewo', 'LaborLine')
@@ -46,12 +51,14 @@ def forward_reparent(apps, schema_editor):
     STANDBY = 'standby'
     OVERTIME = 'overtime'
 
-    for ewo in ExtraWorkOrder.objects.all():
+    for ewo in ExtraWorkOrder.objects.iterator():
         wd = WorkDay.objects.create(ewo=ewo, work_date=ewo.work_date)
 
-        LaborLine.objects.filter(ewo=ewo).update(work_day=wd)
+        for line in LaborLine.objects.filter(ewo=ewo).iterator():
+            line.work_day = wd
+            line.save(update_fields=['work_day'])
 
-        for line in EquipmentLine.objects.filter(ewo=ewo):
+        for line in EquipmentLine.objects.filter(ewo=ewo).iterator():
             line.work_day = wd
             line.qty = 1
             hours = line.hours or Decimal('0.0')
@@ -63,26 +70,38 @@ def forward_reparent(apps, schema_editor):
                 line.standby_hours = hours
             line.save(update_fields=['work_day', 'qty', 'reg_hours', 'ot_hours', 'standby_hours'])
 
-        MaterialLine.objects.filter(ewo=ewo).update(work_day=wd)
+        for line in MaterialLine.objects.filter(ewo=ewo).iterator():
+            line.work_day = wd
+            line.save(update_fields=['work_day'])
 
 
 def reverse_reparent(apps, schema_editor):
-    """Reverse: set the legacy ``ewo`` FK on each line back from work_day.ewo,
-    collapse the per-unit hour buckets back into the single ``hours`` field
-    plus a usage_type chosen by which bucket is non-zero, and delete WorkDays.
-    Best-effort — if a line has multiple non-zero hour buckets, standby wins
-    over ot wins over reg (matching ``forward_reparent`` choice semantics).
     """
+    Best-effort reverse of ``forward_reparent``. Several transforms are
+    inherently lossy and cannot round-trip cleanly:
+
+    * ``EquipmentLine.qty`` > 1 loses information — old schema had no qty.
+    * Per-unit reg/ot/standby hour buckets collapse into a single ``hours``
+      value + chosen ``usage_type``. Precedence: standby > overtime > regular
+      (matches ``forward_reparent``'s choice semantics).
+    * ``WorkDay.work_date`` is used to restore ``ExtraWorkOrder.work_date``
+      (first WorkDay by date per EWO); multi-day EWOs collapse to their
+      earliest date and the extra days are dropped along with their WorkDay.
+
+    In practice this reverse path only runs locally for rollback testing —
+    real deploys should not reverse once WorkDays carry meaningful data.
+    """
+    ExtraWorkOrder = apps.get_model('ewo', 'ExtraWorkOrder')
     WorkDay = apps.get_model('ewo', 'WorkDay')
     LaborLine = apps.get_model('ewo', 'LaborLine')
     EquipmentLine = apps.get_model('ewo', 'EquipmentLine')
     MaterialLine = apps.get_model('ewo', 'MaterialLine')
 
-    for line in LaborLine.objects.all():
+    for line in LaborLine.objects.iterator():
         line.ewo_id = line.work_day.ewo_id
         line.save(update_fields=['ewo'])
 
-    for line in EquipmentLine.objects.all():
+    for line in EquipmentLine.objects.iterator():
         line.ewo_id = line.work_day.ewo_id
         if line.standby_hours and line.standby_hours > 0:
             line.usage_type = 'standby'
@@ -95,9 +114,21 @@ def reverse_reparent(apps, schema_editor):
             line.hours = line.reg_hours
         line.save(update_fields=['ewo', 'usage_type', 'hours'])
 
-    for line in MaterialLine.objects.all():
+    for line in MaterialLine.objects.iterator():
         line.ewo_id = line.work_day.ewo_id
         line.save(update_fields=['ewo'])
+
+    # Restore ExtraWorkOrder.work_date from the earliest WorkDay for each EWO.
+    for ewo in ExtraWorkOrder.objects.iterator():
+        earliest = (
+            WorkDay.objects.filter(ewo=ewo)
+            .order_by('work_date')
+            .values_list('work_date', flat=True)
+            .first()
+        )
+        if earliest is not None:
+            ewo.work_date = earliest
+            ewo.save(update_fields=['work_date'])
 
     WorkDay.objects.all().delete()
 

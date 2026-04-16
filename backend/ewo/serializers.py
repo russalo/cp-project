@@ -64,13 +64,28 @@ class ExtraWorkOrderSerializer(serializers.ModelSerializer):
         ]
 
     def get_workday_count(self, obj):
+        """Prefer annotated count from the viewset queryset; fall back to a query."""
+        annotated = getattr(obj, 'workday_count', None)
+        if annotated is not None:
+            return annotated
         return obj.work_days.count()
 
     def get_line_counts(self, obj):
-        """Rolled-up counts across all WorkDays for this EWO."""
-        labor = LaborLine.objects.filter(work_day__ewo=obj).count()
-        equipment = EquipmentLine.objects.filter(work_day__ewo=obj).count()
-        materials = MaterialLine.objects.filter(work_day__ewo=obj).count()
+        """
+        Rolled-up line counts across all WorkDays for this EWO.
+        Prefer annotations if the viewset attached them; otherwise query.
+        """
+        labor = getattr(obj, 'labor_count', None)
+        equipment = getattr(obj, 'equipment_count', None)
+        materials = getattr(obj, 'materials_count', None)
+
+        if labor is None:
+            labor = LaborLine.objects.filter(work_day__ewo=obj).count()
+        if equipment is None:
+            equipment = EquipmentLine.objects.filter(work_day__ewo=obj).count()
+        if materials is None:
+            materials = MaterialLine.objects.filter(work_day__ewo=obj).count()
+
         return {
             'labor': labor,
             'equipment': equipment,

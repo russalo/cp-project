@@ -1,3 +1,5 @@
+from django.db.models import Count
+
 from rest_framework import viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny
@@ -47,6 +49,13 @@ class ExtraWorkOrderViewSet(EwoLockedDeleteMixin, viewsets.ModelViewSet):
     queryset = (
         ExtraWorkOrder.objects
         .select_related('job', 'created_by', 'parent_ewo')
+        # Annotate counts so the serializer doesn't fire 4 queries per row.
+        .annotate(
+            workday_count=Count('work_days', distinct=True),
+            labor_count=Count('work_days__labor_lines', distinct=True),
+            equipment_count=Count('work_days__equipment_lines', distinct=True),
+            materials_count=Count('work_days__material_lines', distinct=True),
+        )
         .order_by('-ewo_sequence', 'ewo_number')
     )
     serializer_class = ExtraWorkOrderSerializer
