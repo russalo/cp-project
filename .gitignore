@@ -20,6 +20,13 @@ env/
 # PyCharm
 .idea/
 
+# VS Code
+.vscode/
+
+# Local AI/dev-setup drafts (not project policy)
+/ANTIGRAVITY.md
+/docs/reference/ai-architecture.md
+
 # Django
 *.log
 db.sqlite3
