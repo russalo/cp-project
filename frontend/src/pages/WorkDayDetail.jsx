@@ -152,16 +152,6 @@ function mapById(list) {
   return m
 }
 
-function groupEquipmentByCategory(equipTypes) {
-  const byCat = new Map()
-  for (const eq of equipTypes) {
-    const key = eq.category || ''
-    if (!byCat.has(key)) byCat.set(key, [])
-    byCat.get(key).push(eq)
-  }
-  return [...byCat.entries()].sort((a, b) => a[0].localeCompare(b[0]))
-}
-
 function fmtHours(v) {
   if (v === null || v === undefined || v === '') return '—'
   return Number(v).toFixed(1)
@@ -328,10 +318,35 @@ function tradeByName(trades, name) {
 function EquipmentSection({ workDayId, locked, lines, equipTypes, equipMap, onChange }) {
   const [adding, setAdding] = useState(false)
   const [err, setErr] = useState(null)
+  const [categoryFilter, setCategoryFilter] = useState('')
   const [form, setForm] = useState({
     equipment_type: '', qty: '1',
     reg_hours: '8.0', ot_hours: '0.0', standby_hours: '0.0',
   })
+
+  // Distinct category list for the prefilter dropdown.
+  const categories = useMemo(() => {
+    const set = new Set(equipTypes.map(e => e.category).filter(Boolean))
+    return [...set].sort()
+  }, [equipTypes])
+
+  // Equipment filtered by the current category selection.
+  const filteredEquip = useMemo(() => {
+    if (!categoryFilter) return equipTypes
+    return equipTypes.filter(e => e.category === categoryFilter)
+  }, [equipTypes, categoryFilter])
+
+  // If the user changes the category and the current selection no longer
+  // fits, clear it so they don't accidentally submit a stale id.
+  const onCategoryChange = (cat) => {
+    setCategoryFilter(cat)
+    if (form.equipment_type && cat) {
+      const current = equipMap.get(Number(form.equipment_type))
+      if (current && current.category !== cat) {
+        setForm(f => ({ ...f, equipment_type: '' }))
+      }
+    }
+  }
 
   const submit = async (e) => {
     e.preventDefault()
@@ -362,17 +377,23 @@ function EquipmentSection({ workDayId, locked, lines, equipTypes, equipMap, onCh
         onAdd={!locked && !adding ? () => setAdding(true) : null} />
       {adding && (
         <form className="line-form" onSubmit={submit}>
-          <LF label="Equipment" className="line-form-full">
+          <LF label="Category (narrow the list)" className="line-form-full">
+            <select value={categoryFilter} onChange={e => onCategoryChange(e.target.value)}>
+              <option value="">— all categories ({equipTypes.length}) —</option>
+              {categories.map(c => (
+                <option key={c} value={c}>
+                  {c} ({equipTypes.filter(e => e.category === c).length})
+                </option>
+              ))}
+            </select>
+          </LF>
+          <LF label={`Equipment (${filteredEquip.length})`} className="line-form-full">
             <select value={form.equipment_type}
               onChange={e => setForm({ ...form, equipment_type: e.target.value })}
               required>
               <option value="">— pick equipment —</option>
-              {groupEquipmentByCategory(equipTypes).map(([category, items]) => (
-                <optgroup key={category || 'uncategorized'} label={category || 'Uncategorized'}>
-                  {items.map(e => (
-                    <option key={e.id} value={e.id}>{e.name} · {e.description}</option>
-                  ))}
-                </optgroup>
+              {filteredEquip.map(e => (
+                <option key={e.id} value={e.id}>{e.name} · {e.description}</option>
               ))}
             </select>
           </LF>
