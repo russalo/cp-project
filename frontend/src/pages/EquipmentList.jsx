@@ -1,6 +1,19 @@
 import { useState, useEffect } from 'react'
 import { fetchEquipment } from '../services/api'
 
+const MATCH_LABEL = {
+  exact: 'Exact',
+  close: 'Close',
+  none: 'No match',
+  retired: 'CT retired',
+  fmv: 'FMV',
+}
+
+function hasRates(eq) {
+  const n = v => Number(v || 0)
+  return n(eq.rate_reg) + n(eq.rate_ot) + n(eq.rate_standby) > 0
+}
+
 export default function EquipmentList() {
   const [equipment, setEquipment] = useState([])
   const [loading, setLoading] = useState(true)
@@ -49,13 +62,13 @@ export default function EquipmentList() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Class</th>
-              <th>Make · Model</th>
+              <th>Code</th>
+              <th>CT Match</th>
+              <th>Caltrans Class</th>
               <th>Oper</th>
+              <th>OT</th>
               <th>Stby</th>
-              <th>OT adder</th>
-              <th>Unit</th>
+              <th>Fuel</th>
               <th>Status</th>
             </tr>
           </thead>
@@ -67,46 +80,35 @@ export default function EquipmentList() {
                 </td>
               </tr>
             ) : (
-              equipment.map(eq => (
-                <tr key={eq.id}>
-                  <td>{eq.name}</td>
-                  <td>
-                    {eq.rate_available
-                      ? <><code>{eq.class_code}</code> {eq.class_desc}</>
-                      : <span className="rate-unavailable">—</span>}
-                  </td>
-                  <td>
-                    {eq.rate_available
-                      ? `${eq.make_desc} · ${eq.model_desc}`
-                      : <span className="rate-unavailable">—</span>}
-                  </td>
-                  <td className="rate-cell">
-                    {eq.rate_available
-                      ? `$${eq.rental_rate}`
-                      : <span className="rate-unavailable">—</span>}
-                  </td>
-                  <td className="rate-cell">
-                    {eq.rate_available
-                      ? `$${eq.rw_delay_rate}`
-                      : <span className="rate-unavailable">—</span>}
-                  </td>
-                  <td className="rate-cell">
-                    {eq.rate_available
-                      ? `+$${eq.overtime_rate}`
-                      : <span className="rate-unavailable">—</span>}
-                  </td>
-                  <td>
-                    {eq.rate_available
-                      ? eq.unit
-                      : <span className="rate-unavailable">—</span>}
-                  </td>
-                  <td>
-                    <span className={eq.active ? 'badge badge-active' : 'badge badge-inactive'}>
-                      {eq.active ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                </tr>
-              ))
+              equipment.map(eq => {
+                const rated = hasRates(eq)
+                return (
+                  <tr key={eq.id}>
+                    <td><code>{eq.name}</code></td>
+                    <td>{MATCH_LABEL[eq.ct_match_quality] ?? eq.ct_match_quality}</td>
+                    <td>
+                      {eq.ct_class_code
+                        ? <><code>{eq.ct_class_code}</code> {eq.ct_class_desc ?? ''}</>
+                        : <span className="rate-unavailable">—</span>}
+                    </td>
+                    <td className="rate-cell">
+                      {rated ? `$${eq.rate_reg}` : <span className="rate-unavailable">—</span>}
+                    </td>
+                    <td className="rate-cell">
+                      {rated ? `$${eq.rate_ot}` : <span className="rate-unavailable">—</span>}
+                    </td>
+                    <td className="rate-cell">
+                      {rated ? `$${eq.rate_standby}` : <span className="rate-unavailable">—</span>}
+                    </td>
+                    <td>{eq.fuel_surcharge_eligible ? 'Yes' : 'No'}</td>
+                    <td>
+                      <span className={eq.active ? 'badge badge-active' : 'badge badge-inactive'}>
+                        {eq.active ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                  </tr>
+                )
+              })
             )}
           </tbody>
         </table>

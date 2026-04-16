@@ -85,7 +85,7 @@ class EmployeeAdmin(ImportExportMixin, ModelAdmin):
 class CaltransRateLineInline(TabularInline):
     model = CaltransRateLine
     extra = 0
-    fields = ('class_code', 'make_code', 'model_code', 'rental_rate', 'rw_delay_rate', 'overtime_rate', 'unit')
+    fields = ('class_code', 'make_code', 'model_code', 'rental_rate', 'rw_delay_factor', 'ot_factor', 'unit')
     show_change_link = True
 
 
@@ -97,7 +97,7 @@ class CaltransScheduleAdmin(ModelAdmin):
 
 @admin.register(CaltransRateLine)
 class CaltransRateLineAdmin(ImportExportMixin, ModelAdmin):
-    list_display = ('class_code', 'make_code', 'model_code', 'rental_rate', 'rw_delay_rate', 'overtime_rate', 'unit', 'schedule')
+    list_display = ('class_code', 'make_code', 'model_code', 'rental_rate', 'rw_delay_factor', 'ot_factor', 'unit', 'schedule')
     list_filter = ('schedule', 'class_code', 'unit')
     search_fields = ('class_code', 'class_desc', 'make_code', 'make_desc', 'model_code', 'model_desc')
 
@@ -109,47 +109,26 @@ class EquipmentUnitInline(TabularInline):
 
 
 @admin.register(EquipmentType)
-class EquipmentTypeAdmin(ModelAdmin):
-    list_display = ('name', 'current_rates_display', 'active')
-    list_filter = ('active',)
-    search_fields = ('name',)
+class EquipmentTypeAdmin(ImportExportMixin, ModelAdmin):
+    list_display = (
+        'name', 'current_rates_display',
+        'fuel_surcharge_eligible', 'ct_match_quality', 'active',
+    )
+    list_filter = ('active', 'ct_match_quality', 'fuel_surcharge_eligible')
+    search_fields = ('name', 'caltrans_rate_line__class_code')
     inlines = [EquipmentUnitInline]
+    fields = (
+        'name', 'active',
+        'rate_reg', 'rate_ot', 'rate_standby',
+        'fuel_surcharge_eligible',
+        'ct_match_quality', 'caltrans_rate_line',
+        'notes',
+    )
+    autocomplete_fields = ('caltrans_rate_line',)
 
-    def changelist_view(self, request, extra_context=None):
-        # Initialize a per-request cache for equipment rates to avoid N+1 lookups
-        self._current_rates_cache = {}
-        return super().changelist_view(request, extra_context=extra_context)
-
-    def _get_current_rate_for_obj(self, obj):
-        import datetime
-        from ewo.services import get_equipment_rates
-
-        # Use a simple in-memory cache on the admin instance keyed by (pk, date)
-        cache = getattr(self, '_current_rates_cache', None)
-        if cache is None:
-            cache = {}
-            self._current_rates_cache = cache
-
-        today = datetime.date.today()
-        cache_key = (obj.pk, today)
-
-        if cache_key in cache:
-            return cache[cache_key]
-
-        try:
-            rl = get_equipment_rates(obj, today)
-        except ValueError:
-            rl = None
-
-        cache[cache_key] = rl
-        return rl
-
-    @admin.display(description='Oper / Stby / OT Rates')
+    @admin.display(description='Rates (Reg / OT / Stby)')
     def current_rates_display(self, obj):
-        rl = self._get_current_rate_for_obj(obj)
-        if rl is None:
-            return '— no Caltrans rate linked —'
-        return f'${rl.rental_rate} / ${rl.rw_delay_rate} + ${rl.overtime_rate} OT ({rl.unit})'
+        return f'${obj.rate_reg} / ${obj.rate_ot} / ${obj.rate_standby}'
 
 
 @admin.register(EquipmentUnit)

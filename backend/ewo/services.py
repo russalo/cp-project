@@ -61,44 +61,36 @@ def get_labor_rate(trade_classification, work_date):
 
 def get_equipment_rates(equipment_type, work_date):
     """
-    Return the CaltransRateLine for equipment_type active on work_date.
+    Return the current rates for an EquipmentType (DEC-060).
 
-    Looks up the Caltrans schedule whose effective/expiry window covers
-    work_date, then finds the matching rate line by class/make/model codes.
-    Falls back to the equipment type's current rate line if no dated schedule
-    covers work_date (e.g. work done before any schedule was imported).
+    Per DEC-060, ``EquipmentType`` owns authoritative billing rates. Annual
+    Caltrans re-ingest refreshes them from factors × rental_rate; items with
+    no CT match carry manually-entered (in-house / FMV) rates. ``work_date``
+    is preserved in the signature for API symmetry with ``get_labor_rate``
+    but historical effective-dating is provided by on-line snapshots, not by
+    stepping back through EquipmentType rate history.
 
-    Raises ValueError if no rate line can be resolved at all.
+    Returns ``(rate_reg, rate_ot, rate_standby, caltrans_rate_line_or_None)``
+    where ``caltrans_rate_line`` is the provenance FK for audit, if any.
+
+    Raises ValueError if no rates are configured (all three fields are zero).
     """
-    from resources.models import CaltransRateLine, CaltransSchedule
-
-    ref = equipment_type.caltrans_rate_line
-    if ref is None:
+    if (
+        equipment_type.rate_reg == 0
+        and equipment_type.rate_ot == 0
+        and equipment_type.rate_standby == 0
+    ):
         raise ValueError(
-            f'EquipmentType "{equipment_type}" has no Caltrans rate line assigned.'
+            f'EquipmentType "{equipment_type}" has no rates configured. '
+            f'Set rate_reg / rate_ot / rate_standby on the EquipmentType, '
+            f'or run the Caltrans ingest to populate them from a linked CT row.'
         )
-
-    # Find the schedule active on work_date
-    schedule = (
-        CaltransSchedule.objects
-        .filter(effective_date__lte=work_date, expiry_date__gte=work_date)
-        .order_by('-effective_date')
-        .first()
+    return (
+        equipment_type.rate_reg,
+        equipment_type.rate_ot,
+        equipment_type.rate_standby,
+        equipment_type.caltrans_rate_line,
     )
-
-    if schedule:
-        try:
-            return CaltransRateLine.objects.get(
-                schedule=schedule,
-                class_code=ref.class_code,
-                make_code=ref.make_code,
-                model_code=ref.model_code,
-            )
-        except CaltransRateLine.DoesNotExist:
-            pass  # No matching line in this schedule; fall through to fallback
-
-    # Fallback: use the equipment type's currently assigned rate line
-    return ref
 
 
 # ─── Line calculators ─────────────────────────────────────────────────────────
@@ -135,31 +127,34 @@ def calculate_equipment_line(line):
     """
     Snapshot rates and calculate line_total for an EquipmentLine.
 
-    All three Caltrans rate components are snapshotted regardless of usage_type
-    so the full rate context is preserved for audit (DEC-021, DEC-015).
+    Rates come from the ``EquipmentType`` (DEC-060). All three components
+    are snapshotted regardless of ``usage_type`` so the full rate context is
+    preserved for audit (DEC-021, DEC-015).
 
     usage_type determines which rate is applied (DEC-021):
-      operating → rental_rate
-      standby   → rw_delay_rate
-      overtime  → rental_rate + overtime_rate
+      operating → rate_reg
+      standby   → rate_standby
+      overtime  → rate_ot  (Caltrans OT is rental × ot_factor, not a surcharge)
 
     Returns the calculated line_total (Decimal).
     """
     from ewo.models import EquipmentLine
 
-    caltrans_line = get_equipment_rates(line.equipment_type, line.ewo.work_date)
+    rate_reg, rate_ot, rate_standby, caltrans_line = get_equipment_rates(
+        line.equipment_type, line.ewo.work_date
+    )
 
     line.caltrans_rate_line = caltrans_line
-    line.rental_rate_snapshot = caltrans_line.rental_rate
-    line.rw_delay_rate_snapshot = caltrans_line.rw_delay_rate
-    line.ot_rate_snapshot = caltrans_line.overtime_rate
+    line.rental_rate_snapshot = rate_reg
+    line.rw_delay_rate_snapshot = rate_standby
+    line.ot_rate_snapshot = rate_ot
 
     if line.usage_type == EquipmentLine.UsageType.OPERATING:
-        rate = caltrans_line.rental_rate
+        rate = rate_reg
     elif line.usage_type == EquipmentLine.UsageType.STANDBY:
-        rate = caltrans_line.rw_delay_rate
+        rate = rate_standby
     elif line.usage_type == EquipmentLine.UsageType.OVERTIME:
-        rate = caltrans_line.rental_rate + caltrans_line.overtime_rate
+        rate = rate_ot
     else:
         raise ValueError(f'Unknown usage_type: {line.usage_type!r}')
 
