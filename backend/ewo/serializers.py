@@ -2,6 +2,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
 from .models import EquipmentLine, ExtraWorkOrder, LaborLine, MaterialLine, WorkDay
+from .services import create_ewo_from_job
 
 
 class ExtraWorkOrderSerializer(serializers.ModelSerializer):
@@ -107,6 +108,16 @@ class ExtraWorkOrderSerializer(serializers.ModelSerializer):
                 'job': 'Job cannot be changed after an EWO number is assigned.'
             })
         return attrs
+
+    def create(self, validated_data):
+        """
+        Snapshot OH&P / bond defaults from Job and seed fuel_surcharge_pct
+        from the most recent EWO on the same Job (DEC-062 / DEC-063).
+        Explicit values in the payload override the snapshots.
+        """
+        job = validated_data.pop('job')
+        created_by = validated_data.pop('created_by')
+        return create_ewo_from_job(job=job, created_by=created_by, **validated_data)
 
 
 class WorkDaySerializer(serializers.ModelSerializer):
