@@ -69,8 +69,10 @@ class ExtraWorkOrderViewSet(EwoLockedDeleteMixin, viewsets.ModelViewSet):
         qs = super().get_queryset()
         job_id = self.request.query_params.get('job')
         status_ = self.request.query_params.get('status')
-        if job_id:
-            qs = qs.filter(job_id=job_id)
+        # Validate job id is numeric so a malformed query doesn't produce a
+        # 500 (Django would raise ValueError coercing the string to int).
+        if job_id and job_id.isdigit():
+            qs = qs.filter(job_id=int(job_id))
         if status_:
             qs = qs.filter(status=status_)
         return qs

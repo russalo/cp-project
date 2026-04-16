@@ -11,7 +11,9 @@ export default function WorkDayNew() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
   const [form, setForm] = useState({
-    work_date: new Date().toISOString().slice(0, 10),
+    // Use a locale-aware date so users in timezones behind UTC don't get
+    // tomorrow's date after sunset. 'sv-SE' happens to format as YYYY-MM-DD.
+    work_date: new Date().toLocaleDateString('sv-SE'),
     foreman_name: '',
     superintendent_name: '',
     weather: '',

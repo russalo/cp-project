@@ -9,7 +9,10 @@
 
 const JSON_HEADERS = { 'Content-Type': 'application/json', Accept: 'application/json' }
 
-async function handle(res) {
+async function handle(resOrPromise) {
+  // Callers pass handle(fetch(...)) without awaiting, so resOrPromise is a
+  // Promise<Response>. Await it here so every caller doesn't have to.
+  const res = await resOrPromise
   if (res.status === 204) return null
   const text = await res.text()
   const body = text ? safeJson(text) : null
@@ -27,6 +30,8 @@ function safeJson(text) {
 function formatError(body, res) {
   if (!body) return `${res.status} ${res.statusText}`
   if (typeof body === 'string') return body
+  // DRF non-field errors may come back as a plain array of strings.
+  if (Array.isArray(body)) return body.join(' | ')
   // DRF returns either { detail: "..." } or { field: [msg, ...] }
   if (body.detail) return body.detail
   const parts = Object.entries(body).map(([k, v]) =>

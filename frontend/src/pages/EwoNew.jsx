@@ -30,12 +30,10 @@ export default function EwoNew() {
     setSubmitting(true)
     setError(null)
     try {
-      // created_by is required by the model; in the absence of auth we
-      // submit the first user in the DB via a small convenience. Long-term
-      // this comes from request.user.
+      // created_by is inferred server-side (request.user when auth lands;
+      // first active user pre-auth). Don't hardcode an ID on the client.
       const body = {
         job: Number(jobId),
-        created_by: 1,  // TODO: replace with request.user once auth lands (DEC-007)
         ewo_type: form.ewo_type,
         description: form.description,
         bond_required: form.bond_required,
