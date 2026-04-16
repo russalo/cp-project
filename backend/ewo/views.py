@@ -2,12 +2,13 @@ from rest_framework import viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny
 
-from .models import EquipmentLine, ExtraWorkOrder, LaborLine, MaterialLine
+from .models import EquipmentLine, ExtraWorkOrder, LaborLine, MaterialLine, WorkDay
 from .serializers import (
     EquipmentLineSerializer,
     ExtraWorkOrderSerializer,
     LaborLineSerializer,
     MaterialLineSerializer,
+    WorkDaySerializer,
 )
 
 
@@ -19,10 +20,20 @@ class EwoLockedDeleteMixin:
 
 
 class ParentEwoLockedDeleteMixin:
+    """Guard for line-item viewsets whose parent is a WorkDay under an EWO."""
+    def perform_destroy(self, instance):
+        if instance.work_day.ewo.is_locked:
+            raise ValidationError(
+                'Line items on locked EWOs cannot be deleted through CRUD endpoints.'
+            )
+        super().perform_destroy(instance)
+
+
+class WorkDayLockedDeleteMixin:
     def perform_destroy(self, instance):
         if instance.ewo.is_locked:
             raise ValidationError(
-                'Line items on locked EWOs cannot be deleted through CRUD endpoints.'
+                'WorkDays on locked EWOs cannot be deleted through CRUD endpoints.'
             )
         super().perform_destroy(instance)
 
@@ -36,16 +47,36 @@ class ExtraWorkOrderViewSet(EwoLockedDeleteMixin, viewsets.ModelViewSet):
     queryset = (
         ExtraWorkOrder.objects
         .select_related('job', 'created_by', 'parent_ewo')
-        .order_by('-work_date', 'ewo_number')
+        .order_by('-ewo_sequence', 'ewo_number')
     )
     serializer_class = ExtraWorkOrderSerializer
     permission_classes = [AllowAny]
 
 
+class WorkDayViewSet(WorkDayLockedDeleteMixin, viewsets.ModelViewSet):
+    queryset = (
+        WorkDay.objects
+        .select_related('ewo', 'ewo__job')
+        .order_by('ewo', 'work_date')
+    )
+    serializer_class = WorkDaySerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        ewo_id = self.request.query_params.get('ewo')
+        if ewo_id:
+            queryset = queryset.filter(ewo_id=ewo_id)
+        return queryset
+
+
 class LaborLineViewSet(ParentEwoLockedDeleteMixin, viewsets.ModelViewSet):
     queryset = (
         LaborLine.objects
-        .select_related('ewo', 'employee', 'employee_default_trade', 'trade_classification')
+        .select_related(
+            'work_day', 'work_day__ewo',
+            'employee', 'employee_default_trade', 'trade_classification',
+        )
         .order_by('id')
     )
     serializer_class = LaborLineSerializer
@@ -53,16 +84,22 @@ class LaborLineViewSet(ParentEwoLockedDeleteMixin, viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
+        work_day_id = self.request.query_params.get('work_day')
         ewo_id = self.request.query_params.get('ewo')
-        if ewo_id:
-            queryset = queryset.filter(ewo_id=ewo_id)
+        if work_day_id:
+            queryset = queryset.filter(work_day_id=work_day_id)
+        elif ewo_id:
+            queryset = queryset.filter(work_day__ewo_id=ewo_id)
         return queryset
 
 
 class EquipmentLineViewSet(ParentEwoLockedDeleteMixin, viewsets.ModelViewSet):
     queryset = (
         EquipmentLine.objects
-        .select_related('ewo', 'equipment_type', 'caltrans_rate_line')
+        .select_related(
+            'work_day', 'work_day__ewo',
+            'equipment_type', 'caltrans_rate_line',
+        )
         .order_by('id')
     )
     serializer_class = EquipmentLineSerializer
@@ -70,16 +107,19 @@ class EquipmentLineViewSet(ParentEwoLockedDeleteMixin, viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
+        work_day_id = self.request.query_params.get('work_day')
         ewo_id = self.request.query_params.get('ewo')
-        if ewo_id:
-            queryset = queryset.filter(ewo_id=ewo_id)
+        if work_day_id:
+            queryset = queryset.filter(work_day_id=work_day_id)
+        elif ewo_id:
+            queryset = queryset.filter(work_day__ewo_id=ewo_id)
         return queryset
 
 
 class MaterialLineViewSet(ParentEwoLockedDeleteMixin, viewsets.ModelViewSet):
     queryset = (
         MaterialLine.objects
-        .select_related('ewo', 'catalog_item')
+        .select_related('work_day', 'work_day__ewo', 'catalog_item')
         .order_by('id')
     )
     serializer_class = MaterialLineSerializer
@@ -87,7 +127,10 @@ class MaterialLineViewSet(ParentEwoLockedDeleteMixin, viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
+        work_day_id = self.request.query_params.get('work_day')
         ewo_id = self.request.query_params.get('ewo')
-        if ewo_id:
-            queryset = queryset.filter(ewo_id=ewo_id)
+        if work_day_id:
+            queryset = queryset.filter(work_day_id=work_day_id)
+        elif ewo_id:
+            queryset = queryset.filter(work_day__ewo_id=ewo_id)
         return queryset
