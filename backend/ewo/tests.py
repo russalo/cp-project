@@ -192,12 +192,13 @@ class TestGetEquipmentRates:
 
     def test_returns_rates_from_equipment_type(self):
         equip_type = make_equip_type()  # rental 100, rw 0.5, ot 0.75
+        equip_type.refresh_from_db()  # ensure DB-round-tripped precision (2dp)
         rate_reg, rate_ot, rate_standby, _ = get_equipment_rates(
             equip_type, date(2025, 6, 15)
         )
         assert rate_reg == Decimal('100.00')
-        assert rate_ot == Decimal('75.0000')
-        assert rate_standby == Decimal('50.0000')
+        assert rate_ot == Decimal('75.00')
+        assert rate_standby == Decimal('50.00')
 
     def test_returns_caltrans_fk_when_linked(self):
         equip_type = make_equip_type()
@@ -355,9 +356,10 @@ class TestCalculateEquipmentLine:
         line, _ = self._setup()
         calculate_equipment_line(line)
         line.refresh_from_db()
+        # Snapshot fields on EquipmentLine are decimal_places=2.
         assert line.rental_rate_snapshot == Decimal('100.00')
-        assert line.rw_delay_rate_snapshot == Decimal('50.0000')
-        assert line.ot_rate_snapshot == Decimal('75.0000')
+        assert line.rw_delay_rate_snapshot == Decimal('50.00')
+        assert line.ot_rate_snapshot == Decimal('75.00')
 
     def test_caltrans_rate_line_fk_set_on_line(self):
         line, rate_line = self._setup()

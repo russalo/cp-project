@@ -63,6 +63,10 @@ CT_MATCH_NORMALIZE = {
     'exact': EquipmentType.CtMatchQuality.EXACT,
     'close': EquipmentType.CtMatchQuality.CLOSE,
     'none': EquipmentType.CtMatchQuality.NONE,
+    'retired': EquipmentType.CtMatchQuality.RETIRED,
+    'ct code retired': EquipmentType.CtMatchQuality.RETIRED,
+    'fmv': EquipmentType.CtMatchQuality.FMV,
+    'fair market value': EquipmentType.CtMatchQuality.FMV,
     '': EquipmentType.CtMatchQuality.NONE,
     None: EquipmentType.CtMatchQuality.NONE,
 }
@@ -129,7 +133,7 @@ class Command(BaseCommand):
         """Caltrans Rates 26-27: Class Code | Make | Model/Description | Hourly Rate | RW Delay | OT Factor | Equipment Type."""
         ws = wb['Caltrans Rates 26-27']
 
-        # Schedule window inferred from the sheet title; harcoded 2026-2027 for now.
+        # Schedule window inferred from the sheet title; hardcoded 2026-2027 for now.
         schedule, _ = CaltransSchedule.objects.update_or_create(
             schedule_year='2026-2027',
             defaults={

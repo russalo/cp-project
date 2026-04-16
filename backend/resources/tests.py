@@ -55,14 +55,17 @@ class TestCaltransRateLineDerivedRates:
         assert crl.ot_rate == Decimal('87.0000')
 
     def test_zero_factors_produce_zero_derived_rates(self):
-        """Safe sentinel: a misingested row with zero factors returns zero, not garbage."""
+        """Safe sentinel: a mis-ingested row with zero factors returns zero, not garbage."""
         crl = baker.make(
             CaltransRateLine,
             schedule=self._make_schedule(),
             rental_rate=Decimal('50.00'),
         )
-        assert crl.standby_rate == Decimal('0')
-        assert crl.ot_rate == Decimal('0')
+        # Compare numerically — Decimal equality across exponents is loose
+        # (Decimal('0') == Decimal('0.00') == Decimal('0.000000') are all True),
+        # but we keep the cast explicit in case someone adds rounding later.
+        assert crl.standby_rate == 0
+        assert crl.ot_rate == 0
 
 
 @pytest.mark.django_db

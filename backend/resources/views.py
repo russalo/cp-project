@@ -33,7 +33,9 @@ class EquipmentTypeListView(ListAPIView):
     permission_classes = [AllowAny]
 
     def get_queryset(self):
-        qs = EquipmentType.objects.select_related('caltrans_rate_line').order_by('name')
+        qs = EquipmentType.objects.select_related(
+            'caltrans_rate_line__schedule',
+        ).order_by('name')
         if self.request.query_params.get('active') == 'false':
             return qs
         return qs.filter(active=True)

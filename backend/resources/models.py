@@ -1,3 +1,6 @@
+from decimal import Decimal
+
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from simple_history.models import HistoricalRecords
 
@@ -117,8 +120,17 @@ class CaltransRateLine(models.Model):
     # Factors are multipliers of rental_rate; ingest always sets real values.
     # Default 0 is a safe sentinel: a zero factor would produce zero rates,
     # immediately surfacing an ingest bug rather than silently masking it.
-    rw_delay_factor = models.DecimalField(max_digits=5, decimal_places=4, default=0)
-    ot_factor = models.DecimalField(max_digits=5, decimal_places=4, default=0)
+    # Caltrans-published factors are in the 0.0000–1.0000 range.
+    _factor_validators = [
+        MinValueValidator(Decimal('0')),
+        MaxValueValidator(Decimal('1')),
+    ]
+    rw_delay_factor = models.DecimalField(
+        max_digits=5, decimal_places=4, default=0, validators=_factor_validators,
+    )
+    ot_factor = models.DecimalField(
+        max_digits=5, decimal_places=4, default=0, validators=_factor_validators,
+    )
     unit = models.CharField(max_length=10)  # HR or DAY
 
     history = HistoricalRecords()
