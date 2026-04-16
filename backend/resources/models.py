@@ -181,6 +181,11 @@ class EquipmentType(models.Model):
         FMV = 'fmv', 'Fair Market Value'
 
     name = models.CharField(max_length=200)
+    # Human-readable description (e.g. "4-Axle Dump Truck (Super 10), Bare").
+    # ``name`` holds the CP code (e.g. "DT-4AX"); description holds the phrase
+    # that goes on the T&M print.
+    description = models.CharField(max_length=200, blank=True)
+    category = models.CharField(max_length=50, blank=True)
     # Optional provenance link (DEC-060 — 28% of fleet has no CT match)
     caltrans_rate_line = models.ForeignKey(
         CaltransRateLine,

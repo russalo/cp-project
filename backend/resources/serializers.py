@@ -73,7 +73,7 @@ class EquipmentTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = EquipmentType
         fields = [
-            'id', 'name', 'active',
+            'id', 'name', 'description', 'category', 'active',
             'rate_reg', 'rate_ot', 'rate_standby',
             'fuel_surcharge_eligible',
             'ct_match_quality',

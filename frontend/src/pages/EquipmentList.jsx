@@ -63,8 +63,9 @@ export default function EquipmentList() {
           <thead>
             <tr>
               <th>Code</th>
+              <th>Description</th>
+              <th>Category</th>
               <th>CT Match</th>
-              <th>Caltrans Class</th>
               <th>Oper</th>
               <th>OT</th>
               <th>Stby</th>
@@ -75,7 +76,7 @@ export default function EquipmentList() {
           <tbody>
             {equipment.length === 0 ? (
               <tr>
-                <td colSpan={8} className="rate-unavailable" style={{ textAlign: 'center', padding: '32px' }}>
+                <td colSpan={9} className="rate-unavailable" style={{ textAlign: 'center', padding: '32px' }}>
                   No equipment found.
                 </td>
               </tr>
@@ -85,12 +86,9 @@ export default function EquipmentList() {
                 return (
                   <tr key={eq.id}>
                     <td><code>{eq.name}</code></td>
+                    <td>{eq.description || <span className="rate-unavailable">—</span>}</td>
+                    <td>{eq.category || <span className="rate-unavailable">—</span>}</td>
                     <td>{MATCH_LABEL[eq.ct_match_quality] ?? eq.ct_match_quality}</td>
-                    <td>
-                      {eq.ct_class_code
-                        ? <><code>{eq.ct_class_code}</code> {eq.ct_class_desc ?? ''}</>
-                        : <span className="rate-unavailable">—</span>}
-                    </td>
                     <td className="rate-cell">
                       {rated ? `$${eq.rate_reg}` : <span className="rate-unavailable">—</span>}
                     </td>
