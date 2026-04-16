@@ -152,6 +152,16 @@ function mapById(list) {
   return m
 }
 
+function groupEquipmentByCategory(equipTypes) {
+  const byCat = new Map()
+  for (const eq of equipTypes) {
+    const key = eq.category || ''
+    if (!byCat.has(key)) byCat.set(key, [])
+    byCat.get(key).push(eq)
+  }
+  return [...byCat.entries()].sort((a, b) => a[0].localeCompare(b[0]))
+}
+
 function fmtHours(v) {
   if (v === null || v === undefined || v === '') return '—'
   return Number(v).toFixed(1)
@@ -343,8 +353,12 @@ function EquipmentSection({ workDayId, locked, lines, equipTypes, equipMap, onCh
             onChange={e => setForm({ ...form, equipment_type: e.target.value })}
             className="full-width" required>
             <option value="">— equipment —</option>
-            {equipTypes.map(e => (
-              <option key={e.id} value={e.id}>{e.name} · {e.description}</option>
+            {groupEquipmentByCategory(equipTypes).map(([category, items]) => (
+              <optgroup key={category || 'uncategorized'} label={category || 'Uncategorized'}>
+                {items.map(e => (
+                  <option key={e.id} value={e.id}>{e.name} · {e.description}</option>
+                ))}
+              </optgroup>
             ))}
           </select>
           <input type="number" min="1" step="1" value={form.qty}
