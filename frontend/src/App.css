@@ -80,6 +80,16 @@
   justify-content: space-between;
   margin: 8px 0 20px;
   gap: 16px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+  .page-header {
+    gap: 12px;
+  }
+  .page-toolbar {
+    flex-wrap: wrap;
+  }
 }
 
 .page-title {
@@ -416,25 +426,44 @@
 .line-form {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  gap: 8px;
+  gap: 10px 8px;
   padding: 12px;
   background: var(--cp-gray-lt);
   border: 1px solid var(--border);
   border-top: none;
-  align-items: center;
 }
 
-.line-form .full-width {
+/* Labeled field inside the line form. */
+.lf {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  grid-column: span 2;
+  min-width: 0;
+}
+
+.lf-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.line-form-full {
   grid-column: 1 / -1;
 }
 
 .line-form select,
 .line-form input[type="text"],
 .line-form input[type="number"] {
-  padding: 6px 8px;
+  padding: 8px 10px;
   border: 1px solid var(--border);
   border-radius: 3px;
-  font-size: 13px;
+  font-size: 14px;
   font-family: var(--sans);
   background: var(--bg);
   width: 100%;
@@ -451,8 +480,8 @@
 .line-form .checkbox-inline {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
+  gap: 8px;
+  font-size: 13px;
   color: var(--text);
 }
 
@@ -466,6 +495,35 @@
   display: flex;
   gap: 8px;
   justify-content: flex-end;
+  margin-top: 4px;
+}
+
+/* Stack to 2 columns on narrow screens (tablet portrait) */
+@media (max-width: 768px) {
+  .line-form {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .lf {
+    grid-column: span 1;
+  }
+}
+
+/* Full stack on phones */
+@media (max-width: 480px) {
+  .line-form {
+    grid-template-columns: 1fr;
+  }
+  .lf {
+    grid-column: 1 / -1;
+  }
+  .line-form-actions {
+    flex-direction: column-reverse;
+  }
+  .line-form-actions .btn {
+    width: 100%;
+    text-align: center;
+    padding: 12px;
+  }
 }
 
 /* ── Small button variants ──────────────────────────────────────────────── */

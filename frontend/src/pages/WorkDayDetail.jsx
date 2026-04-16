@@ -242,35 +242,48 @@ function LaborSection({ workDayId, locked, lines, employees, trades, employeeMap
         onAdd={!locked && !adding ? () => setAdding(true) : null} />
       {adding && (
         <form className="line-form" onSubmit={submit}>
-          <select value={form.labor_type} onChange={e => onTypeChange(e.target.value)}>
-            <option value="named">Named</option>
-            <option value="generic">Generic</option>
-          </select>
-          {form.labor_type === 'named' ? (
-            <select value={form.employee} onChange={e => onEmployeeChange(e.target.value)} required>
-              <option value="">— employee —</option>
-              {employees.map(e => (
-                <option key={e.id} value={e.id}>{e.code} · {e.full_name}</option>
+          <LF label="Type">
+            <select value={form.labor_type} onChange={e => onTypeChange(e.target.value)}>
+              <option value="named">Named</option>
+              <option value="generic">Generic</option>
+            </select>
+          </LF>
+          {form.labor_type === 'named' && (
+            <LF label="Employee" className="line-form-full">
+              <select value={form.employee} onChange={e => onEmployeeChange(e.target.value)} required>
+                <option value="">— pick an employee —</option>
+                {employees.map(e => (
+                  <option key={e.id} value={e.id}>{e.code} · {e.full_name}</option>
+                ))}
+              </select>
+            </LF>
+          )}
+          <LF label="Trade" className="line-form-full">
+            <select value={form.trade_classification}
+              onChange={e => setForm({ ...form, trade_classification: e.target.value })}
+              required>
+              <option value="">— pick a trade —</option>
+              {trades.map(t => (
+                <option key={t.id} value={t.id}>{t.name}</option>
               ))}
             </select>
-          ) : <span />}
-          <select value={form.trade_classification}
-            onChange={e => setForm({ ...form, trade_classification: e.target.value })}
-            required>
-            <option value="">— trade —</option>
-            {trades.map(t => (
-              <option key={t.id} value={t.id}>{t.name}</option>
-            ))}
-          </select>
-          <input type="number" step="0.5" min="0" value={form.reg_hours}
-            onChange={e => setForm({ ...form, reg_hours: e.target.value })} placeholder="REG" />
-          <input type="number" step="0.5" min="0" value={form.ot_hours}
-            onChange={e => setForm({ ...form, ot_hours: e.target.value })} placeholder="OT" />
-          <input type="number" step="0.5" min="0" value={form.dt_hours}
-            onChange={e => setForm({ ...form, dt_hours: e.target.value })} placeholder="DT" />
-          <input type="text" value={form.trade_override_reason}
-            onChange={e => setForm({ ...form, trade_override_reason: e.target.value })}
-            placeholder="Override reason (only if trade differs)" className="full-width" />
+          </LF>
+          <LF label="REG hrs">
+            <input type="number" inputMode="decimal" step="0.5" min="0" value={form.reg_hours}
+              onChange={e => setForm({ ...form, reg_hours: e.target.value })} />
+          </LF>
+          <LF label="OT hrs">
+            <input type="number" inputMode="decimal" step="0.5" min="0" value={form.ot_hours}
+              onChange={e => setForm({ ...form, ot_hours: e.target.value })} />
+          </LF>
+          <LF label="DT hrs">
+            <input type="number" inputMode="decimal" step="0.5" min="0" value={form.dt_hours}
+              onChange={e => setForm({ ...form, dt_hours: e.target.value })} />
+          </LF>
+          <LF label="Trade-override reason (only if trade differs from employee default)" className="line-form-full">
+            <input type="text" value={form.trade_override_reason}
+              onChange={e => setForm({ ...form, trade_override_reason: e.target.value })} />
+          </LF>
           {err && <div className="error-state line-form-error">{err}</div>}
           <div className="line-form-actions">
             <button type="button" className="btn" onClick={() => { setAdding(false); setErr(null) }}>Cancel</button>
@@ -349,26 +362,36 @@ function EquipmentSection({ workDayId, locked, lines, equipTypes, equipMap, onCh
         onAdd={!locked && !adding ? () => setAdding(true) : null} />
       {adding && (
         <form className="line-form" onSubmit={submit}>
-          <select value={form.equipment_type}
-            onChange={e => setForm({ ...form, equipment_type: e.target.value })}
-            className="full-width" required>
-            <option value="">— equipment —</option>
-            {groupEquipmentByCategory(equipTypes).map(([category, items]) => (
-              <optgroup key={category || 'uncategorized'} label={category || 'Uncategorized'}>
-                {items.map(e => (
-                  <option key={e.id} value={e.id}>{e.name} · {e.description}</option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
-          <input type="number" min="1" step="1" value={form.qty}
-            onChange={e => setForm({ ...form, qty: e.target.value })} placeholder="Qty" />
-          <input type="number" step="0.5" min="0" value={form.reg_hours}
-            onChange={e => setForm({ ...form, reg_hours: e.target.value })} placeholder="REG hrs" />
-          <input type="number" step="0.5" min="0" value={form.ot_hours}
-            onChange={e => setForm({ ...form, ot_hours: e.target.value })} placeholder="OT hrs" />
-          <input type="number" step="0.5" min="0" value={form.standby_hours}
-            onChange={e => setForm({ ...form, standby_hours: e.target.value })} placeholder="Stby hrs" />
+          <LF label="Equipment" className="line-form-full">
+            <select value={form.equipment_type}
+              onChange={e => setForm({ ...form, equipment_type: e.target.value })}
+              required>
+              <option value="">— pick equipment —</option>
+              {groupEquipmentByCategory(equipTypes).map(([category, items]) => (
+                <optgroup key={category || 'uncategorized'} label={category || 'Uncategorized'}>
+                  {items.map(e => (
+                    <option key={e.id} value={e.id}>{e.name} · {e.description}</option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </LF>
+          <LF label="Qty">
+            <input type="number" inputMode="numeric" min="1" step="1" value={form.qty}
+              onChange={e => setForm({ ...form, qty: e.target.value })} />
+          </LF>
+          <LF label="REG hrs (per unit)">
+            <input type="number" inputMode="decimal" step="0.5" min="0" value={form.reg_hours}
+              onChange={e => setForm({ ...form, reg_hours: e.target.value })} />
+          </LF>
+          <LF label="OT hrs (per unit)">
+            <input type="number" inputMode="decimal" step="0.5" min="0" value={form.ot_hours}
+              onChange={e => setForm({ ...form, ot_hours: e.target.value })} />
+          </LF>
+          <LF label="Stby hrs (per unit)">
+            <input type="number" inputMode="decimal" step="0.5" min="0" value={form.standby_hours}
+              onChange={e => setForm({ ...form, standby_hours: e.target.value })} />
+          </LF>
           {err && <div className="error-state line-form-error">{err}</div>}
           <div className="line-form-actions">
             <button type="button" className="btn" onClick={() => { setAdding(false); setErr(null) }}>Cancel</button>
@@ -460,29 +483,37 @@ function MaterialSection({ workDayId, locked, lines, catalog, onChange }) {
         onAdd={!locked && !adding ? () => setAdding(true) : null} />
       {adding && (
         <form className="line-form" onSubmit={submit}>
-          <select value={form.catalog_item}
-            onChange={e => onCatalogChange(e.target.value)}
-            className="full-width">
-            <option value="">— catalog (optional) —</option>
-            {catalog.map(c => (
-              <option key={c.id} value={c.id}>
-                {c.description} ({c.default_unit}{c.last_unit_cost ? ` @ $${c.last_unit_cost}` : ''})
-              </option>
-            ))}
-          </select>
-          <input type="text" value={form.description}
-            onChange={e => setForm({ ...form, description: e.target.value })}
-            placeholder="Description" className="full-width" required />
-          <input type="number" step="0.001" min="0" value={form.quantity}
-            onChange={e => setForm({ ...form, quantity: e.target.value })} placeholder="Qty" />
-          <input type="text" value={form.unit}
-            onChange={e => setForm({ ...form, unit: e.target.value })} placeholder="Unit" />
-          <input type="number" step="0.01" min="0" value={form.unit_cost}
-            onChange={e => setForm({ ...form, unit_cost: e.target.value })} placeholder="$/unit" />
-          <input type="text" value={form.reference_number}
-            onChange={e => setForm({ ...form, reference_number: e.target.value })}
-            placeholder="Invoice / PO ref" />
-          <label className="checkbox-inline">
+          <LF label="Catalog item (optional — auto-fills the rest)" className="line-form-full">
+            <select value={form.catalog_item} onChange={e => onCatalogChange(e.target.value)}>
+              <option value="">— none (type below) —</option>
+              {catalog.map(c => (
+                <option key={c.id} value={c.id}>
+                  {c.description} ({c.default_unit}{c.last_unit_cost ? ` @ $${c.last_unit_cost}` : ''})
+                </option>
+              ))}
+            </select>
+          </LF>
+          <LF label="Description" className="line-form-full">
+            <input type="text" value={form.description}
+              onChange={e => setForm({ ...form, description: e.target.value })} required />
+          </LF>
+          <LF label="Qty">
+            <input type="number" inputMode="decimal" step="0.001" min="0" value={form.quantity}
+              onChange={e => setForm({ ...form, quantity: e.target.value })} />
+          </LF>
+          <LF label="Unit">
+            <input type="text" value={form.unit}
+              onChange={e => setForm({ ...form, unit: e.target.value })} />
+          </LF>
+          <LF label="$ per unit">
+            <input type="number" inputMode="decimal" step="0.01" min="0" value={form.unit_cost}
+              onChange={e => setForm({ ...form, unit_cost: e.target.value })} />
+          </LF>
+          <LF label="Invoice / PO ref" className="line-form-full">
+            <input type="text" value={form.reference_number}
+              onChange={e => setForm({ ...form, reference_number: e.target.value })} />
+          </LF>
+          <label className="checkbox-inline line-form-full">
             <input type="checkbox" checked={form.is_subcontractor}
               onChange={e => setForm({ ...form, is_subcontractor: e.target.checked })} />
             Subcontractor
@@ -523,7 +554,7 @@ function MaterialSection({ workDayId, locked, lines, catalog, onChange }) {
   )
 }
 
-// ── Shared section banner ────────────────────────────────────────────────────
+// ── Shared section banner + labeled form field ─────────────────────────────
 
 function SectionBanner({ title, onAdd }) {
   return (
@@ -531,5 +562,15 @@ function SectionBanner({ title, onAdd }) {
       <h2 className="section-title-inline">{title}</h2>
       {onAdd && <button className="btn btn-primary btn-sm" onClick={onAdd}>+ Add</button>}
     </div>
+  )
+}
+
+/** LF = labeled field for the inline line-form grid. */
+function LF({ label, children, className = '' }) {
+  return (
+    <label className={`lf ${className}`.trim()}>
+      <span className="lf-label">{label}</span>
+      {children}
+    </label>
   )
 }
