@@ -246,18 +246,17 @@ class WorkDay(models.Model):
     history = HistoricalRecords()
 
     class Meta:
-        ordering = ['ewo', 'work_date']
-        constraints = [
-            models.UniqueConstraint(
-                fields=['ewo', 'work_date'],
-                name='unique_workday_per_ewo_date',
-            ),
-        ]
+        # No uniqueness on (ewo, work_date): a single calendar day can have
+        # multiple WorkDays under the same EWO when separate crews/foremen
+        # run in parallel. The foreman_name + location fields distinguish
+        # them for humans; summation across WorkDays is already correct.
+        ordering = ['ewo', 'work_date', 'id']
         verbose_name = 'Work Day'
         verbose_name_plural = 'Work Days'
 
     def __str__(self):
-        return f'{self.ewo.ewo_number} · {self.work_date}'
+        suffix = f' ({self.foreman_name})' if self.foreman_name else ''
+        return f'{self.ewo.ewo_number} · {self.work_date}{suffix}'
 
 
 class LaborLine(models.Model):
