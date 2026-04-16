@@ -378,6 +378,128 @@
   border-radius: 0 0 4px 4px;
 }
 
+/* ── Section banner with inline add button ──────────────────────────────── */
+
+.section-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--cp-charcoal);
+  padding: 8px 12px;
+  margin: 24px 0 0;
+  border-radius: 4px 4px 0 0;
+}
+
+.section-title-inline {
+  font-family: var(--banner);
+  font-size: 12px;
+  font-weight: 900;
+  color: #fff;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.section-banner + .data-table,
+.section-banner + .empty-state,
+.section-banner + .line-form {
+  margin-top: 0;
+  border-radius: 0;
+}
+
+.section-banner + .empty-state {
+  border-radius: 0 0 4px 4px;
+}
+
+/* ── Line form (inline add row) ─────────────────────────────────────────── */
+
+.line-form {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  padding: 12px;
+  background: var(--cp-gray-lt);
+  border: 1px solid var(--border);
+  border-top: none;
+  align-items: center;
+}
+
+.line-form .full-width {
+  grid-column: 1 / -1;
+}
+
+.line-form select,
+.line-form input[type="text"],
+.line-form input[type="number"] {
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-size: 13px;
+  font-family: var(--sans);
+  background: var(--bg);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.line-form select:focus,
+.line-form input:focus {
+  outline: none;
+  border-color: var(--cp-orange);
+  box-shadow: 0 0 0 2px var(--cp-orange-bg);
+}
+
+.line-form .checkbox-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text);
+}
+
+.line-form-error {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.line-form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* ── Small button variants ──────────────────────────────────────────────── */
+
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 11px;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 18px;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.btn-icon:hover {
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.08);
+}
+
+/* ── WorkDay header extras ──────────────────────────────────────────────── */
+
+.wd-foreman-suffix {
+  color: var(--text);
+  font-weight: 400;
+  font-size: 15px;
+  margin-left: 4px;
+}
+
 /* ── Buttons ────────────────────────────────────────────────────────────── */
 
 .btn {

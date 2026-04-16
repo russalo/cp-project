@@ -56,6 +56,14 @@ export function fetchEquipment(includeInactive = false) {
   return handle(fetch(`/api/resources/equipment/${includeInactive ? '?active=false' : ''}`))
 }
 
+export function fetchTrades(includeInactive = false) {
+  return handle(fetch(`/api/resources/trades/${includeInactive ? '?active=false' : ''}`))
+}
+
+export function fetchMaterialCatalog(includeInactive = false) {
+  return handle(fetch(`/api/resources/materials/${includeInactive ? '?active=false' : ''}`))
+}
+
 // ─── jobs ──────────────────────────────────────────────────────────────────
 
 export function fetchJobs(includeInactive = false) {
