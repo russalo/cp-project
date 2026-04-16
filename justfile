@@ -2,13 +2,14 @@ set shell := ["bash", "-cu"]
 
 backend_dir := "backend"
 frontend_dir := "frontend"
+backend_python := backend_dir / ".venv/bin/python"
 
 # -------------------------
 # Backend
 # -------------------------
 
 backend:
-    cd {{backend_dir}} && source .venv/bin/activate && python manage.py runserver 127.0.0.1:8000
+    {{backend_python}} {{backend_dir}}/manage.py runserver 127.0.0.1:8000
 
 # -------------------------
 # Frontend
@@ -31,20 +32,20 @@ dev:
 # -------------------------
 
 check-backend:
-    cd {{backend_dir}} && source .venv/bin/activate && python manage.py check
+    {{backend_python}} {{backend_dir}}/manage.py check
 
 migrate:
-    cd {{backend_dir}} && source .venv/bin/activate && python manage.py migrate
+    {{backend_python}} {{backend_dir}}/manage.py migrate
 
 shell:
-    cd {{backend_dir}} && source .venv/bin/activate && python manage.py shell
+    {{backend_python}} {{backend_dir}}/manage.py shell
 
 # -------------------------
 # Full dev environment (tmux)
 # -------------------------
 
 up:
-    tmux new-session -d -s dev "cd backend && source .venv/bin/activate && python manage.py runserver 127.0.0.1:8000"
+    tmux new-session -d -s dev "{{backend_python}} {{backend_dir}}/manage.py runserver 127.0.0.1:8000"
     tmux split-window -h "cd frontend && pnpm dev --host"
     tmux select-layout even-horizontal
     tmux attach -t dev

@@ -6,5 +6,8 @@ export default defineConfig({
   server: {
     host: true,
     allowedHosts: ["srv334254.taild63637.ts.net"],
+    proxy: {
+      '/api': 'http://localhost:8000',
+    },
   },
 })

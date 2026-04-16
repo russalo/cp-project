@@ -1,6 +1,7 @@
 from rest_framework import viewsets
-from .models import Employee, Equipment
-from .serializers import EmployeeSerializer, EquipmentSerializer
+
+from .models import Employee, EquipmentType
+from .serializers import EmployeeSerializer, EquipmentTypeSerializer
 
 
 class EmployeeViewSet(viewsets.ModelViewSet):
@@ -8,6 +9,6 @@ class EmployeeViewSet(viewsets.ModelViewSet):
     serializer_class = EmployeeSerializer
 
 
-class EquipmentViewSet(viewsets.ModelViewSet):
-    queryset = Equipment.objects.all()
-    serializer_class = EquipmentSerializer
+class EquipmentTypeViewSet(viewsets.ModelViewSet):
+    queryset = EquipmentType.objects.all()
+    serializer_class = EquipmentTypeSerializer
