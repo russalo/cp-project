@@ -77,7 +77,12 @@ def make_schedule(effective_date, expiry_date, year=None):
 
 
 def make_rate_line(schedule=None, class_code='AA', make_code='CAT', model_code='D8',
-                   rental_rate='150.00', rw_delay_rate='75.00', overtime_rate='50.00'):
+                   rental_rate='100.00', rw_delay_factor='0.5000', ot_factor='0.7500'):
+    """
+    Create a CaltransRateLine with the new factor-based fields (DEC-059).
+    Defaults: rental_rate=$100/hr, rw_delay_factor=0.5 → standby $50/hr,
+    ot_factor=0.75 → OT rate $75/hr.
+    """
     if schedule is None:
         schedule = make_schedule(date(2025, 1, 1), date(2025, 12, 31))
     return baker.make(
@@ -87,16 +92,31 @@ def make_rate_line(schedule=None, class_code='AA', make_code='CAT', model_code='
         make_code=make_code,
         model_code=model_code,
         rental_rate=Decimal(rental_rate),
-        rw_delay_rate=Decimal(rw_delay_rate),
-        overtime_rate=Decimal(overtime_rate),
+        rw_delay_factor=Decimal(rw_delay_factor),
+        ot_factor=Decimal(ot_factor),
         unit='HR',
     )
 
 
-def make_equip_type(rate_line=None):
+def make_equip_type(rate_line=None, **overrides):
+    """
+    Create an EquipmentType with its own rates populated (DEC-060).
+    By default, derives rate_reg / rate_ot / rate_standby from the rate_line's
+    rental_rate × factors, so callers who pass a rate_line get an EquipmentType
+    that would bill identically to that Caltrans row.
+    """
     if rate_line is None:
         rate_line = make_rate_line()
-    return baker.make(EquipmentType, caltrans_rate_line=rate_line)
+    defaults = {
+        'caltrans_rate_line': rate_line,
+        'ct_match_quality': EquipmentType.CtMatchQuality.EXACT,
+        'rate_reg': rate_line.rental_rate,
+        'rate_ot': rate_line.rental_rate * rate_line.ot_factor,
+        'rate_standby': rate_line.rental_rate * rate_line.rw_delay_factor,
+        'fuel_surcharge_eligible': True,
+    }
+    defaults.update(overrides)
+    return baker.make(EquipmentType, **defaults)
 
 
 def make_open_ewo(work_date=None, **kwargs):
@@ -162,61 +182,54 @@ class TestGetLaborRate:
 
 @pytest.mark.django_db
 class TestGetEquipmentRates:
-    def test_returns_rate_line_from_matching_schedule(self):
-        schedule = make_schedule(date(2025, 1, 1), date(2025, 12, 31))
-        ref = make_rate_line(schedule)
-        equip_type = make_equip_type(ref)
-        # Matching line in the schedule
-        result = get_equipment_rates(equip_type, date(2025, 6, 15))
-        assert result == ref
+    """
+    Under DEC-060, rates live on EquipmentType (authoritative). The function
+    returns a tuple ``(rate_reg, rate_ot, rate_standby, caltrans_rate_line_or_None)``.
+    ``work_date`` is preserved for API symmetry with ``get_labor_rate`` but no
+    per-date schedule lookup happens — historical effective-dating is via
+    line-level rate snapshots, not EquipmentType.
+    """
 
-    def test_picks_rate_line_from_dated_schedule(self):
-        """When a dated schedule exists, use its rate line (not the equip_type's ref)."""
-        old_schedule = make_schedule(date(2024, 1, 1), date(2024, 12, 31))
-        old_line = make_rate_line(old_schedule, class_code='AA', make_code='CAT', model_code='D8',
-                                  rental_rate='120.00')
-        equip_type = make_equip_type(old_line)
+    def test_returns_rates_from_equipment_type(self):
+        equip_type = make_equip_type()  # rental 100, rw 0.5, ot 0.75
+        rate_reg, rate_ot, rate_standby, _ = get_equipment_rates(
+            equip_type, date(2025, 6, 15)
+        )
+        assert rate_reg == Decimal('100.00')
+        assert rate_ot == Decimal('75.0000')
+        assert rate_standby == Decimal('50.0000')
 
-        new_schedule = make_schedule(date(2025, 1, 1), date(2025, 12, 31))
-        new_line = make_rate_line(new_schedule, class_code='AA', make_code='CAT', model_code='D8',
-                                  rental_rate='150.00')
+    def test_returns_caltrans_fk_when_linked(self):
+        equip_type = make_equip_type()
+        _, _, _, ct_line = get_equipment_rates(equip_type, date(2025, 6, 15))
+        assert ct_line == equip_type.caltrans_rate_line
 
-        result = get_equipment_rates(equip_type, date(2025, 6, 15))
-        assert result == new_line
-        assert result.rental_rate == Decimal('150.00')
+    def test_works_when_caltrans_rate_line_is_null(self):
+        """In-house / FMV equipment has rates set directly, no CT link."""
+        equip_type = baker.make(
+            EquipmentType,
+            name='In-house grader',
+            caltrans_rate_line=None,
+            ct_match_quality=EquipmentType.CtMatchQuality.FMV,
+            rate_reg=Decimal('80.00'),
+            rate_ot=Decimal('60.00'),
+            rate_standby=Decimal('20.00'),
+        )
+        rate_reg, _, _, ct_line = get_equipment_rates(equip_type, date(2025, 6, 15))
+        assert rate_reg == Decimal('80.00')
+        assert ct_line is None
 
-    def test_falls_back_to_ref_when_no_schedule_covers_date(self):
-        """No schedule covers work_date — fall back to equipment_type's rate line."""
-        ref = make_rate_line()
-        equip_type = make_equip_type(ref)
-        # Schedule exists but does NOT cover 2023
-        make_schedule(date(2025, 1, 1), date(2025, 12, 31))
-        result = get_equipment_rates(equip_type, date(2023, 6, 15))
-        assert result == ref
-
-    def test_falls_back_when_schedule_has_no_matching_line(self):
-        """Schedule covers work_date but has no line with matching codes."""
-        schedule = make_schedule(date(2025, 1, 1), date(2025, 12, 31))
-        # Rate line in schedule with different codes
-        make_rate_line(schedule, class_code='ZZ', make_code='JD', model_code='850')
-
-        # equip_type's ref uses different codes (AA/CAT/D8)
-        ref = make_rate_line(make_schedule(date(2024, 1, 1), date(2024, 12, 31)),
-                             class_code='AA', make_code='CAT', model_code='D8')
-        equip_type = make_equip_type(ref)
-
-        result = get_equipment_rates(equip_type, date(2025, 6, 15))
-        assert result == ref  # fallback to equipment_type.caltrans_rate_line
-
-    def test_raises_when_equip_type_has_no_rate_line(self):
-        # caltrans_rate_line is a non-nullable FK: accessing the descriptor on
-        # an unsaved instance with caltrans_rate_line_id=None raises
-        # RelatedObjectDoesNotExist, not returns None. Use a Mock so the
-        # attribute access returns None exactly as the service expects.
-        from unittest.mock import Mock
-        equip_type = Mock()
-        equip_type.caltrans_rate_line = None
-        with pytest.raises(ValueError, match='has no Caltrans rate line'):
+    def test_raises_when_equip_type_has_no_rates(self):
+        """All three rates zero means the EquipmentType was never configured."""
+        equip_type = baker.make(
+            EquipmentType,
+            name='Unrated',
+            caltrans_rate_line=None,
+            rate_reg=Decimal('0'),
+            rate_ot=Decimal('0'),
+            rate_standby=Decimal('0'),
+        )
+        with pytest.raises(ValueError, match='no rates configured'):
             get_equipment_rates(equip_type, date(2025, 6, 15))
 
 
@@ -301,14 +314,16 @@ class TestCalculateLaborLine:
 
 @pytest.mark.django_db
 class TestCalculateEquipmentLine:
+    """
+    Equipment rate defaults (from make_rate_line / make_equip_type):
+      rental 100, rw_delay_factor 0.5, ot_factor 0.75
+      → EquipmentType.rate_reg=100, rate_standby=50, rate_ot=75
+    Caltrans OT is rental × ot_factor (incremental wear), not a surcharge.
+    """
+
     def _setup(self, usage_type=EquipmentLine.UsageType.OPERATING, hours='8.0', work_date=date(2025, 6, 15)):
         schedule = make_schedule(date(2025, 1, 1), date(2025, 12, 31))
-        rate_line = make_rate_line(
-            schedule,
-            rental_rate='150.00',
-            rw_delay_rate='75.00',
-            overtime_rate='50.00',
-        )
+        rate_line = make_rate_line(schedule)
         equip_type = make_equip_type(rate_line)
         ewo = make_open_ewo(work_date=work_date)
         line = baker.make(
@@ -321,28 +336,28 @@ class TestCalculateEquipmentLine:
         )
         return line, rate_line
 
-    def test_operating_uses_rental_rate(self):
+    def test_operating_uses_rate_reg(self):
         line, _ = self._setup(EquipmentLine.UsageType.OPERATING)
         total = calculate_equipment_line(line)
-        assert total == Decimal('1200.00')  # 8 * 150
+        assert total == Decimal('800.00')  # 8 × 100
 
-    def test_standby_uses_rw_delay_rate(self):
+    def test_standby_uses_rate_standby(self):
         line, _ = self._setup(EquipmentLine.UsageType.STANDBY)
         total = calculate_equipment_line(line)
-        assert total == Decimal('600.00')  # 8 * 75
+        assert total == Decimal('400.00')  # 8 × 50
 
-    def test_overtime_uses_rental_plus_ot_rate(self):
+    def test_overtime_uses_rate_ot(self):
         line, _ = self._setup(EquipmentLine.UsageType.OVERTIME)
         total = calculate_equipment_line(line)
-        assert total == Decimal('1600.00')  # 8 * (150 + 50)
+        assert total == Decimal('600.00')  # 8 × 75 (rental × ot_factor)
 
     def test_snapshots_all_three_rate_components(self):
-        line, rate_line = self._setup()
+        line, _ = self._setup()
         calculate_equipment_line(line)
         line.refresh_from_db()
-        assert line.rental_rate_snapshot == Decimal('150.00')
-        assert line.rw_delay_rate_snapshot == Decimal('75.00')
-        assert line.ot_rate_snapshot == Decimal('50.00')
+        assert line.rental_rate_snapshot == Decimal('100.00')
+        assert line.rw_delay_rate_snapshot == Decimal('50.0000')
+        assert line.ot_rate_snapshot == Decimal('75.0000')
 
     def test_caltrans_rate_line_fk_set_on_line(self):
         line, rate_line = self._setup()
@@ -350,11 +365,36 @@ class TestCalculateEquipmentLine:
         line.refresh_from_db()
         assert line.caltrans_rate_line_id == rate_line.pk
 
+    def test_caltrans_fk_null_on_line_when_equipment_type_has_no_ct_link(self):
+        """In-house/FMV equipment line records a null CT provenance."""
+        equip_type = baker.make(
+            EquipmentType,
+            name='In-house pump',
+            caltrans_rate_line=None,
+            ct_match_quality=EquipmentType.CtMatchQuality.FMV,
+            rate_reg=Decimal('25.00'),
+            rate_ot=Decimal('18.00'),
+            rate_standby=Decimal('5.00'),
+        )
+        ewo = make_open_ewo()
+        line = baker.make(
+            EquipmentLine,
+            ewo=ewo,
+            equipment_type=equip_type,
+            usage_type=EquipmentLine.UsageType.OPERATING,
+            hours=Decimal('8.0'),
+        )
+        calculate_equipment_line(line)
+        line.refresh_from_db()
+        assert line.caltrans_rate_line_id is None
+        assert line.rental_rate_snapshot == Decimal('25.00')
+        assert line.line_total == Decimal('200.00')  # 8 × 25
+
     def test_round_up_applied_to_result(self):
         """2.5 hr * 33.33 = 83.325 → ROUND_UP → 83.33."""
         schedule = make_schedule(date(2025, 1, 1), date(2025, 12, 31))
         rate_line = make_rate_line(schedule, rental_rate='33.33')
-        equip_type = make_equip_type(rate_line)
+        equip_type = make_equip_type(rate_line, rate_reg=Decimal('33.33'))
         ewo = make_open_ewo()
         line = baker.make(
             EquipmentLine,
@@ -364,14 +404,13 @@ class TestCalculateEquipmentLine:
             hours=Decimal('2.5'),
         )
         total = calculate_equipment_line(line)
-        # 2.5 * 33.33 = 83.325 → ROUND_UP → 83.33
         assert total == Decimal('83.33')
 
     def test_saves_line_total_to_db(self):
         line, _ = self._setup()
         calculate_equipment_line(line)
         line.refresh_from_db()
-        assert line.line_total == Decimal('1200.00')
+        assert line.line_total == Decimal('800.00')
 
 
 # ─── calculate_material_line ───────────────────────────────────────────────────
@@ -499,8 +538,7 @@ class TestCalculateEwoTotals:
                         rate_reg='50.00', rate_ot='75.00', rate_dt='100.00')
 
         schedule = make_schedule(date(2025, 1, 1), date(2025, 12, 31))
-        rate_line = make_rate_line(schedule, rental_rate='100.00',
-                                   rw_delay_rate='50.00', overtime_rate='25.00')
+        rate_line = make_rate_line(schedule, rental_rate='100.00')
         equip_type = make_equip_type(rate_line)
 
         ewo = make_open_ewo(
@@ -737,7 +775,7 @@ class EwoApiTests(APITestCase):
         )
         schedule = make_schedule(date(2025, 1, 1), date(2025, 12, 31), year='2025-2026')
         rate_line = make_rate_line(schedule, class_code='AA', make_code='CAT', model_code='D8')
-        self.equipment_type = baker.make('resources.EquipmentType', name='Dozer', caltrans_rate_line=rate_line)
+        self.equipment_type = make_equip_type(rate_line, name='Dozer')
         self.catalog_item = baker.make(
             'resources.MaterialCatalog',
             description='Pipe',

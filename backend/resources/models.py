@@ -99,6 +99,10 @@ class CaltransRateLine(models.Model):
     Natural key: (schedule, class_code, make_code, model_code).
     Annual re-import upserts by natural key — old rows are never deleted
     so existing EWO snapshots remain intact.
+
+    Caltrans publishes OT and RW-delay (standby) as *factors* of the rental
+    rate, not as separate dollar rates (DEC-059). Store the factors; derive
+    dollar rates on demand via ``ot_rate``/``standby_rate`` properties.
     """
     schedule = models.ForeignKey(
         CaltransSchedule, on_delete=models.PROTECT, related_name='rate_lines'
@@ -109,13 +113,25 @@ class CaltransRateLine(models.Model):
     make_desc = models.CharField(max_length=200)
     model_code = models.CharField(max_length=50)
     model_desc = models.CharField(max_length=200)
-    # Three billable rate components per DEC-021
-    rental_rate = models.DecimalField(max_digits=8, decimal_places=2)    # operating
-    rw_delay_rate = models.DecimalField(max_digits=8, decimal_places=2)  # standby
-    overtime_rate = models.DecimalField(max_digits=8, decimal_places=2)  # OT adder
+    rental_rate = models.DecimalField(max_digits=8, decimal_places=2)    # operating $/hr
+    # Factors are multipliers of rental_rate; ingest always sets real values.
+    # Default 0 is a safe sentinel: a zero factor would produce zero rates,
+    # immediately surfacing an ingest bug rather than silently masking it.
+    rw_delay_factor = models.DecimalField(max_digits=5, decimal_places=4, default=0)
+    ot_factor = models.DecimalField(max_digits=5, decimal_places=4, default=0)
     unit = models.CharField(max_length=10)  # HR or DAY
 
     history = HistoricalRecords()
+
+    @property
+    def standby_rate(self):
+        """Derived $/hr for standby (rw_delay) usage."""
+        return self.rental_rate * self.rw_delay_factor
+
+    @property
+    def ot_rate(self):
+        """Derived $/hr for overtime usage (per Caltrans: rental_rate × ot_factor)."""
+        return self.rental_rate * self.ot_factor
 
     class Meta:
         ordering = ['class_code', 'make_code', 'model_code']
@@ -134,13 +150,57 @@ class CaltransRateLine(models.Model):
 
 class EquipmentType(models.Model):
     """
-    A category of equipment mapped to a Caltrans rate line.
+    A category of equipment with its own authoritative billing rates (DEC-060).
+
+    ``caltrans_rate_line`` is an optional reference showing provenance — ~28%
+    of CP's fleet has no Caltrans match (in-house, retired CT code, or above
+    the largest listed model). When a CT link is present, the ingest step
+    refreshes rate_reg/rate_ot/rate_standby from the CT row's factors
+    (rental_rate × factor). When absent, rates are entered manually.
+
     Shared across all individual units of that type.
     EWO lines reference EquipmentType — not individual units.
     """
+    class CtMatchQuality(models.TextChoices):
+        EXACT = 'exact', 'Exact'
+        CLOSE = 'close', 'Close'
+        NONE = 'none', 'No Match'
+        RETIRED = 'retired', 'CT Code Retired'
+        FMV = 'fmv', 'Fair Market Value'
+
     name = models.CharField(max_length=200)
+    # Optional provenance link (DEC-060 — 28% of fleet has no CT match)
     caltrans_rate_line = models.ForeignKey(
-        CaltransRateLine, on_delete=models.PROTECT, related_name='equipment_types'
+        CaltransRateLine,
+        on_delete=models.PROTECT,
+        related_name='equipment_types',
+        null=True,
+        blank=True,
+    )
+    ct_match_quality = models.CharField(
+        max_length=10,
+        choices=CtMatchQuality.choices,
+        default=CtMatchQuality.NONE,
+        help_text='Provenance of the rates — documents defensibility in claims.',
+    )
+    # Authoritative billing rates (DEC-060)
+    rate_reg = models.DecimalField(
+        max_digits=8, decimal_places=2, default=0,
+        help_text='Operating rate ($/hr).',
+    )
+    rate_ot = models.DecimalField(
+        max_digits=8, decimal_places=2, default=0,
+        help_text='Overtime rate ($/hr).',
+    )
+    rate_standby = models.DecimalField(
+        max_digits=8, decimal_places=2, default=0,
+        help_text='Standby (RW delay) rate ($/hr).',
+    )
+    # Fuel surcharge eligibility (DEC-062) — most diesel equipment is eligible;
+    # attachments, trailers, shoring, hand tools, safety items are not.
+    fuel_surcharge_eligible = models.BooleanField(
+        default=True,
+        help_text='Whether this equipment type participates in the fuel surcharge pool.',
     )
     notes = models.TextField(blank=True)
     active = models.BooleanField(default=True)
