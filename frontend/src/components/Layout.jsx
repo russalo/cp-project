@@ -6,8 +6,11 @@ export default function Layout({ children }) {
     <div>
       <header className="app-header">
         <Link to="/" className="app-title-link">
-          <img src={cpMark} alt="CP Construction" className="app-icon" />
-          <span className="app-title">CP Project</span>
+          <img src={cpMark} alt="CP" className="app-icon" />
+          <div className="app-wordmark">
+            <div className="app-wordmark-name">CONSTRUCTION COMPANY, INC.</div>
+            <div className="app-wordmark-tag">WATER &middot; SEWER &middot; STORM DRAIN</div>
+          </div>
         </Link>
         <span className="login-placeholder">login</span>
       </header>

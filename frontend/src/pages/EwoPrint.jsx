@@ -341,7 +341,7 @@ function Letterhead() {
     <header className="print-letterhead">
       <img src={cpMark} alt="CP" className="print-letterhead-mark" />
       <div className="print-letterhead-text">
-        <div className="print-letterhead-name">C.P. CONSTRUCTION COMPANY, INC.</div>
+        <div className="print-letterhead-name">CONSTRUCTION COMPANY, INC.</div>
         <div className="print-letterhead-tag">WATER &middot; SEWER &middot; STORM DRAIN</div>
       </div>
       <div className="print-letterhead-contact">
@@ -406,12 +406,19 @@ function PrintStyles() {
       }
       .print-letterhead-mark { height: 42px; width: auto; }
       .print-letterhead-name {
-        font-family: 'CPLogo', 'Square721 BT Extended', 'Arial Black', sans-serif;
-        font-size: 16pt;
-        letter-spacing: 1.5px;
+        font-family: 'Square721 BT Extended', 'Arial Black', sans-serif;
+        font-style: italic;
+        font-weight: 700;
+        font-size: 18pt;
+        letter-spacing: 1.4px;
         color: #0d0d0d;
       }
-      .print-letterhead-tag { font-size: 8pt; letter-spacing: 2px; color: #555; }
+      .print-letterhead-tag {
+        font-family: 'Square721 BT Extended', 'Arial Black', 'Roboto', sans-serif;
+        font-size: 8pt;
+        letter-spacing: 3px;
+        color: #555;
+      }
       .print-letterhead-contact { font-size: 8pt; text-align: right; color: #333; }
 
       .print-doc-title {

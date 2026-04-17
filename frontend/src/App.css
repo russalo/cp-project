@@ -6,16 +6,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 56px;
+  height: 64px;
   flex-shrink: 0;
-}
-
-.app-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: 1px;
-  text-transform: uppercase;
 }
 
 .app-title-link {
@@ -23,16 +15,45 @@
   text-decoration: none;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
 }
 
 .app-icon {
-  /* CPmark.svg is already the CP orange (#F37224) on transparent, sized in a
-     landscape viewBox (~428x320). Lock the height so it sits inside the 56px
-     header and let the width go natural. */
-  height: 30px;
+  /* CPmark.svg is CP orange (#F37224) on transparent, ~428x320 landscape.
+     Lock the height; let width stay proportional. */
+  height: 42px;
   width: auto;
   display: block;
+}
+
+.app-wordmark {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.app-wordmark-name {
+  font-family: 'Square721 BT Extended', 'Arial Black', sans-serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 18px;
+  color: #fff;
+  letter-spacing: 1px;
+}
+
+.app-wordmark-tag {
+  font-family: 'Square721 BT Extended', 'Arial Black', 'Roboto', sans-serif;
+  font-size: 10px;
+  color: var(--cp-gray);
+  letter-spacing: 3px;
+  margin-top: 2px;
+}
+
+@media (max-width: 480px) {
+  .app-header { height: 56px; padding: 0 14px; }
+  .app-icon { height: 34px; }
+  .app-wordmark-name { font-size: 14px; letter-spacing: 0.6px; }
+  .app-wordmark-tag { font-size: 8px; letter-spacing: 2px; }
 }
 
 .login-placeholder {
