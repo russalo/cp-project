@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { fetchEwo, fetchJob, fetchWorkDays, patchEwo } from '../services/api'
 import EditableField from '../components/EditableField'
+import { fmtMoney, fmtPct } from '../lib/format'
 
 const STATUS_LABEL = {
   open: 'Open',
@@ -142,9 +143,8 @@ export default function EwoDetail() {
             <tr>
               <th>Date</th>
               <th>Foreman</th>
-              <th>Superintendent</th>
               <th>Location</th>
-              <th>Weather</th>
+              <th>Description</th>
               <th>Day Total</th>
             </tr>
           </thead>
@@ -157,10 +157,9 @@ export default function EwoDetail() {
                   </Link>
                 </td>
                 <td>{wd.foreman_name || '—'}</td>
-                <td>{wd.superintendent_name || '—'}</td>
                 <td>{wd.location || '—'}</td>
-                <td>{wd.weather || '—'}</td>
-                <td>{fmtMoney(wd.day_total)}</td>
+                <td className="col-description">{wd.description || <span className="rate-unavailable">—</span>}</td>
+                <td>{wd.day_total === null ? <span className="rate-unavailable">—</span> : fmtMoney(wd.day_total)}</td>
               </tr>
             ))}
           </tbody>
@@ -170,12 +169,3 @@ export default function EwoDetail() {
   )
 }
 
-function fmtPct(v) {
-  if (v === null || v === undefined || v === '') return '—'
-  return `${(Number(v) * 100).toFixed(2)}%`
-}
-
-function fmtMoney(v) {
-  if (v === null || v === undefined || v === '') return <span className="rate-unavailable">—</span>
-  return `$${Number(v).toFixed(2)}`
-}

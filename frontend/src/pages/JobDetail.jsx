@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { fetchJob, fetchEwos } from '../services/api'
+import { fmtMoney, fmtPct } from '../lib/format'
 
 const STATUS_LABEL = {
   open: 'Open',
@@ -105,7 +106,7 @@ export default function JobDetail() {
                   </span>
                 </td>
                 <td>{e.workday_count ?? '—'}</td>
-                <td>{fmtMoney(e.total)}</td>
+                <td>{e.total === null ? <span className="rate-unavailable">—</span> : fmtMoney(e.total)}</td>
                 <td className="col-description">{e.description}</td>
               </tr>
             ))}
@@ -114,14 +115,4 @@ export default function JobDetail() {
       )}
     </div>
   )
-}
-
-function fmtPct(v) {
-  if (v === null || v === undefined || v === '') return '—'
-  return `${(Number(v) * 100).toFixed(2)}%`
-}
-
-function fmtMoney(v) {
-  if (v === null || v === undefined || v === '') return <span className="rate-unavailable">—</span>
-  return `$${Number(v).toFixed(2)}`
 }

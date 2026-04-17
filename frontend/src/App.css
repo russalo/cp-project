@@ -558,6 +558,49 @@
   margin-left: 4px;
 }
 
+.wd-running-totals {
+  display: flex;
+  gap: 20px;
+  padding: 8px 14px;
+  background: var(--cp-gray-lt);
+  border-left: 4px solid var(--cp-orange);
+  border-radius: 3px;
+  font-variant-numeric: tabular-nums;
+}
+
+.wd-running-totals > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.wd-running-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.wd-running-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--cp-charcoal);
+  font-family: var(--banner);
+}
+
+@media (max-width: 480px) {
+  .wd-running-totals {
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+  }
+  .wd-running-value {
+    font-size: 16px;
+  }
+}
+
 /* ── Editable field (inline pencil → input / textarea) ─────────────────── */
 
 .editable-field {

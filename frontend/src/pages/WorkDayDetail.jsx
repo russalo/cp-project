@@ -6,6 +6,7 @@ import {
   laborLines, equipmentLines, materialLines,
 } from '../services/api'
 import EditableField from '../components/EditableField'
+import { fmtMoney, fmtHours } from '../lib/format'
 
 export default function WorkDayDetail() {
   const { workDayId } = useParams()
@@ -101,6 +102,26 @@ export default function WorkDayDetail() {
             <span className="wd-foreman-suffix">· {workDay.foreman_name}</span>
           )}
         </h1>
+        <div className="wd-running-totals">
+          <div>
+            <span className="wd-running-label">Day total</span>
+            <span className="wd-running-value">
+              {workDay.day_total === null
+                ? <span className="rate-unavailable">—</span>
+                : fmtMoney(workDay.day_total)}
+            </span>
+          </div>
+          {ewo && (
+            <div>
+              <span className="wd-running-label">EWO total</span>
+              <span className="wd-running-value">
+                {ewo.total === null
+                  ? <span className="rate-unavailable">—</span>
+                  : fmtMoney(ewo.total)}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       <section className="detail-card">
@@ -192,16 +213,6 @@ function mapById(list) {
   const m = new Map()
   list.forEach(x => m.set(x.id, x))
   return m
-}
-
-function fmtHours(v) {
-  if (v === null || v === undefined || v === '') return '—'
-  return Number(v).toFixed(1)
-}
-
-function fmtMoney(v) {
-  if (v === null || v === undefined || v === '') return <span className="rate-unavailable">—</span>
-  return `$${Number(v).toFixed(2)}`
 }
 
 // ── Labor ────────────────────────────────────────────────────────────────────
