@@ -15,68 +15,21 @@
   text-decoration: none;
   display: flex;
   align-items: center;
-  gap: 14px;
 }
 
-.app-icon {
-  /* CPmark.svg is CP orange (#F37224) on transparent, ~428x320 landscape.
-     Lock the height; let width stay proportional. */
-  height: 42px;
+/* Dark-background brand lockup SVG — includes the CP mark + stacked
+   "C.P. CONSTRUCTION / COMPANY, INC." in white + tagline + Est. 1966
+   in CP orange, all baked. Sized by height to sit inside the 64px
+   header bar. */
+.app-logo {
+  height: 46px;
   width: auto;
   display: block;
 }
 
-.app-wordmark {
-  /* inline-flex so the column shrink-wraps to the company name width,
-     which then bounds the tagline's justify target below. */
-  display: inline-flex;
-  flex-direction: column;
-  line-height: 1.1;
-}
-
-.app-wordmark-name {
-  font-family: 'Square721 BT Extended', 'Arial Black', sans-serif;
-  font-style: italic;
-  font-weight: 700;
-  font-size: 18px;
-  color: #fff;
-  letter-spacing: 1px;
-  white-space: nowrap;  /* locks the column width for the tagline below */
-}
-
-.app-wordmark-tag {
-  font-family: 'Square721 BT Extended', 'Arial Black', 'Roboto', sans-serif;
-  font-size: 10px;
-  color: var(--cp-gray);
-  letter-spacing: 1px;
-  margin-top: 2px;
-  /* Stretch the 5 word-gaps so the tagline spans the full column width
-     set by the company name above. "text-align-last: justify" is what
-     makes this work for a single-line string. */
-  text-align: justify;
-  text-align-last: justify;
-  text-justify: inter-word;
-}
-
-.app-wordmark-est {
-  font-family: 'Square721 BT', 'Roboto', sans-serif;
-  font-weight: 700;
-  font-size: 9px;
-  color: var(--cp-orange);
-  text-align: right;
-  margin-top: 1px;
-  letter-spacing: 0.3px;
-}
-
-@media (max-width: 480px) {
-  .app-wordmark-est { font-size: 8px; }
-}
-
 @media (max-width: 480px) {
   .app-header { height: 56px; padding: 0 14px; }
-  .app-icon { height: 34px; }
-  .app-wordmark-name { font-size: 14px; letter-spacing: 0.6px; }
-  .app-wordmark-tag { font-size: 8px; letter-spacing: 2px; }
+  .app-logo { height: 38px; }
 }
 
 .login-placeholder {

@@ -1,17 +1,12 @@
 import { NavLink, Link } from 'react-router-dom'
-import cpMark from '../assets/cpmark.svg'
+import logoDark from '../assets/logo-dark.svg'
 
 export default function Layout({ children }) {
   return (
     <div>
       <header className="app-header">
-        <Link to="/" className="app-title-link">
-          <img src={cpMark} alt="CP" className="app-icon" />
-          <div className="app-wordmark">
-            <div className="app-wordmark-name">CONSTRUCTION COMPANY, INC.</div>
-            <div className="app-wordmark-tag">WATER &middot; SEWER &middot; STORM DRAIN</div>
-            <div className="app-wordmark-est">Est. 1966</div>
-          </div>
+        <Link to="/" className="app-title-link" aria-label="C.P. Construction Company, Inc.">
+          <img src={logoDark} alt="C.P. Construction Company, Inc." className="app-logo" />
         </Link>
         <span className="login-placeholder">login</span>
       </header>
