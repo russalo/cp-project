@@ -397,29 +397,48 @@ function PrintStyles() {
 
       .print-letterhead {
         display: grid;
-        grid-template-columns: 48px 1fr auto;
-        gap: 12px;
+        grid-template-columns: auto 1fr auto;
+        gap: 14px;
         align-items: center;
         border-bottom: 2px solid #2e2e2e;
         padding-bottom: 8px;
         margin-bottom: 14px;
       }
-      .print-letterhead-mark { height: 42px; width: auto; }
+      .print-letterhead-mark {
+        /* Height matches the two-line wordmark block so nothing towers. */
+        height: 38pt;
+        width: auto;
+        display: block;
+      }
+      .print-letterhead-text {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.05;
+        min-width: 0;
+      }
       .print-letterhead-name {
         font-family: 'Square721 BT Extended', 'Arial Black', sans-serif;
         font-style: italic;
         font-weight: 700;
-        font-size: 18pt;
-        letter-spacing: 1.4px;
+        font-size: 14pt;
+        letter-spacing: 1px;
         color: #0d0d0d;
+        white-space: nowrap;
       }
       .print-letterhead-tag {
         font-family: 'Square721 BT Extended', 'Arial Black', 'Roboto', sans-serif;
-        font-size: 8pt;
+        font-size: 7.5pt;
         letter-spacing: 3px;
         color: #555;
+        margin-top: 2pt;
       }
-      .print-letterhead-contact { font-size: 8pt; text-align: right; color: #333; }
+      .print-letterhead-contact {
+        font-size: 8pt;
+        text-align: right;
+        color: #333;
+        line-height: 1.3;
+        white-space: nowrap;
+      }
 
       .print-doc-title {
         font-family: 'Square721 BT Extended', 'Arial Black', sans-serif;
