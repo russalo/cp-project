@@ -83,7 +83,12 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             '--effective-date', type=str, default=None,
-            help='Effective date for new LaborRate rows (ISO YYYY-MM-DD). Defaults to today.',
+            help=(
+                'Effective date for new LaborRate rows (ISO YYYY-MM-DD). '
+                'Defaults to Jan 1 of the current year so the rates cover any '
+                'work date in the current year; override with an earlier date '
+                'if you need to bill for prior-year work.'
+            ),
         )
 
     def handle(self, *args, **opts):
@@ -98,8 +103,12 @@ class Command(BaseCommand):
         if not xlsx_path.exists():
             raise CommandError(f'Workbook not found: {xlsx_path}')
 
+        # Default to Jan 1 of the current year so new LaborRate rows cover any
+        # work_date in this year — union scale increases realistically sit in
+        # effect for months, not just "today and forward."
         effective_date = (
-            date.fromisoformat(opts['effective_date']) if opts['effective_date'] else date.today()
+            date.fromisoformat(opts['effective_date']) if opts['effective_date']
+            else date(date.today().year, 1, 1)
         )
         dry_run = opts['dry_run']
 

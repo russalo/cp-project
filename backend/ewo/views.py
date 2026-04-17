@@ -1,3 +1,5 @@
+import logging
+
 from django.db.models import Count
 
 from rest_framework import viewsets
@@ -12,6 +14,32 @@ from .serializers import (
     MaterialLineSerializer,
     WorkDaySerializer,
 )
+from .services import calculate_ewo_totals
+
+
+logger = logging.getLogger(__name__)
+
+
+def _recalc_if_editable(ewo):
+    """
+    Recompute WorkDay + EWO totals whenever an editable EWO's line items
+    change. Skipped on locked EWOs so frozen numbers stay frozen (DEC-031).
+
+    Rate-lookup failures (e.g. missing LaborRate for a work_date, or an
+    EquipmentType without any rates configured) are logged but do not
+    surface to the caller — the CRUD call already succeeded with a 2xx;
+    raising from a post-save hook would confuse the user. Totals remain
+    at their previous value until the next successful recalc or submit.
+    """
+    if ewo is None or getattr(ewo, 'is_locked', True):
+        return
+    try:
+        calculate_ewo_totals(ewo)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(
+            'recalc skipped for EWO %s: %s: %s',
+            ewo.ewo_number, type(exc).__name__, exc,
+        )
 
 
 class EwoLockedDeleteMixin:
@@ -22,22 +50,42 @@ class EwoLockedDeleteMixin:
 
 
 class ParentEwoLockedDeleteMixin:
-    """Guard for line-item viewsets whose parent is a WorkDay under an EWO."""
+    """Guard + recalc trigger for line-item viewsets under a WorkDay."""
+    def perform_create(self, serializer):
+        serializer.save()
+        _recalc_if_editable(serializer.instance.work_day.ewo)
+
+    def perform_update(self, serializer):
+        serializer.save()
+        _recalc_if_editable(serializer.instance.work_day.ewo)
+
     def perform_destroy(self, instance):
         if instance.work_day.ewo.is_locked:
             raise ValidationError(
                 'Line items on locked EWOs cannot be deleted through CRUD endpoints.'
             )
+        ewo = instance.work_day.ewo
         super().perform_destroy(instance)
+        _recalc_if_editable(ewo)
 
 
 class WorkDayLockedDeleteMixin:
+    def perform_create(self, serializer):
+        serializer.save()
+        _recalc_if_editable(serializer.instance.ewo)
+
+    def perform_update(self, serializer):
+        serializer.save()
+        _recalc_if_editable(serializer.instance.ewo)
+
     def perform_destroy(self, instance):
         if instance.ewo.is_locked:
             raise ValidationError(
                 'WorkDays on locked EWOs cannot be deleted through CRUD endpoints.'
             )
+        ewo = instance.ewo
         super().perform_destroy(instance)
+        _recalc_if_editable(ewo)
 
 
 class ExtraWorkOrderViewSet(EwoLockedDeleteMixin, viewsets.ModelViewSet):
@@ -76,6 +124,12 @@ class ExtraWorkOrderViewSet(EwoLockedDeleteMixin, viewsets.ModelViewSet):
         if status_:
             qs = qs.filter(status=status_)
         return qs
+
+    def perform_update(self, serializer):
+        # Changing fuel %, OH&P, bond, or bond_required on an open EWO should
+        # refresh the totals immediately so the UI stays in sync.
+        serializer.save()
+        _recalc_if_editable(serializer.instance)
 
 
 class WorkDayViewSet(WorkDayLockedDeleteMixin, viewsets.ModelViewSet):

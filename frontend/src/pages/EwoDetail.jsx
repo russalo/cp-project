@@ -127,7 +127,8 @@ export default function EwoDetail() {
         </dl>
         {ewo.total === null && (
           <p className="hint">
-            Totals are computed on EWO submission. Currently showing as unset.
+            Add at least one line to a WorkDay to see totals. They recalculate
+            automatically as you build; the numbers lock on EWO submission.
           </p>
         )}
       </section>
