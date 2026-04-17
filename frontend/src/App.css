@@ -6,21 +6,30 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 56px;
+  height: 64px;
   flex-shrink: 0;
-}
-
-.app-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: 1px;
-  text-transform: uppercase;
 }
 
 .app-title-link {
   color: inherit;
   text-decoration: none;
+  display: flex;
+  align-items: center;
+}
+
+/* Dark-background brand lockup SVG — includes the CP mark + stacked
+   "C.P. CONSTRUCTION / COMPANY, INC." in white + tagline + Est. 1966
+   in CP orange, all baked. Sized by height to sit inside the 64px
+   header bar. */
+.app-logo {
+  height: 46px;
+  width: auto;
+  display: block;
+}
+
+@media (max-width: 480px) {
+  .app-header { height: 56px; padding: 0 14px; }
+  .app-logo { height: 38px; }
 }
 
 .login-placeholder {
@@ -408,6 +417,17 @@
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 1px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cat-icon {
+  width: 18px;
+  height: 18px;
+  /* Source SVGs are black-stroked with currentColor; invert for white on charcoal banner. */
+  filter: invert(1);
+  flex-shrink: 0;
 }
 
 .section-banner + .data-table,
@@ -556,6 +576,49 @@
   font-weight: 400;
   font-size: 15px;
   margin-left: 4px;
+}
+
+.wd-running-totals {
+  display: flex;
+  gap: 20px;
+  padding: 8px 14px;
+  background: var(--cp-gray-lt);
+  border-left: 4px solid var(--cp-orange);
+  border-radius: 3px;
+  font-variant-numeric: tabular-nums;
+}
+
+.wd-running-totals > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.wd-running-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.wd-running-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--cp-charcoal);
+  font-family: var(--banner);
+}
+
+@media (max-width: 480px) {
+  .wd-running-totals {
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+  }
+  .wd-running-value {
+    font-size: 16px;
+  }
 }
 
 /* ── Editable field (inline pencil → input / textarea) ─────────────────── */

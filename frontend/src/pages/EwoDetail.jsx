@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { fetchEwo, fetchJob, fetchWorkDays, patchEwo } from '../services/api'
 import EditableField from '../components/EditableField'
+import { fmtMoney, fmtPct } from '../lib/format'
 
 const STATUS_LABEL = {
   open: 'Open',
@@ -70,6 +71,7 @@ export default function EwoDetail() {
           </span>
         </h1>
         <div className="page-toolbar">
+          <Link to={`/ewos/${ewo.id}/print`} className="btn">Print</Link>
           {!locked && (
             <Link to={`/ewos/${ewo.id}/workdays/new`} className="btn btn-primary">+ New WorkDay</Link>
           )}
@@ -92,12 +94,20 @@ export default function EwoDetail() {
             />
           </dd>
 
-          <dt>Bond required</dt>
-          <dd>{ewo.bond_required ? 'Yes' : 'No'}</dd>
+          {/* OH&P federated: one row when Labor and Equip/Mat rates match
+              (the 99% case), split when they differ (leniency case). */}
+          <dt>OH&P</dt>
+          <dd>{ohpRateLine(ewo)}</dd>
 
-          <dt>Labor OH&P</dt> <dd>{fmtPct(ewo.labor_ohp_pct)}</dd>
-          <dt>Equip/Mat OH&P</dt> <dd>{fmtPct(ewo.equip_mat_ohp_pct)}</dd>
-          <dt>Bond %</dt> <dd>{fmtPct(ewo.bond_pct)}</dd>
+          {/* Bond is a single line: "Not required" when off, or the rate when on.
+              Avoids the "Bond required: No" + "Bond %: 1.5%" double-read that
+              made it look like bond was being applied. */}
+          <dt>Bond</dt>
+          <dd>
+            {ewo.bond_required
+              ? fmtPct(ewo.bond_pct)
+              : <span className="rate-unavailable">Not required</span>}
+          </dd>
 
           <dt>Fuel Surcharge %</dt>
           <dd>
@@ -117,17 +127,18 @@ export default function EwoDetail() {
       <section className="detail-card totals-card">
         <h2 className="detail-card-title">Totals</h2>
         <dl className="detail-grid totals-grid">
-          <dt>Labor</dt>        <dd>{fmtMoney(ewo.labor_subtotal)}</dd>
-          <dt>Labor OH&P</dt>    <dd>{fmtMoney(ewo.labor_ohp_amount)}</dd>
+          <dt>Labor</dt>         <dd>{fmtMoney(ewo.labor_subtotal)}</dd>
           <dt>Equip + Mat</dt>   <dd>{fmtMoney(ewo.equip_mat_subtotal)}</dd>
           <dt>Fuel</dt>          <dd>{fmtMoney(ewo.fuel_subtotal)}</dd>
-          <dt>E+M OH&P</dt>      <dd>{fmtMoney(ewo.equip_mat_ohp_amount)}</dd>
+          <dt>{ohpLabel(ewo)}</dt>
+          <dd>{combinedOhpDisplay(ewo)}</dd>
           <dt>Bond</dt>          <dd>{fmtMoney(ewo.bond_amount)}</dd>
           <dt className="total-row">Total</dt> <dd className="total-row">{fmtMoney(ewo.total)}</dd>
         </dl>
         {ewo.total === null && (
           <p className="hint">
-            Totals are computed on EWO submission. Currently showing as unset.
+            Add at least one line to a WorkDay to see totals. They recalculate
+            automatically as you build; the numbers lock on EWO submission.
           </p>
         )}
       </section>
@@ -141,9 +152,8 @@ export default function EwoDetail() {
             <tr>
               <th>Date</th>
               <th>Foreman</th>
-              <th>Superintendent</th>
               <th>Location</th>
-              <th>Weather</th>
+              <th>Description</th>
               <th>Day Total</th>
             </tr>
           </thead>
@@ -156,10 +166,9 @@ export default function EwoDetail() {
                   </Link>
                 </td>
                 <td>{wd.foreman_name || '—'}</td>
-                <td>{wd.superintendent_name || '—'}</td>
                 <td>{wd.location || '—'}</td>
-                <td>{wd.weather || '—'}</td>
-                <td>{fmtMoney(wd.day_total)}</td>
+                <td className="col-description">{wd.description || <span className="rate-unavailable">—</span>}</td>
+                <td>{wd.day_total === null ? <span className="rate-unavailable">—</span> : fmtMoney(wd.day_total)}</td>
               </tr>
             ))}
           </tbody>
@@ -169,12 +178,27 @@ export default function EwoDetail() {
   )
 }
 
-function fmtPct(v) {
-  if (v === null || v === undefined || v === '') return '—'
-  return `${(Number(v) * 100).toFixed(2)}%`
+/** "OH&P (15.00%)" when both rates match, else "OH&P (L 15.00% · EM 12.00%)". */
+function ohpLabel(ewo) {
+  const labor = Number(ewo.labor_ohp_pct ?? 0)
+  const em = Number(ewo.equip_mat_ohp_pct ?? 0)
+  if (labor === em) return `OH\u0026P (${fmtPct(labor)})`
+  return `OH\u0026P (L ${fmtPct(labor)} \u00b7 EM ${fmtPct(em)})`
 }
 
-function fmtMoney(v) {
-  if (v === null || v === undefined || v === '') return <span className="rate-unavailable">—</span>
-  return `$${Number(v).toFixed(2)}`
+/** Just the OH&P rate(s), for the config card where the label is already "OH&P". */
+function ohpRateLine(ewo) {
+  const labor = Number(ewo.labor_ohp_pct ?? 0)
+  const em = Number(ewo.equip_mat_ohp_pct ?? 0)
+  if (labor === em) return fmtPct(labor)
+  return `L ${fmtPct(labor)} \u00b7 EM ${fmtPct(em)}`
 }
+
+/** Combined labor + equip/mat OH&P dollar amount, null-aware. */
+function combinedOhpDisplay(ewo) {
+  const l = ewo.labor_ohp_amount
+  const em = ewo.equip_mat_ohp_amount
+  if (l === null && em === null) return <span className="rate-unavailable">—</span>
+  return fmtMoney(Number(l ?? 0) + Number(em ?? 0))
+}
+

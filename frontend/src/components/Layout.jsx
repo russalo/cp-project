@@ -1,11 +1,12 @@
 import { NavLink, Link } from 'react-router-dom'
+import logoDark from '../assets/logo-dark.svg'
 
 export default function Layout({ children }) {
   return (
     <div>
       <header className="app-header">
-        <Link to="/" className="app-title-link">
-          <span className="app-title">CP Project</span>
+        <Link to="/" className="app-title-link" aria-label="C.P. Construction Company, Inc.">
+          <img src={logoDark} alt="C.P. Construction Company, Inc." className="app-logo" />
         </Link>
         <span className="login-placeholder">login</span>
       </header>

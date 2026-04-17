@@ -25,6 +25,10 @@ class JobApiTests(APITestCase):
                 'location': '',
                 'gc_name': '',
                 'active': True,
+                'cp_role': '',
+                'labor_ohp_pct': '0.1500',
+                'equip_mat_ohp_pct': '0.1500',
+                'bond_pct': '0.0150',
             }
         ])
 

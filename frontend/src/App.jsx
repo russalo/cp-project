@@ -6,6 +6,7 @@ import EmployeeList from './pages/EmployeeList'
 import EquipmentList from './pages/EquipmentList'
 import EwoDetail from './pages/EwoDetail'
 import EwoNew from './pages/EwoNew'
+import EwoPrint from './pages/EwoPrint'
 import WorkDayDetail from './pages/WorkDayDetail'
 import WorkDayNew from './pages/WorkDayNew'
 import './App.css'
@@ -19,6 +20,7 @@ export default function App() {
         <Route path="/jobs/:jobId" element={<JobDetail />} />
         <Route path="/jobs/:jobId/ewos/new" element={<EwoNew />} />
         <Route path="/ewos/:ewoId" element={<EwoDetail />} />
+        <Route path="/ewos/:ewoId/print" element={<EwoPrint />} />
         <Route path="/ewos/:ewoId/workdays/new" element={<WorkDayNew />} />
         <Route path="/workdays/:workDayId" element={<WorkDayDetail />} />
         <Route path="/employees" element={<EmployeeList />} />

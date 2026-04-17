@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { createEwo, fetchJob } from '../services/api'
+import { fmtPct } from '../lib/format'
 
 export default function EwoNew() {
   const { jobId } = useParams()
@@ -124,7 +125,3 @@ export default function EwoNew() {
   )
 }
 
-function fmtPct(v) {
-  if (v === null || v === undefined || v === '') return '—'
-  return `${(Number(v) * 100).toFixed(2)}%`
-}

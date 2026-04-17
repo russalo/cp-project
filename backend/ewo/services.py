@@ -22,10 +22,21 @@ get_equipment_rates(equipment_type, work_date)    -> (reg, ot, standby, ct_fk)
 calculate_labor_line(line)                        -> Decimal (line_total)
 calculate_equipment_line(line)                    -> Decimal (line_total)
 calculate_material_line(line)                     -> Decimal (line_total)
-calculate_workday_totals(work_day)                -> dict
-calculate_ewo_totals(ewo)                         -> dict of EWO rollups
+calculate_workday_totals(work_day)                -> dict  (recomputes all lines)
+calculate_ewo_totals(ewo)                         -> dict  (recomputes all lines)
+rollup_workday_totals(work_day)                   -> dict  (uses stored line_total)
+rollup_ewo_totals(ewo)                            -> dict  (uses stored line_total)
 submit_ewo(ewo)                                   -> ExtraWorkOrder (submitted)
 create_ewo_from_job(...)                          -> ExtraWorkOrder (pct snapshotted)
+
+Two recompute paths intentionally coexist:
+
+* ``calculate_*_totals`` re-snapshots every line by calling the per-line
+  calculators. Used by ``submit_ewo`` for a canonical "freshen everything"
+  pass before locking, and by the tests that assert line snapshot fields.
+* ``rollup_*_totals`` aggregates existing ``line_total`` values without
+  touching line rows. Used by CRUD recalc hooks so editing a single line
+  doesn't produce an audit row on every other line in the EWO.
 """
 
 from decimal import ROUND_UP, Decimal
@@ -196,9 +207,11 @@ def _update_catalog_stats(material_line):
 # ─── WorkDay and EWO totals ───────────────────────────────────────────────────
 
 
-def calculate_workday_totals(work_day):
+def rollup_workday_totals(work_day):
     """
-    Calculate and write daily totals for one WorkDay (DEC-064).
+    Aggregate daily totals from already-computed ``line_total`` values
+    without re-saving any line rows. Same math as ``calculate_workday_totals``
+    minus the per-line recompute pass.
 
     Order of operations — "chain B" per the fuel-surcharge design:
       1. Labor subtotal       — sum of labor line totals
@@ -216,32 +229,17 @@ def calculate_workday_totals(work_day):
     """
     ewo = work_day.ewo
 
-    # Fetch each line set once; reuse the objects for calculation + aggregation
-    # to avoid re-querying. equipment_type is selected so the fuel-eligible
-    # filter runs in-memory rather than spawning an extra query.
-    labor_lines = list(
-        work_day.labor_lines.select_related('trade_classification', 'work_day').all()
-    )
+    labor_lines = list(work_day.labor_lines.all())
     equipment_lines = list(
-        work_day.equipment_lines.select_related('equipment_type', 'work_day').all()
+        work_day.equipment_lines.select_related('equipment_type').all()
     )
-    material_lines = list(
-        work_day.material_lines.select_related('catalog_item', 'work_day').all()
-    )
-
-    for line in labor_lines:
-        calculate_labor_line(line)
-    for line in equipment_lines:
-        calculate_equipment_line(line)
-    for line in material_lines:
-        calculate_material_line(line)
+    material_lines = list(work_day.material_lines.all())
 
     labor_subtotal = _sum_line_totals(labor_lines)
     equip_subtotal = _sum_line_totals(equipment_lines)
     material_subtotal = _sum_line_totals(material_lines)
 
     # Fuel surcharge base: only equipment lines whose type is fuel_eligible.
-    # Filtered in Python since equipment_type is already joined.
     fuel_base = _sum_line_totals(
         [line for line in equipment_lines if line.equipment_type.fuel_surcharge_eligible]
     )
@@ -291,17 +289,56 @@ def calculate_workday_totals(work_day):
     }
 
 
-def calculate_ewo_totals(ewo):
+def calculate_workday_totals(work_day):
     """
-    Calculate WorkDay totals and roll them up onto the EWO record (DEC-064).
+    Recompute every line on a WorkDay and roll up daily totals (DEC-064).
+
+    Use this on submit (canonical "freshen everything" pass). CRUD hooks
+    should prefer ``rollup_workday_totals`` so editing one line does not
+    produce an audit row on every other line in the day.
+    """
+    for line in work_day.labor_lines.select_related('trade_classification').all():
+        calculate_labor_line(line)
+    for line in work_day.equipment_lines.select_related('equipment_type').all():
+        calculate_equipment_line(line)
+    for line in work_day.material_lines.select_related('catalog_item').all():
+        calculate_material_line(line)
+
+    return rollup_workday_totals(work_day)
+
+
+def rollup_ewo_totals(ewo):
+    """
+    Roll up already-computed WorkDay totals onto the EWO record (DEC-064).
+
+    Calls ``rollup_workday_totals`` for each WorkDay so daily amounts stay
+    consistent with current line_total values, then sums onto the EWO.
+    Does not touch line rows.
 
     Returns a dict of the rolled-up totals.
+    """
+    for work_day in ewo.work_days.all():
+        rollup_workday_totals(work_day)
+    return _sum_days_onto_ewo(ewo)
+
+
+def calculate_ewo_totals(ewo):
+    """
+    Recompute every line on every WorkDay, then roll up to the EWO.
+
+    Used by ``submit_ewo`` to guarantee rates are re-snapshotted against
+    the current work_date before the EWO is locked. CRUD hooks should
+    use ``rollup_ewo_totals`` instead.
+
     Raises ValueError if any rate lookup fails during line calculation.
     """
     for work_day in ewo.work_days.all():
         calculate_workday_totals(work_day)
+    return _sum_days_onto_ewo(ewo)
 
-    # Roll up from WorkDays (re-query for freshness)
+
+def _sum_days_onto_ewo(ewo):
+    """Sum per-day amounts onto the EWO and save. Shared by rollup + calculate paths."""
     days = list(ewo.work_days.all())
 
     labor_subtotal = sum((d.labor_subtotal or _ZERO for d in days), _ZERO)

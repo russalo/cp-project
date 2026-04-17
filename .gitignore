@@ -42,6 +42,12 @@ db.sqlite3-journal
 # Local scratch / working material (reference only, not committed)
 /scratch/
 
+# Dev-only CP brand fonts — Monotype desktop EULA does not permit web
+# hosting. Loaded via import.meta.glob in src/main.jsx when the files
+# exist locally; absent on CI / clean clones (graceful fallback).
+/frontend/src/assets/fonts-dev/
+/frontend/src/assets/fonts-dev.css
+
 # OS
 .DS_Store
 Thumbs.db
