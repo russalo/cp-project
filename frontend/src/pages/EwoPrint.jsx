@@ -152,21 +152,6 @@ export default function EwoPrint() {
           <div className="print-meta-value">{ewo.description || '—'}</div>
         </section>
 
-        <h2 className="print-section-title">EWO Totals</h2>
-        <table className="print-totals">
-          <tbody>
-            <tr><td>Labor</td><td>{fmtMoney(ewo.labor_subtotal)}</td></tr>
-            <tr><td>Equipment + Materials</td><td>{fmtMoney(ewo.equip_mat_subtotal)}</td></tr>
-            <tr><td>Fuel</td><td>{fmtMoney(ewo.fuel_subtotal)}</td></tr>
-            <tr><td>OH&amp;P ({fmtPct(ewo.labor_ohp_pct)})</td><td>{fmtMoney(sumOhp(ewo))}</td></tr>
-            <tr><td>Bond</td><td>{fmtMoney(ewo.bond_amount)}</td></tr>
-            <tr className="print-total-row">
-              <td>TOTAL</td>
-              <td>{fmtMoney(ewo.total)}</td>
-            </tr>
-          </tbody>
-        </table>
-
         <h2 className="print-section-title">WorkDay Summary ({days.length})</h2>
         <table className="print-daylist">
           <thead>
@@ -188,6 +173,21 @@ export default function EwoPrint() {
                 <td className="num">{fmtMoney(wd.day_total)}</td>
               </tr>
             ))}
+          </tbody>
+        </table>
+
+        <h2 className="print-section-title">EWO Totals</h2>
+        <table className="print-totals">
+          <tbody>
+            <tr><td>Labor</td><td>{fmtMoney(ewo.labor_subtotal)}</td></tr>
+            <tr><td>Equipment + Materials</td><td>{fmtMoney(ewo.equip_mat_subtotal)}</td></tr>
+            <tr><td>Fuel</td><td>{fmtMoney(ewo.fuel_subtotal)}</td></tr>
+            <tr><td>OH&amp;P ({fmtPct(ewo.labor_ohp_pct)})</td><td>{fmtMoney(sumOhp(ewo))}</td></tr>
+            <tr><td>Bond</td><td>{fmtMoney(ewo.bond_amount)}</td></tr>
+            <tr className="print-total-row">
+              <td>TOTAL</td>
+              <td>{fmtMoney(ewo.total)}</td>
+            </tr>
           </tbody>
         </table>
 
