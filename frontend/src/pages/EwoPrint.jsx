@@ -636,7 +636,14 @@ function PrintStyles() {
       }
 
       @media print {
-        .no-print { display: none !important; }
+        /* Hide the shared app chrome so the printed pages are just the
+           report content — no black header bar, no JOBS/EMPLOYEES/
+           EQUIPMENT tab strip, no print-toolbar. */
+        .app-header,
+        .tab-strip,
+        .no-print {
+          display: none !important;
+        }
         body { background: #fff !important; }
         .printable { box-shadow: none; margin: 0; padding: 0.4in 0.4in;
                      max-width: none; }
