@@ -1,12 +1,12 @@
 import { NavLink, Link } from 'react-router-dom'
-import excavatorIcon from '../assets/excavator-icon.svg'
+import cpMark from '../assets/cpmark.svg'
 
 export default function Layout({ children }) {
   return (
     <div>
       <header className="app-header">
         <Link to="/" className="app-title-link">
-          <img src={excavatorIcon} alt="" className="app-icon" />
+          <img src={cpMark} alt="CP Construction" className="app-icon" />
           <span className="app-title">CP Project</span>
         </Link>
         <span className="login-placeholder">login</span>

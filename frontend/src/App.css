@@ -27,10 +27,12 @@
 }
 
 .app-icon {
-  width: 26px;
-  height: 26px;
-  /* Source SVG is black-stroked; invert so it sits on the near-black header. */
-  filter: invert(1);
+  /* CPmark.svg is already the CP orange (#F37224) on transparent, sized in a
+     landscape viewBox (~428x320). Lock the height so it sits inside the 56px
+     header and let the width go natural. */
+  height: 30px;
+  width: auto;
+  display: block;
 }
 
 .login-placeholder {
