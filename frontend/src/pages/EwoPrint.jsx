@@ -38,21 +38,26 @@ export default function EwoPrint() {
     const load = async () => {
       try {
         const ewo = await fetchEwo(ewoId)
-        const [job, wds, emps, trs, eqs] = await Promise.all([
+        // Pull each line type once for the whole EWO and group by work_day
+        // client-side — avoids a 3×N request pattern on EWOs with many days.
+        const [job, wds, emps, trs, eqs, allLabor, allEquipment, allMaterials] = await Promise.all([
           fetchJob(ewo.job),
           fetchWorkDays({ ewo: ewo.id }),
           fetchEmployees(),
           fetchTrades(),
           fetchEquipment(),
+          laborLines.list({ ewo: ewo.id }),
+          equipmentLines.list({ ewo: ewo.id }),
+          materialLines.list({ ewo: ewo.id }),
         ])
-        // For each WorkDay, pull its line items in parallel.
-        const perDay = await Promise.all((wds || []).map(async (wd) => {
-          const [labor, equipment, materials] = await Promise.all([
-            laborLines.list({ work_day: wd.id }),
-            equipmentLines.list({ work_day: wd.id }),
-            materialLines.list({ work_day: wd.id }),
-          ])
-          return { wd, labor: labor || [], equipment: equipment || [], materials: materials || [] }
+        const laborByDay = groupBy(allLabor, 'work_day')
+        const equipmentByDay = groupBy(allEquipment, 'work_day')
+        const materialsByDay = groupBy(allMaterials, 'work_day')
+        const perDay = (wds || []).map((wd) => ({
+          wd,
+          labor: laborByDay.get(wd.id) || [],
+          equipment: equipmentByDay.get(wd.id) || [],
+          materials: materialsByDay.get(wd.id) || [],
         }))
         if (!cancelled) setData({ ewo, job, days: perDay, employees: emps, trades: trs, equipment: eqs })
       } catch (e) {
@@ -419,6 +424,19 @@ function mapById(list) {
   const m = new Map()
   if (!list) return m
   list.forEach(x => m.set(x.id, x))
+  return m
+}
+
+function groupBy(list, key) {
+  const m = new Map()
+  if (!list) return m
+  list.forEach(x => {
+    const k = x?.[key]
+    if (k == null) return
+    const bucket = m.get(k)
+    if (bucket) bucket.push(x)
+    else m.set(k, [x])
+  })
   return m
 }
 

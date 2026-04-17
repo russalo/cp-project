@@ -10,8 +10,9 @@ const MONEY_FMT = new Intl.NumberFormat('en-US', {
 
 /**
  * Format a money value (string or number) with thousands separators.
- * Returns a JSX fragment ("—" span) when null/undefined/empty so callers
- * can drop it directly into a table cell.
+ * Returns a plain string — "—" for null/undefined/empty input (or the
+ * empty string when {emDash: false}), otherwise the formatted currency
+ * string.
  */
 export function fmtMoney(value, { emDash = true } = {}) {
   if (value === null || value === undefined || value === '') {
