@@ -7,9 +7,11 @@ This file mirrors the shared policy in `docs/reference/ai-guidance.md`.
 cp-project is a full-stack web application for an underground wet utility pipeline contractor to
 manage Extra Work Orders (EWOs) across field capture, costing, review, and billing.
 
-**Current status:** Milestone 1 in progress. CI is in place; core backend API surfaces and an
-initial Jobs UI page are implemented, with additional models and features still under active
-development.
+**Current status (2026-04-16):** Milestones 1–2 complete. CI is in place; the EWO schema is
+built out through `WorkDay` children, Job-level OH&P / bond defaults, fuel surcharge, and the
+Caltrans factor-based rate model. An initial navigable UI (Jobs → EWO → WorkDay → line items)
+is live on the dev server. See `DECISIONS_INBOX.md` (DEC-059 onward) for the Phase 1–3 design
+decisions and `DEV-SESSION.md` for the running session log.
 
 ## Knowledge Pipeline Rules
 
