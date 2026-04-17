@@ -6,6 +6,16 @@ Never delete directly - items are cleared by the processing script.
 
 ## Unprocessed Items
 
+### 2026-04-17 — `rollup_ewo_totals` subset optimization (deferred)
+
+Copilot flagged that `rollup_ewo_totals` re-rolls every WorkDay on the EWO
+on every line-item CRUD change. At current scale (EWOs run 1–5 days)
+that's ~15 queries worst-case and mirrors what the pre-refactor
+`calculate_ewo_totals` did, so it's not a regression. If per-day counts
+start climbing, extend `rollup_ewo_totals` (or the CRUD hook) to rollup
+only the affected WorkDay(s) then sum the day totals onto the EWO. Deferred
+until we see an EWO with enough days to matter.
+
 ### 2026-04-17 — Fleetlocate GPS integration (equipment ground truth)
 
 CP subscribes to Fleetlocate for equipment GPS tracking. Sample CSV export
