@@ -87,45 +87,63 @@ export default function EwoPrint() {
         <Letterhead />
 
         <h1 className="print-doc-title">
-          Daily Time &amp; Material Report — EWO&nbsp;
-          <code>{ewo.ewo_number}</code>
+          Daily Time &amp; Material Report
+          <code className="print-doc-ewo">{ewo.ewo_number}</code>
+          <span className="print-day-pill">{STATUS_LABEL[ewo.status] || ewo.status}</span>
         </h1>
 
-        <section className="print-meta">
-          <dl>
-            <dt>Job</dt>        <dd><code>{job.job_number}</code> {job.name}</dd>
-            <dt>Job Site</dt>   <dd>{job.location || '—'}</dd>
-            <dt>General Contractor</dt> <dd>{job.gc_name || '—'}</dd>
-            <dt>Type</dt>       <dd>{ewo.ewo_type === 'tm' ? 'Time &amp; Materials' : 'Change Order'}</dd>
-            <dt>Status</dt>     <dd>{STATUS_LABEL[ewo.status] || ewo.status}</dd>
-            <dt>Description</dt><dd>{ewo.description || '—'}</dd>
-            {(ewo.gc_ack_name || ewo.gc_ack_date) && (
-              <>
-                <dt>GC Acknowledgement</dt>
-                <dd>
-                  {ewo.gc_ack_name || '—'}
-                  {ewo.gc_ack_date && ` · ${ewo.gc_ack_date}`}
-                  {ewo.gc_ack_method && ` · ${ewo.gc_ack_method}`}
-                </dd>
-              </>
-            )}
-          </dl>
+        {/* Dense 3-column metadata strip. Labels above values so "Job",
+            "Job Site", "GC" line up in a scannable row. */}
+        <section className="print-meta-strip">
+          <div>
+            <div className="print-meta-label">Job</div>
+            <div className="print-meta-value"><code>{job.job_number}</code> {job.name}</div>
+          </div>
+          <div>
+            <div className="print-meta-label">Job Site</div>
+            <div className="print-meta-value">{job.location || '—'}</div>
+          </div>
+          <div>
+            <div className="print-meta-label">General Contractor</div>
+            <div className="print-meta-value">{job.gc_name || '—'}</div>
+          </div>
+          <div>
+            <div className="print-meta-label">Type</div>
+            <div className="print-meta-value">
+              {ewo.ewo_type === 'tm' ? 'Time & Materials' : 'Change Order'}
+            </div>
+          </div>
+          <div>
+            <div className="print-meta-label">OH&amp;P</div>
+            <div className="print-meta-value">{ohpLine(ewo)}</div>
+          </div>
+          <div>
+            <div className="print-meta-label">Bond</div>
+            <div className="print-meta-value">
+              {ewo.bond_required ? fmtPct(ewo.bond_pct) : 'Not required'}
+            </div>
+          </div>
+          <div>
+            <div className="print-meta-label">Fuel Surcharge</div>
+            <div className="print-meta-value">
+              {Number(ewo.fuel_surcharge_pct) > 0 ? fmtPct(ewo.fuel_surcharge_pct) : 'None'}
+            </div>
+          </div>
+          {(ewo.gc_ack_name || ewo.gc_ack_date) && (
+            <div>
+              <div className="print-meta-label">GC Acknowledgement</div>
+              <div className="print-meta-value">
+                {ewo.gc_ack_name || '—'}
+                {ewo.gc_ack_date && ` · ${ewo.gc_ack_date}`}
+                {ewo.gc_ack_method && ` · ${ewo.gc_ack_method}`}
+              </div>
+            </div>
+          )}
         </section>
 
-        <section className="print-markups">
-          <table className="print-kv">
-            <tbody>
-              <tr><td>OH&amp;P</td><td>{ohpLine(ewo)}</td></tr>
-              <tr>
-                <td>Bond</td>
-                <td>{ewo.bond_required ? fmtPct(ewo.bond_pct) : 'Not required'}</td>
-              </tr>
-              <tr>
-                <td>Fuel surcharge</td>
-                <td>{Number(ewo.fuel_surcharge_pct) > 0 ? fmtPct(ewo.fuel_surcharge_pct) : 'None'}</td>
-              </tr>
-            </tbody>
-          </table>
+        <section className="print-description">
+          <div className="print-meta-label">Description</div>
+          <div className="print-meta-value">{ewo.description || '—'}</div>
         </section>
 
         <h2 className="print-section-title">EWO Totals</h2>
@@ -459,6 +477,8 @@ function PrintStyles() {
         margin-left: auto;
       }
 
+      /* Legacy stacked meta block, still used on per-WorkDay detail sheets
+         where the vertical layout makes sense. */
       .print-meta dl {
         display: grid;
         grid-template-columns: 160px 1fr;
@@ -473,6 +493,56 @@ function PrintStyles() {
         color: #555;
       }
       .print-meta dd { margin: 0; color: #000; }
+
+      /* Dense 3-column strip for the summary page — label above value in
+         each cell, ~7 fields fit across two rows. */
+      .print-meta-strip {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8pt 14pt;
+        margin: 8pt 0 6pt;
+        padding: 6pt 0;
+        border-top: 0.5pt solid #ccc;
+        border-bottom: 0.5pt solid #ccc;
+      }
+      .print-meta-strip > div { min-width: 0; }
+      .print-meta-label {
+        font-family: 'Square721 BT', 'Roboto', sans-serif;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 7pt;
+        letter-spacing: 0.8px;
+        color: #666;
+        margin-bottom: 1pt;
+      }
+      .print-meta-value {
+        font-size: 10pt;
+        color: #000;
+        line-height: 1.25;
+        word-wrap: break-word;
+      }
+      .print-meta-value code {
+        font-size: 9.5pt;
+        padding: 1pt 4pt;
+        background: #f0f0ee;
+        border-radius: 2pt;
+      }
+
+      .print-description {
+        margin: 4pt 0 8pt;
+      }
+      .print-description .print-meta-value {
+        font-size: 10.5pt;
+        line-height: 1.35;
+        padding: 3pt 0;
+      }
+
+      .print-doc-ewo {
+        font-size: 14pt !important;
+        background: none !important;
+        padding: 0 !important;
+        color: #f37224 !important;
+      }
 
       .print-section-title {
         font-family: 'Square721 BT Extended', 'Arial Black', sans-serif;
