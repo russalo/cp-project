@@ -114,5 +114,15 @@ Questions to carry into the DEC-071 scoping:
 - UX affordance: is the status badge enough, or do we want a colored
   bar + text ("DRAFT — still being priced") so a foreman tapping on
   their phone knows at a glance what they're looking at?
+- **Quote-mode field applicability** (user, 2026-04-17): on a quote,
+  `work_date` and `weather` don't apply — you're pricing future work
+  that hasn't happened. Two plausible model shapes:
+    * quote-type EWO has WorkDays with nullable `work_date` +
+      "Day N of N" label until promoted (Q14 option (a) from the
+      original design session)
+    * quote-type EWO has no WorkDays; line items live directly on the
+      EWO; promoting to actual structures them into WorkDays
+      (Q14 option (b))
+  This needs the bigger Sandbox/EWE/EWO call to settle first.
 
 Captured 2026-04-17 during the Phase 3 iPad/phone walkthrough.
