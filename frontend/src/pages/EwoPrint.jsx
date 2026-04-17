@@ -615,12 +615,23 @@ function PrintStyles() {
           display: none !important;
         }
         body { background: #fff !important; }
+
+        /* @page margin is the SINGLE gutter. Dropping .printable padding
+           prevents the double-margin that was pushing the letterhead's
+           right-side contact block off the page. */
+        @page { size: Letter; margin: 0.5in 0.5in 0.7in 0.5in; }
         .printable {
-          box-shadow: none; margin: 0; padding: 0.4in 0.4in;
+          box-shadow: none;
+          margin: 0;
+          padding: 0;
           max-width: none;
-          padding-bottom: 0.7in;  /* leave room for the fixed footer */
         }
-        @page { size: Letter; margin: 0.4in; }
+
+        /* Never let the full-bleed letterhead kiss the right edge. */
+        .print-letterhead-lockup {
+          max-width: 100%;
+          width: 100%;
+        }
 
         /* License footer — pinned to the bottom of every printed page.
            Chrome / Safari respect position:fixed per-page when printing. */

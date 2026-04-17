@@ -58,6 +58,20 @@
   text-justify: inter-word;
 }
 
+.app-wordmark-est {
+  font-family: 'Square721 BT', 'Roboto', sans-serif;
+  font-weight: 700;
+  font-size: 9px;
+  color: var(--cp-orange);
+  text-align: right;
+  margin-top: 1px;
+  letter-spacing: 0.3px;
+}
+
+@media (max-width: 480px) {
+  .app-wordmark-est { font-size: 8px; }
+}
+
 @media (max-width: 480px) {
   .app-header { height: 56px; padding: 0 14px; }
   .app-icon { height: 34px; }

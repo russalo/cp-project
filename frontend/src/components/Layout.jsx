@@ -10,6 +10,7 @@ export default function Layout({ children }) {
           <div className="app-wordmark">
             <div className="app-wordmark-name">CONSTRUCTION COMPANY, INC.</div>
             <div className="app-wordmark-tag">WATER &middot; SEWER &middot; STORM DRAIN</div>
+            <div className="app-wordmark-est">Est. 1966</div>
           </div>
         </Link>
         <span className="login-placeholder">login</span>
