@@ -418,6 +418,17 @@
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 1px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cat-icon {
+  width: 18px;
+  height: 18px;
+  /* Source SVGs are black-stroked with currentColor; invert for white on charcoal banner. */
+  filter: invert(1);
+  flex-shrink: 0;
 }
 
 .section-banner + .data-table,

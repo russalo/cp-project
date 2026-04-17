@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { fetchEquipment } from '../services/api'
+import { iconFor } from '../lib/categoryIcons'
 
 const MATCH_LABEL = {
   exact: 'Exact',
@@ -103,10 +104,14 @@ export default function EquipmentList() {
 }
 
 function CategoryGroup({ category, rows }) {
+  const icon = iconFor(category)
   return (
     <>
       <div className="section-banner">
-        <h2 className="section-title-inline">{category} ({rows.length})</h2>
+        <h2 className="section-title-inline">
+          {icon && <img src={icon} alt="" className="cat-icon" />}
+          {category} ({rows.length})
+        </h2>
       </div>
       <table className="data-table">
         <thead>
