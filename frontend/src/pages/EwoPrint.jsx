@@ -82,6 +82,12 @@ export default function EwoPrint() {
         <button className="btn btn-primary" onClick={() => window.print()}>Print / Save as PDF</button>
       </div>
 
+      {/* License footer — fixed to the bottom of every printed page via
+          @media print rules below. Hidden on screen except when printing. */}
+      <div className="print-footer">
+        State Contractors Lic. No. 304795-Class "A"
+      </div>
+
       {/* ── Page 1: Cover + summary ─────────────────────────────────────── */}
       <article className="printable print-page">
         <Letterhead />
@@ -595,6 +601,10 @@ function PrintStyles() {
         text-align: right; font-style: italic;
       }
 
+      /* Screen-side: hide the license footer (it belongs at the bottom of
+         printed pages, not in the on-screen flow). */
+      .print-footer { display: none; }
+
       @media print {
         /* Hide the shared app chrome so the printed pages are just the
            report content — no black header bar, no JOBS/EMPLOYEES/
@@ -605,9 +615,29 @@ function PrintStyles() {
           display: none !important;
         }
         body { background: #fff !important; }
-        .printable { box-shadow: none; margin: 0; padding: 0.4in 0.4in;
-                     max-width: none; }
+        .printable {
+          box-shadow: none; margin: 0; padding: 0.4in 0.4in;
+          max-width: none;
+          padding-bottom: 0.7in;  /* leave room for the fixed footer */
+        }
         @page { size: Letter; margin: 0.4in; }
+
+        /* License footer — pinned to the bottom of every printed page.
+           Chrome / Safari respect position:fixed per-page when printing. */
+        .print-footer {
+          display: block;
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          text-align: center;
+          font-family: 'Square721 BT', 'Roboto', sans-serif;
+          font-size: 8pt;
+          font-weight: 700;
+          color: #f37224;
+          padding: 6pt 0;
+          letter-spacing: 0.4pt;
+        }
       }
     `}</style>
   )
