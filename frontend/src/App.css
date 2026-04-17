@@ -21,6 +21,16 @@
 .app-title-link {
   color: inherit;
   text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.app-icon {
+  width: 26px;
+  height: 26px;
+  /* Source SVG is black-stroked; invert so it sits on the near-black header. */
+  filter: invert(1);
 }
 
 .login-placeholder {
