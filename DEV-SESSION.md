@@ -67,8 +67,8 @@ whatever else needs tightening. Known rough edges flagged:
   sticky totals bar on WorkDay page.
 - **Submit EWO action + status transitions** — wait; bundled with DEC-071.
 
-Dev servers are left running for tomorrow (backend pid 2959209, frontend
-pid 2959258).
+Dev servers were left running for tomorrow on `origin-core`
+(Django on `:8000`, Vite on `:5174`).
 
 ## Notes
 
