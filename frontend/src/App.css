@@ -558,6 +558,87 @@
   margin-left: 4px;
 }
 
+/* ── Editable field (inline pencil → input / textarea) ─────────────────── */
+
+.editable-field {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  min-height: 22px;
+  max-width: 100%;
+}
+
+.editable-field.editing {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.editable-field.editing.multiline {
+  max-width: 100%;
+}
+
+.editable-value {
+  color: var(--text-h);
+  word-break: break-word;
+}
+
+.edit-icon {
+  font-size: 14px;
+  color: var(--text);
+  padding: 2px 6px;
+  opacity: 0.5;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+/* Always visible on touch; fade in on hover for mouse users. */
+.editable-field:hover .edit-icon {
+  opacity: 1;
+  color: var(--cp-orange);
+}
+
+@media (hover: none) {
+  .edit-icon {
+    opacity: 0.8;
+  }
+}
+
+.editable-field.editing input[type="text"],
+.editable-field.editing input[type="date"],
+.editable-field.editing input[type="number"],
+.editable-field.editing textarea {
+  padding: 8px 10px;
+  border: 1px solid var(--cp-orange);
+  border-radius: 3px;
+  font-size: 14px;
+  font-family: var(--sans);
+  color: var(--text-h);
+  background: var(--bg);
+  box-shadow: 0 0 0 2px var(--cp-orange-bg);
+  width: 100%;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.editable-field.editing textarea {
+  resize: vertical;
+  min-height: 64px;
+}
+
+.editable-field-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.editable-field-error {
+  margin-top: 4px;
+  font-size: 12px;
+}
+
 /* ── Buttons ────────────────────────────────────────────────────────────── */
 
 .btn {

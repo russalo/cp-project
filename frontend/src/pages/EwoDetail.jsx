@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { fetchEwo, fetchJob, fetchWorkDays } from '../services/api'
+import { fetchEwo, fetchJob, fetchWorkDays, patchEwo } from '../services/api'
+import EditableField from '../components/EditableField'
 
 const STATUS_LABEL = {
   open: 'Open',
@@ -77,13 +78,39 @@ export default function EwoDetail() {
 
       <section className="detail-card">
         <dl className="detail-grid">
-          <dt>Type</dt> <dd>{ewo.ewo_type === 'tm' ? 'Time & Materials' : 'Change Order'}</dd>
-          <dt>Description</dt> <dd>{ewo.description || '—'}</dd>
-          <dt>Bond required</dt> <dd>{ewo.bond_required ? 'Yes' : 'No'}</dd>
+          <dt>Type</dt>
+          <dd>{ewo.ewo_type === 'tm' ? 'Time & Materials' : 'Change Order'}</dd>
+
+          <dt>Description</dt>
+          <dd>
+            <EditableField
+              value={ewo.description}
+              locked={locked}
+              multiline
+              placeholder="(add a description)"
+              onSave={(v) => patchEwo(ewo.id, { description: v }).then(setEwo)}
+            />
+          </dd>
+
+          <dt>Bond required</dt>
+          <dd>{ewo.bond_required ? 'Yes' : 'No'}</dd>
+
           <dt>Labor OH&P</dt> <dd>{fmtPct(ewo.labor_ohp_pct)}</dd>
           <dt>Equip/Mat OH&P</dt> <dd>{fmtPct(ewo.equip_mat_ohp_pct)}</dd>
           <dt>Bond %</dt> <dd>{fmtPct(ewo.bond_pct)}</dd>
-          <dt>Fuel Surcharge %</dt> <dd>{fmtPct(ewo.fuel_surcharge_pct)}</dd>
+
+          <dt>Fuel Surcharge %</dt>
+          <dd>
+            <EditableField
+              value={ewo.fuel_surcharge_pct}
+              locked={locked}
+              type="number"
+              step="0.0001"
+              min="0"
+              placeholder="0.0000"
+              onSave={(v) => patchEwo(ewo.id, { fuel_surcharge_pct: v }).then(setEwo)}
+            />
+          </dd>
         </dl>
       </section>
 

@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
-  fetchWorkDay, fetchEwo, fetchJob,
+  fetchWorkDay, fetchEwo, fetchJob, patchWorkDay,
   fetchEmployees, fetchEquipment, fetchTrades, fetchMaterialCatalog,
   laborLines, equipmentLines, materialLines,
 } from '../services/api'
+import EditableField from '../components/EditableField'
 
 export default function WorkDayDetail() {
   const { workDayId } = useParams()
@@ -104,15 +105,56 @@ export default function WorkDayDetail() {
 
       <section className="detail-card">
         <dl className="detail-grid">
-          <dt>Foreman</dt>        <dd>{workDay.foreman_name || '—'}</dd>
-          <dt>Superintendent</dt> <dd>{workDay.superintendent_name || '—'}</dd>
-          <dt>Location</dt>       <dd>{workDay.location || '—'}</dd>
-          <dt>Weather</dt>        <dd>{workDay.weather || '—'}</dd>
-          <dt>Day Total</dt>      <dd>{fmtMoney(workDay.day_total)}</dd>
+          <dt>Foreman</dt>
+          <dd>
+            <EditableField
+              value={workDay.foreman_name}
+              locked={ewoLocked}
+              onSave={(v) => patchWorkDay(workDay.id, { foreman_name: v }).then(setWorkDay)}
+            />
+          </dd>
+
+          <dt>Superintendent</dt>
+          <dd>
+            <EditableField
+              value={workDay.superintendent_name}
+              locked={ewoLocked}
+              onSave={(v) => patchWorkDay(workDay.id, { superintendent_name: v }).then(setWorkDay)}
+            />
+          </dd>
+
+          <dt>Location</dt>
+          <dd>
+            <EditableField
+              value={workDay.location}
+              locked={ewoLocked}
+              onSave={(v) => patchWorkDay(workDay.id, { location: v }).then(setWorkDay)}
+            />
+          </dd>
+
+          <dt>Weather</dt>
+          <dd>
+            <EditableField
+              value={workDay.weather}
+              locked={ewoLocked}
+              onSave={(v) => patchWorkDay(workDay.id, { weather: v }).then(setWorkDay)}
+            />
+          </dd>
+
+          <dt>Day Total</dt>
+          <dd>{fmtMoney(workDay.day_total)}</dd>
+
+          <dt>Description</dt>
+          <dd>
+            <EditableField
+              value={workDay.description}
+              locked={ewoLocked}
+              multiline
+              placeholder="(add a note for this day)"
+              onSave={(v) => patchWorkDay(workDay.id, { description: v }).then(setWorkDay)}
+            />
+          </dd>
         </dl>
-        {workDay.description && (
-          <p className="description-block">{workDay.description}</p>
-        )}
       </section>
 
       <LaborSection
