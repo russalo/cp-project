@@ -429,7 +429,9 @@ function PrintStyles() {
         display: block;
       }
       .print-letterhead-text {
-        display: flex;
+        /* inline-flex so the column shrink-wraps to the name width, giving
+           the tagline below a fixed target to justify across. */
+        display: inline-flex;
         flex-direction: column;
         line-height: 1.05;
         min-width: 0;
@@ -446,9 +448,15 @@ function PrintStyles() {
       .print-letterhead-tag {
         font-family: 'Square721 BT Extended', 'Arial Black', 'Roboto', sans-serif;
         font-size: 7.5pt;
-        letter-spacing: 3px;
+        letter-spacing: 1px;
         color: #555;
         margin-top: 2pt;
+        /* Justify the word-gaps so the tagline spans the same width as
+           the company name above it (5 gaps in "WATER · SEWER · STORM
+           DRAIN"). */
+        text-align: justify;
+        text-align-last: justify;
+        text-justify: inter-word;
       }
       .print-letterhead-contact {
         font-size: 8pt;

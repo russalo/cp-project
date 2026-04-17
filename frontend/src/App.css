@@ -27,7 +27,9 @@
 }
 
 .app-wordmark {
-  display: flex;
+  /* inline-flex so the column shrink-wraps to the company name width,
+     which then bounds the tagline's justify target below. */
+  display: inline-flex;
   flex-direction: column;
   line-height: 1.1;
 }
@@ -39,14 +41,21 @@
   font-size: 18px;
   color: #fff;
   letter-spacing: 1px;
+  white-space: nowrap;  /* locks the column width for the tagline below */
 }
 
 .app-wordmark-tag {
   font-family: 'Square721 BT Extended', 'Arial Black', 'Roboto', sans-serif;
   font-size: 10px;
   color: var(--cp-gray);
-  letter-spacing: 3px;
+  letter-spacing: 1px;
   margin-top: 2px;
+  /* Stretch the 5 word-gaps so the tagline spans the full column width
+     set by the company name above. "text-align-last: justify" is what
+     makes this work for a single-line string. */
+  text-align: justify;
+  text-align-last: justify;
+  text-justify: inter-word;
 }
 
 @media (max-width: 480px) {
