@@ -124,11 +124,11 @@ export default function EwoDetail() {
       <section className="detail-card totals-card">
         <h2 className="detail-card-title">Totals</h2>
         <dl className="detail-grid totals-grid">
-          <dt>Labor</dt>        <dd>{fmtMoney(ewo.labor_subtotal)}</dd>
-          <dt>Labor OH&P</dt>    <dd>{fmtMoney(ewo.labor_ohp_amount)}</dd>
+          <dt>Labor</dt>         <dd>{fmtMoney(ewo.labor_subtotal)}</dd>
           <dt>Equip + Mat</dt>   <dd>{fmtMoney(ewo.equip_mat_subtotal)}</dd>
           <dt>Fuel</dt>          <dd>{fmtMoney(ewo.fuel_subtotal)}</dd>
-          <dt>E+M OH&P</dt>      <dd>{fmtMoney(ewo.equip_mat_ohp_amount)}</dd>
+          <dt>{ohpLabel(ewo)}</dt>
+          <dd>{combinedOhpDisplay(ewo)}</dd>
           <dt>Bond</dt>          <dd>{fmtMoney(ewo.bond_amount)}</dd>
           <dt className="total-row">Total</dt> <dd className="total-row">{fmtMoney(ewo.total)}</dd>
         </dl>
@@ -173,5 +173,21 @@ export default function EwoDetail() {
       )}
     </div>
   )
+}
+
+/** "OH&P (15.00%)" when both rates match, else "OH&P (L 15.00% · EM 12.00%)". */
+function ohpLabel(ewo) {
+  const labor = Number(ewo.labor_ohp_pct ?? 0)
+  const em = Number(ewo.equip_mat_ohp_pct ?? 0)
+  if (labor === em) return `OH\u0026P (${fmtPct(labor)})`
+  return `OH\u0026P (L ${fmtPct(labor)} \u00b7 EM ${fmtPct(em)})`
+}
+
+/** Combined labor + equip/mat OH&P dollar amount, null-aware. */
+function combinedOhpDisplay(ewo) {
+  const l = ewo.labor_ohp_amount
+  const em = ewo.equip_mat_ohp_amount
+  if (l === null && em === null) return <span className="rate-unavailable">—</span>
+  return fmtMoney(Number(l ?? 0) + Number(em ?? 0))
 }
 
