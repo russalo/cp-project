@@ -606,10 +606,20 @@ function PrintStyles() {
         page-break-inside: avoid;
         break-inside: avoid;
       }
-      .print-sig-line { border-top: 1px solid #000; padding-top: 3pt; }
-      .print-sig-label { font-size: 7.5pt; text-transform: uppercase;
-        letter-spacing: 0.6px; color: #555; }
-      .print-sig-slot { height: 26pt; }
+      .print-sig-line {
+        /* container only — actual line is the slot's bottom border. */
+      }
+      .print-sig-slot {
+        height: 36pt;                    /* writing space */
+        border-bottom: 1px solid #000;   /* THIS is the signature line */
+      }
+      .print-sig-label {
+        margin-top: 2pt;                 /* label sits right under the line */
+        font-size: 7.5pt;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: #555;
+      }
 
       /* Try to keep each day's sheet on a single page. The break-before
          rule above forces a new page at the start; combined with
