@@ -206,16 +206,35 @@ export default function EwoPrint() {
             <span className="print-day-pill">{wd.work_date}</span>
           </h1>
 
-          <section className="print-meta">
-            <dl>
-              <dt>Job</dt>            <dd><code>{job.job_number}</code> {job.name}</dd>
-              <dt>Foreman</dt>        <dd>{wd.foreman_name || '—'}</dd>
-              <dt>Superintendent</dt> <dd>{wd.superintendent_name || '—'}</dd>
-              <dt>Location</dt>       <dd>{wd.location || '—'}</dd>
-              <dt>Weather</dt>        <dd>{wd.weather || '—'}</dd>
-              <dt>Description</dt>    <dd>{wd.description || '—'}</dd>
-            </dl>
+          <section className="print-meta-strip">
+            <div>
+              <div className="print-meta-label">Job</div>
+              <div className="print-meta-value"><code>{job.job_number}</code> {job.name}</div>
+            </div>
+            <div>
+              <div className="print-meta-label">Foreman</div>
+              <div className="print-meta-value">{wd.foreman_name || '—'}</div>
+            </div>
+            <div>
+              <div className="print-meta-label">Superintendent</div>
+              <div className="print-meta-value">{wd.superintendent_name || '—'}</div>
+            </div>
+            <div>
+              <div className="print-meta-label">Location</div>
+              <div className="print-meta-value">{wd.location || '—'}</div>
+            </div>
+            <div>
+              <div className="print-meta-label">Weather</div>
+              <div className="print-meta-value">{wd.weather || '—'}</div>
+            </div>
           </section>
+
+          {wd.description && (
+            <section className="print-description">
+              <div className="print-meta-label">Description</div>
+              <div className="print-meta-value">{wd.description}</div>
+            </section>
+          )}
 
           <h2 className="print-section-title">Labor</h2>
           {labor.length === 0 ? (
