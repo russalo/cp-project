@@ -93,8 +93,10 @@ export default function EwoDetail() {
             />
           </dd>
 
-          <dt>Labor OH&P</dt> <dd>{fmtPct(ewo.labor_ohp_pct)}</dd>
-          <dt>Equip/Mat OH&P</dt> <dd>{fmtPct(ewo.equip_mat_ohp_pct)}</dd>
+          {/* OH&P federated: one row when Labor and Equip/Mat rates match
+              (the 99% case), split when they differ (leniency case). */}
+          <dt>OH&P</dt>
+          <dd>{ohpRateLine(ewo)}</dd>
 
           {/* Bond is a single line: "Not required" when off, or the rate when on.
               Avoids the "Bond required: No" + "Bond %: 1.5%" double-read that
@@ -181,6 +183,14 @@ function ohpLabel(ewo) {
   const em = Number(ewo.equip_mat_ohp_pct ?? 0)
   if (labor === em) return `OH\u0026P (${fmtPct(labor)})`
   return `OH\u0026P (L ${fmtPct(labor)} \u00b7 EM ${fmtPct(em)})`
+}
+
+/** Just the OH&P rate(s), for the config card where the label is already "OH&P". */
+function ohpRateLine(ewo) {
+  const labor = Number(ewo.labor_ohp_pct ?? 0)
+  const em = Number(ewo.equip_mat_ohp_pct ?? 0)
+  if (labor === em) return fmtPct(labor)
+  return `L ${fmtPct(labor)} \u00b7 EM ${fmtPct(em)}`
 }
 
 /** Combined labor + equip/mat OH&P dollar amount, null-aware. */
