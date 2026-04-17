@@ -93,12 +93,18 @@ export default function EwoDetail() {
             />
           </dd>
 
-          <dt>Bond required</dt>
-          <dd>{ewo.bond_required ? 'Yes' : 'No'}</dd>
-
           <dt>Labor OH&P</dt> <dd>{fmtPct(ewo.labor_ohp_pct)}</dd>
           <dt>Equip/Mat OH&P</dt> <dd>{fmtPct(ewo.equip_mat_ohp_pct)}</dd>
-          <dt>Bond %</dt> <dd>{fmtPct(ewo.bond_pct)}</dd>
+
+          {/* Bond is a single line: "Not required" when off, or the rate when on.
+              Avoids the "Bond required: No" + "Bond %: 1.5%" double-read that
+              made it look like bond was being applied. */}
+          <dt>Bond</dt>
+          <dd>
+            {ewo.bond_required
+              ? fmtPct(ewo.bond_pct)
+              : <span className="rate-unavailable">Not required</span>}
+          </dd>
 
           <dt>Fuel Surcharge %</dt>
           <dd>
