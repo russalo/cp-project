@@ -355,13 +355,16 @@ export default function EwoPrint() {
 }
 
 function Letterhead() {
+  // header.svg already includes mark + wordmark + tagline + Est. 1966 +
+  // phone/fax/addresses as one pre-rendered lockup. No separate contact
+  // block needed on the right.
   return (
     <header className="print-letterhead">
-      <img src={headerLockup} alt="C.P. Construction Company, Inc." className="print-letterhead-lockup" />
-      <div className="print-letterhead-contact">
-        <div>(909) 981-1091 &middot; Lic. #304795-A</div>
-        <div>PO Box 1206, Ontario CA 91762</div>
-      </div>
+      <img
+        src={headerLockup}
+        alt="C.P. Construction Company, Inc."
+        className="print-letterhead-lockup"
+      />
     </header>
   )
 }
@@ -410,29 +413,17 @@ function PrintStyles() {
       .print-page-break { page-break-before: always; break-before: page; }
 
       .print-letterhead {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 18pt;
-        align-items: end;
         border-bottom: 2px solid #2e2e2e;
         padding-bottom: 8pt;
         margin-bottom: 14pt;
       }
       .print-letterhead-lockup {
-        /* Full-width SVG includes mark + wordmark + tagline + Est. line.
-           Max width keeps it proportional on the Letter page. */
+        /* Full lockup SVG (mark + wordmark + tagline + Est. + contact).
+           Sized to the full content width so the contact block on the
+           right sits at the page's right margin. */
         width: 100%;
-        max-width: 460pt;
         height: auto;
         display: block;
-      }
-      .print-letterhead-contact {
-        font-size: 8pt;
-        text-align: right;
-        color: #333;
-        line-height: 1.4;
-        white-space: nowrap;
-        padding-bottom: 4pt;
       }
 
       .print-doc-title {
