@@ -409,9 +409,9 @@ function PrintStyles() {
         background: #fff;
         color: #000;
         font-family: 'Square721 BT', 'Roboto', system-ui, sans-serif;
-        font-size: 11pt;
-        line-height: 1.35;
-        padding: 0.6in 0.5in;
+        font-size: 10pt;
+        line-height: 1.3;
+        padding: 0.5in 0.5in;
         max-width: 8.5in;
         margin: 16px auto;
         box-shadow: 0 2px 12px rgba(0,0,0,0.15);
@@ -455,18 +455,18 @@ function PrintStyles() {
          where the vertical layout makes sense. */
       .print-meta dl {
         display: grid;
-        grid-template-columns: 160px 1fr;
-        gap: 4px 12px;
-        margin: 10px 0 14px;
+        grid-template-columns: 120px 1fr;
+        gap: 2pt 10pt;
+        margin: 6pt 0 8pt;
       }
       .print-meta dt {
         font-weight: 700;
         text-transform: uppercase;
-        font-size: 8pt;
-        letter-spacing: 0.8px;
+        font-size: 7pt;
+        letter-spacing: 0.6px;
         color: #555;
       }
-      .print-meta dd { margin: 0; color: #000; }
+      .print-meta dd { margin: 0; color: #000; font-size: 9.5pt; }
 
       /* Dense 3-column strip for the summary page — label above value in
          each cell, ~7 fields fit across two rows. */
@@ -520,30 +520,30 @@ function PrintStyles() {
 
       .print-section-title {
         font-family: 'Square721 BT Extended', 'Arial Black', sans-serif;
-        font-size: 10pt;
+        font-size: 9pt;
         background: #2e2e2e;
         color: #fff;
-        padding: 4px 10px;
-        margin: 14px 0 0;
+        padding: 3pt 9pt;
+        margin: 9pt 0 0;
         text-transform: uppercase;
-        letter-spacing: 1.2px;
+        letter-spacing: 1px;
       }
 
       .print-lines, .print-totals, .print-kv, .print-daylist {
-        width: 100%; border-collapse: collapse; font-size: 10pt;
+        width: 100%; border-collapse: collapse; font-size: 9pt;
       }
       .print-lines thead th {
         background: #e5e5e4; color: #000;
-        text-align: left; padding: 5px 8px; font-weight: 700;
-        text-transform: uppercase; font-size: 8pt; letter-spacing: 0.6px;
+        text-align: left; padding: 3pt 7pt; font-weight: 700;
+        text-transform: uppercase; font-size: 7.5pt; letter-spacing: 0.5px;
         border-bottom: 1px solid #999;
       }
       .print-lines tbody td, .print-daylist tbody td {
-        padding: 5px 8px; border-bottom: 0.5pt solid #bbb;
+        padding: 3pt 7pt; border-bottom: 0.5pt solid #bbb;
       }
       .print-daylist thead th {
-        background: #e5e5e4; padding: 5px 8px; font-weight: 700;
-        text-transform: uppercase; font-size: 8pt; letter-spacing: 0.6px;
+        background: #e5e5e4; padding: 3pt 7pt; font-weight: 700;
+        text-transform: uppercase; font-size: 7.5pt; letter-spacing: 0.5px;
         text-align: left;
       }
 
@@ -573,23 +573,32 @@ function PrintStyles() {
         background: #e5e5e4;
       }
 
-      .print-day-summary { margin-top: 10px; max-width: 55%; margin-left: auto; }
+      .print-day-summary { margin-top: 6pt; max-width: 55%; margin-left: auto; }
       .print-day-summary .print-total-row td {
-        font-weight: 900; font-size: 11pt;
+        font-weight: 900; font-size: 10pt;
         border-top: 1.5px solid #2e2e2e; background: #f37224; color: #fff;
       }
 
       .print-signatures {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 20px;
-        margin-top: 36px;
+        gap: 14pt;
+        margin-top: 18pt;
         page-break-inside: avoid;
+        break-inside: avoid;
       }
-      .print-sig-line { border-top: 1px solid #000; padding-top: 4px; }
-      .print-sig-label { font-size: 8pt; text-transform: uppercase;
-        letter-spacing: 0.8px; color: #555; }
-      .print-sig-slot { height: 40px; }
+      .print-sig-line { border-top: 1px solid #000; padding-top: 3pt; }
+      .print-sig-label { font-size: 7.5pt; text-transform: uppercase;
+        letter-spacing: 0.6px; color: #555; }
+      .print-sig-slot { height: 26pt; }
+
+      /* Try to keep each day's sheet on a single page. The break-before
+         rule above forces a new page at the start; combined with
+         break-inside here the browser will keep the content together
+         when the content fits. */
+      .print-page-break {
+        break-inside: avoid-page;
+      }
 
       .print-empty {
         margin: 6px 0 10px; font-size: 9pt; color: #777; font-style: italic;
