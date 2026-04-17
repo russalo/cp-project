@@ -1,3 +1,88 @@
+# DEV SESSION - 2026-04-16
+
+## Goal For Today
+
+Use the real CP EWO workbook to drive a cohesive master-data + schema + UI
+refresh. Walk through the spreadsheet, translate its structure into the
+Django models, get it usable in a browser on the tailnet so the foreman /
+field view can be assessed on a phone.
+
+## Key Accomplishments
+
+- **Phase 1 (#88, squash `7e00610`)** — master-data schema + Excel ingest.
+  CaltransRateLine switched to factor storage (DEC-059); EquipmentType gained
+  authoritative rates, nullable CT FK, `ct_match_quality` enum, and
+  `fuel_surcharge_eligible` flag (DEC-060/061/062a). New
+  `ingest_ewo_workbook` command loaded 2150 Caltrans rows, 11 trades +
+  rates, 51 employees, 122 equipment types into the local dev DB.
+- **Phase 2 (#89, squash `eea4cf4`)** — WorkDay + per-day math. Added
+  `WorkDay` child model (DEC-065), re-parented Labor/Equipment/Material
+  lines from `ewo` → `work_day`, changed equipment line shape to
+  `qty + reg_hours + ot_hours + standby_hours` (DEC-066). Added
+  `fuel_surcharge_pct` + `fuel_subtotal` on EWO (DEC-062b/c). Job gained
+  `labor_ohp_pct`, `equip_mat_ohp_pct`, `bond_pct`, `cp_role`
+  (DEC-063/068). ewo_number format `EWO-{job}-{nnn}` (DEC-067).
+  Per-WorkDay math uses **chain B** (fuel enters equip+mat OH&P base —
+  DEC-062d / DEC-064). Dropped `(ewo, work_date)` uniqueness so two
+  foremen can run parallel crews on the same day under one EWO.
+- **Phase 3 (#90, squash `f9a4214`)** — navigable UI. Added
+  `react-router-dom`; built JobDetail / EwoDetail / WorkDayDetail /
+  creation pages. Line items can be added + deleted inline on a WorkDay.
+  Two-stage equipment picker (category → equipment). Inline-edit pencil
+  on WorkDay + EWO header fields. CP brand retheme using the palette +
+  fonts extracted from the workbook. Responsive line-form grid for
+  phone / tablet.
+- **Dev server on tailnet** — `http://origin-core:5174/` serving the live
+  React UI; Django on `:8000`. Vite config allowlists `origin-core` +
+  tailnet FQDN.
+- **DECISIONS_INBOX** extended with DEC-059 through DEC-071 capturing the
+  Phase 1–3 design choices, plus the Sandbox/EWE/EWO three-artifact
+  earmark.
+- **INBOX** — captured the "draft / in-progress / final" state concept
+  bundled with DEC-071.
+
+## Current Branch
+
+`main` — clean; three PRs merged (admin squash), local branches deleted.
+
+## Still Open / Next Session
+
+User will do a full-EWO walkthrough from the desktop tomorrow to surface
+whatever else needs tightening. Known rough edges flagged:
+
+- **Totals show `—` until submit** — no Submit-EWO UI yet; totals compute
+  on transition per DEC-031.
+- **Line items aren't editable** — delete + re-add works. Parallel to the
+  header inline-edit that shipped; wire the same pattern.
+- **Material catalog empty** — type freehand for now; a separate ingest
+  would populate it.
+- **Line tables show `#id` for some fields** — employee / trade / equipment
+  now resolved in WorkDay view via the reference-data maps, but other
+  views may need the same treatment.
+- **Caltrans auto-link (Phase 1.5)** — 87 exact/close EquipmentTypes have
+  `rate_ot` and `rate_standby` at zero because the Caltrans FK wasn't
+  wired during ingest. A pass that parses the Excel "CT Code" column
+  would populate 87 rows' OT/standby rates automatically.
+- **Mobile hardening list**: tables → cards on phone, ≥44pt tap targets,
+  sticky totals bar on WorkDay page.
+- **Submit EWO action + status transitions** — wait; bundled with DEC-071.
+
+Dev servers are left running for tomorrow (backend pid 2959209, frontend
+pid 2959258).
+
+## Notes
+
+- Excel workbook (`scratch/EWOexample.xlsx`) is gitignored and contains
+  real CP names/amounts — do not commit its row content anywhere.
+- `CLAUDE.md` domain rules are unchanged; all the new structure lives in
+  DECISIONS_INBOX / INBOX.
+- User preferences locked in memory: mobile-first (phone always
+  available, iPad maybe, desktop = office), a/b/c decision pacing with
+  concerns bundled where they overlap, and admin-squash merge style with
+  all PR bot comments addressed first.
+
+---
+
 # DEV SESSION - 2026-03-23
 
 ## Goal For Today
