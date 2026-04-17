@@ -94,7 +94,7 @@ export default function EwoPrint() {
         <section className="print-meta">
           <dl>
             <dt>Job</dt>        <dd><code>{job.job_number}</code> {job.name}</dd>
-            <dt>Location</dt>   <dd>{job.location || '—'}</dd>
+            <dt>Job Site</dt>   <dd>{job.location || '—'}</dd>
             <dt>General Contractor</dt> <dd>{job.gc_name || '—'}</dd>
             <dt>Type</dt>       <dd>{ewo.ewo_type === 'tm' ? 'Time &amp; Materials' : 'Change Order'}</dd>
             <dt>Status</dt>     <dd>{STATUS_LABEL[ewo.status] || ewo.status}</dd>
