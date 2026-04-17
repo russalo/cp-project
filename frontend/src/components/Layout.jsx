@@ -1,34 +1,24 @@
-export default function Layout({ tab, setTab, children }) {
+import { NavLink, Link } from 'react-router-dom'
+
+export default function Layout({ children }) {
   return (
     <div>
       <header className="app-header">
-        <span className="app-title">CP Project</span>
+        <Link to="/" className="app-title-link">
+          <span className="app-title">CP Project</span>
+        </Link>
         <span className="login-placeholder">login</span>
       </header>
       <nav className="tab-strip">
-        <button
-          type="button"
-          className={`tab-btn${tab === 'jobs' ? ' active' : ''}`}
-          onClick={() => setTab('jobs')}
-        >
-          Jobs
-        </button>
-        <button
-          type="button"
-          className={`tab-btn${tab === 'employees' ? ' active' : ''}`}
-          onClick={() => setTab('employees')}
-        >
-          Employees
-        </button>
-        <button
-          type="button"
-          className={`tab-btn${tab === 'equipment' ? ' active' : ''}`}
-          onClick={() => setTab('equipment')}
-        >
-          Equipment
-        </button>
+        <NavLink to="/jobs" className={navCls}>Jobs</NavLink>
+        <NavLink to="/employees" className={navCls}>Employees</NavLink>
+        <NavLink to="/equipment" className={navCls}>Equipment</NavLink>
       </nav>
       <main>{children}</main>
     </div>
   )
+}
+
+function navCls({ isActive }) {
+  return `tab-btn${isActive ? ' active' : ''}`
 }

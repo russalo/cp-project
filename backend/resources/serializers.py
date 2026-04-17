@@ -2,7 +2,7 @@ import datetime
 
 from rest_framework import serializers
 
-from .models import Employee, EquipmentType
+from .models import Employee, EquipmentType, MaterialCatalog, TradeClassification
 
 
 def _labor_rate_for(trade_classification, context):
@@ -73,7 +73,7 @@ class EquipmentTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = EquipmentType
         fields = [
-            'id', 'name', 'active',
+            'id', 'name', 'description', 'category', 'active',
             'rate_reg', 'rate_ot', 'rate_standby',
             'fuel_surcharge_eligible',
             'ct_match_quality',
@@ -96,3 +96,21 @@ class EquipmentTypeSerializer(serializers.ModelSerializer):
 
     def get_ct_schedule_year(self, obj):
         return obj.caltrans_rate_line.schedule.schedule_year if obj.caltrans_rate_line_id else None
+
+
+class TradeClassificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TradeClassification
+        fields = ['id', 'name', 'union_name', 'union_abbrev', 'active']
+
+
+class MaterialCatalogSerializer(serializers.ModelSerializer):
+    category_name = serializers.CharField(source='category.name', read_only=True, default='')
+
+    class Meta:
+        model = MaterialCatalog
+        fields = [
+            'id', 'description', 'default_unit', 'last_unit_cost',
+            'last_cost_date', 'use_count', 'is_boilerplate',
+            'category', 'category_name', 'active',
+        ]

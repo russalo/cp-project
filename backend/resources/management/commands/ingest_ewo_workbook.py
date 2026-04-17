@@ -316,12 +316,10 @@ class Command(BaseCommand):
 
             rate_reg = _as_decimal(rate, '0.00')
 
-            # Use Equipment sheet "Code" as the unique name; description goes in notes if different.
-            # This matches the CP code convention (e.g. "DT-4AX") and keeps the admin searchable.
+            # description + category are first-class fields now; notes hold
+            # auxiliary CT-code / unit / free-form notes for audit context.
             composed_notes = '\n'.join(
                 filter(None, [
-                    f'Description: {desc}' if desc else None,
-                    f'Category: {category}' if category else None,
                     f'CT Code: {ct_code}' if ct_code else None,
                     f'Unit: {unit_}' if unit_ else None,
                     f'Note: {notes}' if notes else None,
@@ -333,6 +331,8 @@ class Command(BaseCommand):
             # rate_standby, caltrans_rate_line) are only set on CREATE so
             # re-running ingest never clobbers manual adjustments.
             sheet_defaults = {
+                'description': str(desc or '')[:200],
+                'category': str(category or '')[:50],
                 'rate_reg': rate_reg,
                 'fuel_surcharge_eligible': fuel_eligible,
                 'ct_match_quality': match_quality,

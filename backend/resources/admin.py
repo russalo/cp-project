@@ -111,14 +111,14 @@ class EquipmentUnitInline(TabularInline):
 @admin.register(EquipmentType)
 class EquipmentTypeAdmin(ImportExportMixin, ModelAdmin):
     list_display = (
-        'name', 'current_rates_display',
+        'name', 'description', 'category', 'current_rates_display',
         'fuel_surcharge_eligible', 'ct_match_quality', 'active',
     )
-    list_filter = ('active', 'ct_match_quality', 'fuel_surcharge_eligible')
-    search_fields = ('name', 'caltrans_rate_line__class_code')
+    list_filter = ('active', 'category', 'ct_match_quality', 'fuel_surcharge_eligible')
+    search_fields = ('name', 'description', 'category', 'caltrans_rate_line__class_code')
     inlines = [EquipmentUnitInline]
     fields = (
-        'name', 'active',
+        'name', 'description', 'category', 'active',
         'rate_reg', 'rate_ot', 'rate_standby',
         'fuel_surcharge_eligible',
         'ct_match_quality', 'caltrans_rate_line',

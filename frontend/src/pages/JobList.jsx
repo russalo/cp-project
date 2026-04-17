@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { fetchJobs } from '../services/api'
 
 export default function JobList() {
@@ -69,9 +70,13 @@ export default function JobList() {
               </tr>
             ) : (
               jobs.map(job => (
-                <tr key={job.id}>
-                  <td><code>{job.job_number}</code></td>
-                  <td>{job.name}</td>
+                <tr key={job.id} className="row-clickable">
+                  <td>
+                    <Link to={`/jobs/${job.id}`} className="row-link">
+                      <code>{job.job_number}</code>
+                    </Link>
+                  </td>
+                  <td><Link to={`/jobs/${job.id}`} className="row-link">{job.name}</Link></td>
                   <td>{job.location || <span className="rate-unavailable">—</span>}</td>
                   <td>{job.gc_name || <span className="rate-unavailable">—</span>}</td>
                   <td>

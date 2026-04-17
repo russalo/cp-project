@@ -1,7 +1,7 @@
-/* ── Layout ─────────────────────────────────────────────────────────────────── */
+/* ── Layout ─────────────────────────────────────────────────────────────── */
 
 .app-header {
-  background: var(--text-h);
+  background: var(--cp-black);
   padding: 0 24px;
   display: flex;
   align-items: center;
@@ -11,15 +11,23 @@
 }
 
 .app-title {
-  font-size: 17px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 700;
   color: #fff;
-  letter-spacing: 0;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.app-title-link {
+  color: inherit;
+  text-decoration: none;
 }
 
 .login-placeholder {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.45);
+  font-size: 12px;
+  color: var(--cp-gray);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
 }
 
 .tab-strip {
@@ -33,79 +41,135 @@
 .tab-btn {
   background: none;
   border: none;
-  border-bottom: 2px solid transparent;
-  padding: 12px 16px;
-  font-size: 14px;
+  border-bottom: 3px solid transparent;
+  padding: 14px 18px;
+  font-size: 13px;
   font-family: var(--sans);
+  font-weight: 500;
   color: var(--text);
   cursor: pointer;
   margin-bottom: -1px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  text-decoration: none;
   transition: color 0.15s;
 }
 
 .tab-btn:hover {
-  color: var(--text-h);
+  color: var(--cp-charcoal);
+  text-decoration: none;
 }
 
 .tab-btn.active {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
-  font-weight: 500;
+  color: var(--cp-orange);
+  border-bottom-color: var(--cp-orange);
+  font-weight: 700;
 }
 
-/* ── Page content ───────────────────────────────────────────────────────────── */
+/* ── Page content ───────────────────────────────────────────────────────── */
 
 .page {
   padding: 24px;
+  max-width: 1280px;
+  box-sizing: border-box;
 }
 
 .page-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin: 8px 0 20px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+  .page-header {
+    gap: 12px;
+  }
+  .page-toolbar {
+    flex-wrap: wrap;
+  }
 }
 
 .page-title {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 500;
   color: var(--text-h);
   margin: 0;
   letter-spacing: -0.2px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .page-toolbar {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
 
 .show-inactive-label {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text);
   cursor: pointer;
   user-select: none;
 }
 
-/* ── Table ──────────────────────────────────────────────────────────────────── */
+/* ── Breadcrumbs ────────────────────────────────────────────────────────── */
+
+.breadcrumbs {
+  font-size: 12px;
+  color: var(--text);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.breadcrumbs a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.breadcrumbs a:hover {
+  color: var(--cp-orange);
+  text-decoration: none;
+}
+
+.breadcrumb-sep {
+  margin: 0 6px;
+  color: var(--border);
+}
+
+/* ── Table ──────────────────────────────────────────────────────────────── */
 
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: 13px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.data-table thead {
+  background: var(--cp-charcoal);
 }
 
 .data-table th {
   text-align: left;
-  padding: 8px 12px;
-  color: var(--text);
-  font-weight: 500;
-  font-size: 13px;
-  border-bottom: 2px solid var(--border);
+  padding: 10px 12px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
   white-space: nowrap;
+  border: none;
 }
 
 .data-table td {
@@ -115,22 +179,27 @@
   vertical-align: middle;
 }
 
+/* CP workbook uses alternating row banding with the light gray. */
+.data-table tbody tr:nth-child(even) td {
+  background: var(--cp-gray-lt);
+}
+
 .data-table tr:last-child td {
   border-bottom: none;
 }
 
 .data-table tbody tr:hover td {
-  background: var(--accent-bg);
+  background: var(--cp-orange-bg);
 }
 
 .rate-cell {
   font-variant-numeric: tabular-nums;
   font-family: var(--mono);
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .rate-unavailable {
-  color: var(--text);
+  color: #999;
   font-style: italic;
 }
 
@@ -139,15 +208,40 @@
   padding: 32px;
 }
 
-/* ── Badges ─────────────────────────────────────────────────────────────────── */
+/* ── Row linking ────────────────────────────────────────────────────────── */
+
+.row-clickable {
+  cursor: pointer;
+}
+
+.row-link {
+  color: inherit;
+  text-decoration: none;
+  display: block;
+}
+
+.row-link:hover {
+  color: var(--cp-orange);
+  text-decoration: none;
+}
+
+.col-description {
+  max-width: 480px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Badges ─────────────────────────────────────────────────────────────── */
 
 .badge {
   display: inline-block;
-  font-size: 11px;
-  padding: 2px 7px;
+  font-size: 10px;
+  padding: 3px 8px;
   border-radius: 3px;
-  font-weight: 500;
-  letter-spacing: 0.2px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
 }
 
 .badge-active {
@@ -156,11 +250,18 @@
 }
 
 .badge-inactive {
-  background: var(--code-bg);
+  background: var(--cp-gray);
   color: var(--text);
 }
 
-/* ── Loading / error states ─────────────────────────────────────────────────── */
+.badge-status-open      { background: var(--cp-orange-bg);        color: var(--cp-orange); }
+.badge-status-submitted { background: rgba(168, 85, 247, 0.12);   color: #7e22ce; }
+.badge-status-approved  { background: rgba(16, 185, 129, 0.12);   color: #047857; }
+.badge-status-rejected  { background: rgba(220, 38, 38, 0.1);     color: #b91c1c; }
+.badge-status-sent      { background: rgba(234, 179, 8, 0.12);    color: #854d0e; }
+.badge-status-billed    { background: var(--cp-gray);             color: var(--cp-charcoal); }
+
+/* ── Loading / error / empty states ─────────────────────────────────────── */
 
 .loading-state {
   padding: 48px;
@@ -170,11 +271,482 @@
 }
 
 .error-state {
-  padding: 16px 20px;
+  padding: 14px 18px;
   color: #dc2626;
   background: rgba(220, 38, 38, 0.05);
-  border: 1px solid rgba(220, 38, 38, 0.2);
-  border-radius: 6px;
+  border-left: 4px solid #dc2626;
+  border-radius: 2px;
   margin: 0 0 16px;
   font-size: 14px;
+}
+
+.empty-state {
+  padding: 32px;
+  text-align: center;
+  color: var(--text);
+  font-size: 14px;
+  background: var(--cp-gray-lt);
+  border: 1px dashed var(--border);
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--text);
+  font-style: italic;
+  margin: 0 0 16px;
+}
+
+/* ── Detail cards ───────────────────────────────────────────────────────── */
+
+.detail-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+}
+
+.detail-card-title {
+  font-family: var(--banner);
+  font-size: 11px;
+  font-weight: 900;
+  color: var(--cp-charcoal);
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 8px 16px;
+  margin: 0;
+  font-size: 13px;
+}
+
+.detail-grid dt {
+  color: var(--text);
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.6px;
+}
+
+.detail-grid dd {
+  margin: 0;
+  color: var(--text-h);
+}
+
+.totals-card {
+  background: var(--cp-gray-lt);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--cp-orange);
+}
+
+.totals-grid {
+  grid-template-columns: 200px 1fr;
+}
+
+.totals-grid .total-row {
+  font-weight: 700;
+  font-size: 15px;
+  padding-top: 8px;
+  border-top: 2px solid var(--cp-charcoal);
+  margin-top: 4px;
+  color: var(--cp-charcoal);
+  font-family: var(--banner);
+}
+
+.description-block {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text-h);
+  white-space: pre-wrap;
+}
+
+.section-title {
+  font-family: var(--banner);
+  font-size: 12px;
+  font-weight: 900;
+  color: #fff;
+  background: var(--cp-charcoal);
+  margin: 24px 0 0;
+  padding: 8px 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-radius: 4px 4px 0 0;
+}
+
+.section-title + .data-table,
+.section-title + .empty-state {
+  margin-top: 0;
+  border-radius: 0 0 4px 4px;
+}
+
+/* ── Section banner with inline add button ──────────────────────────────── */
+
+.section-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--cp-charcoal);
+  padding: 8px 12px;
+  margin: 24px 0 0;
+  border-radius: 4px 4px 0 0;
+}
+
+.section-title-inline {
+  font-family: var(--banner);
+  font-size: 12px;
+  font-weight: 900;
+  color: #fff;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.section-banner + .data-table,
+.section-banner + .empty-state,
+.section-banner + .line-form {
+  margin-top: 0;
+  border-radius: 0;
+}
+
+.section-banner + .empty-state {
+  border-radius: 0 0 4px 4px;
+}
+
+/* ── Line form (inline add row) ─────────────────────────────────────────── */
+
+.line-form {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px 8px;
+  padding: 12px;
+  background: var(--cp-gray-lt);
+  border: 1px solid var(--border);
+  border-top: none;
+}
+
+/* Labeled field inside the line form. */
+.lf {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  grid-column: span 2;
+  min-width: 0;
+}
+
+.lf-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.line-form-full {
+  grid-column: 1 / -1;
+}
+
+.line-form select,
+.line-form input[type="text"],
+.line-form input[type="number"] {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-size: 14px;
+  font-family: var(--sans);
+  background: var(--bg);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.line-form select:focus,
+.line-form input:focus {
+  outline: none;
+  border-color: var(--cp-orange);
+  box-shadow: 0 0 0 2px var(--cp-orange-bg);
+}
+
+.line-form .checkbox-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.line-form-error {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.line-form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+/* Stack to 2 columns on narrow screens (tablet portrait) */
+@media (max-width: 768px) {
+  .line-form {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .lf {
+    grid-column: span 1;
+  }
+}
+
+/* Full stack on phones */
+@media (max-width: 480px) {
+  .line-form {
+    grid-template-columns: 1fr;
+  }
+  .lf {
+    grid-column: 1 / -1;
+  }
+  .line-form-actions {
+    flex-direction: column-reverse;
+  }
+  .line-form-actions .btn {
+    width: 100%;
+    text-align: center;
+    padding: 12px;
+  }
+}
+
+/* ── Small button variants ──────────────────────────────────────────────── */
+
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 11px;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 18px;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.btn-icon:hover {
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.08);
+}
+
+/* ── WorkDay header extras ──────────────────────────────────────────────── */
+
+.wd-foreman-suffix {
+  color: var(--text);
+  font-weight: 400;
+  font-size: 15px;
+  margin-left: 4px;
+}
+
+/* ── Editable field (inline pencil → input / textarea) ─────────────────── */
+
+.editable-field {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  min-height: 22px;
+  max-width: 100%;
+}
+
+.editable-field.editing {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.editable-field.editing.multiline {
+  max-width: 100%;
+}
+
+.editable-value {
+  color: var(--text-h);
+  word-break: break-word;
+}
+
+.edit-icon {
+  font-size: 14px;
+  color: var(--text);
+  padding: 2px 6px;
+  opacity: 0.5;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+/* Always visible on touch; fade in on hover for mouse users. */
+.editable-field:hover .edit-icon {
+  opacity: 1;
+  color: var(--cp-orange);
+}
+
+@media (hover: none) {
+  .edit-icon {
+    opacity: 0.8;
+  }
+}
+
+.editable-field.editing input[type="text"],
+.editable-field.editing input[type="date"],
+.editable-field.editing input[type="number"],
+.editable-field.editing textarea {
+  padding: 8px 10px;
+  border: 1px solid var(--cp-orange);
+  border-radius: 3px;
+  font-size: 14px;
+  font-family: var(--sans);
+  color: var(--text-h);
+  background: var(--bg);
+  box-shadow: 0 0 0 2px var(--cp-orange-bg);
+  width: 100%;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.editable-field.editing textarea {
+  resize: vertical;
+  min-height: 64px;
+}
+
+.editable-field-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.editable-field-error {
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+/* ── Buttons ────────────────────────────────────────────────────────────── */
+
+.btn {
+  display: inline-block;
+  padding: 8px 14px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-h);
+  font-size: 12px;
+  font-family: var(--sans);
+  font-weight: 500;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.btn:hover {
+  border-color: var(--cp-orange);
+  color: var(--cp-orange);
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: var(--cp-orange);
+  color: #fff;
+  border-color: var(--cp-orange);
+}
+
+.btn-primary:hover {
+  background: #e45d0e;
+  color: #fff;
+  border-color: #e45d0e;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+/* ── Forms ──────────────────────────────────────────────────────────────── */
+
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 560px;
+  margin-top: 20px;
+}
+
+.form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text);
+}
+
+.form-grid label span {
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.form-grid input[type="text"],
+.form-grid input[type="date"],
+.form-grid input[type="number"],
+.form-grid textarea,
+.form-grid select {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-size: 14px;
+  font-family: var(--sans);
+  color: var(--text-h);
+  background: var(--bg);
+}
+
+.form-grid input:focus,
+.form-grid textarea:focus,
+.form-grid select:focus {
+  outline: none;
+  border-color: var(--cp-orange);
+  box-shadow: 0 0 0 2px var(--cp-orange-bg);
+}
+
+.form-grid textarea {
+  resize: vertical;
+  min-height: 64px;
+}
+
+.form-grid label.checkbox-row {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-grid label.checkbox-row span {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+  font-size: 13px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
 }

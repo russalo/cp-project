@@ -1,8 +1,13 @@
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import AllowAny
 
-from .models import Employee, EquipmentType
-from .serializers import EmployeeSerializer, EquipmentTypeSerializer
+from .models import Employee, EquipmentType, MaterialCatalog, TradeClassification
+from .serializers import (
+    EmployeeSerializer,
+    EquipmentTypeSerializer,
+    MaterialCatalogSerializer,
+    TradeClassificationSerializer,
+)
 
 
 class EmployeeListView(ListAPIView):
@@ -35,7 +40,33 @@ class EquipmentTypeListView(ListAPIView):
     def get_queryset(self):
         qs = EquipmentType.objects.select_related(
             'caltrans_rate_line__schedule',
-        ).order_by('name')
+        ).order_by('category', 'name')
+        if self.request.query_params.get('active') == 'false':
+            return qs
+        return qs.filter(active=True)
+
+
+class TradeClassificationListView(ListAPIView):
+    """GET /api/resources/trades/ — labor trade lookup (DEC-029)."""
+    serializer_class = TradeClassificationSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        qs = TradeClassification.objects.order_by('name')
+        if self.request.query_params.get('active') == 'false':
+            return qs
+        return qs.filter(active=True)
+
+
+class MaterialCatalogListView(ListAPIView):
+    """GET /api/resources/materials/ — material master list (DEC-022)."""
+    serializer_class = MaterialCatalogSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        qs = MaterialCatalog.objects.select_related('category').order_by(
+            '-use_count', 'description',
+        )
         if self.request.query_params.get('active') == 'false':
             return qs
         return qs.filter(active=True)

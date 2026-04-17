@@ -2,6 +2,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
 from .models import EquipmentLine, ExtraWorkOrder, LaborLine, MaterialLine, WorkDay
+from .services import create_ewo_from_job
 
 
 class ExtraWorkOrderSerializer(serializers.ModelSerializer):
@@ -11,6 +12,11 @@ class ExtraWorkOrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ExtraWorkOrder
+        # created_by is optional on write — the create() method falls back
+        # to request.user (or the first active user for pre-auth dev).
+        extra_kwargs = {
+            'created_by': {'required': False, 'allow_null': True},
+        }
         fields = [
             'id',
             'ewo_number',
@@ -107,6 +113,39 @@ class ExtraWorkOrderSerializer(serializers.ModelSerializer):
                 'job': 'Job cannot be changed after an EWO number is assigned.'
             })
         return attrs
+
+    def create(self, validated_data):
+        """
+        Snapshot OH&P / bond defaults from Job and seed fuel_surcharge_pct
+        from the most recent EWO on the same Job (DEC-062 / DEC-063).
+        Explicit values in the payload override the snapshots.
+
+        ``created_by`` resolution (pre-auth, DEC-007 is M4):
+          1. explicit value in payload, else
+          2. request.user if authenticated, else
+          3. first active superuser, else
+          4. first user in the DB.
+        """
+        from django.contrib.auth.models import User
+
+        job = validated_data.pop('job')
+        created_by = validated_data.pop('created_by', None)
+        if created_by is None:
+            request = self.context.get('request')
+            request_user = getattr(request, 'user', None) if request else None
+            if request_user is not None and request_user.is_authenticated:
+                created_by = request_user
+            else:
+                created_by = (
+                    User.objects.filter(is_superuser=True, is_active=True).first()
+                    or User.objects.filter(is_active=True).first()
+                    or User.objects.first()
+                )
+            if created_by is None:
+                raise serializers.ValidationError({
+                    'created_by': 'Cannot infer a creator — pass an explicit user id.'
+                })
+        return create_ewo_from_job(job=job, created_by=created_by, **validated_data)
 
 
 class WorkDaySerializer(serializers.ModelSerializer):

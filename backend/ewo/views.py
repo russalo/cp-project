@@ -44,6 +44,10 @@ class ExtraWorkOrderViewSet(EwoLockedDeleteMixin, viewsets.ModelViewSet):
     """
     CRUD-only EWO API. Lifecycle transitions stay out of this viewset so submit/
     approval behavior can be implemented explicitly later.
+
+    Supported filters:
+        ?job=<id>      — only EWOs on that job
+        ?status=<s>    — filter by status (open, submitted, approved, …)
     """
 
     queryset = (
@@ -60,6 +64,18 @@ class ExtraWorkOrderViewSet(EwoLockedDeleteMixin, viewsets.ModelViewSet):
     )
     serializer_class = ExtraWorkOrderSerializer
     permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        job_id = self.request.query_params.get('job')
+        status_ = self.request.query_params.get('status')
+        # Validate job id is numeric so a malformed query doesn't produce a
+        # 500 (Django would raise ValueError coercing the string to int).
+        if job_id and job_id.isdigit():
+            qs = qs.filter(job_id=int(job_id))
+        if status_:
+            qs = qs.filter(status=status_)
+        return qs
 
 
 class WorkDayViewSet(WorkDayLockedDeleteMixin, viewsets.ModelViewSet):
