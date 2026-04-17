@@ -6,7 +6,7 @@ import {
   laborLines, equipmentLines, materialLines,
 } from '../services/api'
 import { fmtMoney, fmtHours, fmtPct } from '../lib/format'
-import cpMark from '../assets/cpmark.svg'
+import headerLockup from '../assets/header.svg'
 
 const STATUS_LABEL = {
   open: 'Open',
@@ -357,11 +357,7 @@ export default function EwoPrint() {
 function Letterhead() {
   return (
     <header className="print-letterhead">
-      <img src={cpMark} alt="CP" className="print-letterhead-mark" />
-      <div className="print-letterhead-text">
-        <div className="print-letterhead-name">CONSTRUCTION COMPANY, INC.</div>
-        <div className="print-letterhead-tag">WATER &middot; SEWER &middot; STORM DRAIN</div>
-      </div>
+      <img src={headerLockup} alt="C.P. Construction Company, Inc." className="print-letterhead-lockup" />
       <div className="print-letterhead-contact">
         <div>(909) 981-1091 &middot; Lic. #304795-A</div>
         <div>PO Box 1206, Ontario CA 91762</div>
@@ -415,55 +411,28 @@ function PrintStyles() {
 
       .print-letterhead {
         display: grid;
-        grid-template-columns: auto 1fr auto;
-        gap: 14px;
-        align-items: center;
+        grid-template-columns: 1fr auto;
+        gap: 18pt;
+        align-items: end;
         border-bottom: 2px solid #2e2e2e;
-        padding-bottom: 8px;
-        margin-bottom: 14px;
+        padding-bottom: 8pt;
+        margin-bottom: 14pt;
       }
-      .print-letterhead-mark {
-        /* Height matches the two-line wordmark block so nothing towers. */
-        height: 38pt;
-        width: auto;
+      .print-letterhead-lockup {
+        /* Full-width SVG includes mark + wordmark + tagline + Est. line.
+           Max width keeps it proportional on the Letter page. */
+        width: 100%;
+        max-width: 460pt;
+        height: auto;
         display: block;
-      }
-      .print-letterhead-text {
-        /* inline-flex so the column shrink-wraps to the name width, giving
-           the tagline below a fixed target to justify across. */
-        display: inline-flex;
-        flex-direction: column;
-        line-height: 1.05;
-        min-width: 0;
-      }
-      .print-letterhead-name {
-        font-family: 'Square721 BT Extended', 'Arial Black', sans-serif;
-        font-style: italic;
-        font-weight: 700;
-        font-size: 14pt;
-        letter-spacing: 1px;
-        color: #0d0d0d;
-        white-space: nowrap;
-      }
-      .print-letterhead-tag {
-        font-family: 'Square721 BT Extended', 'Arial Black', 'Roboto', sans-serif;
-        font-size: 7.5pt;
-        letter-spacing: 1px;
-        color: #555;
-        margin-top: 2pt;
-        /* Justify the word-gaps so the tagline spans the same width as
-           the company name above it (5 gaps in "WATER · SEWER · STORM
-           DRAIN"). */
-        text-align: justify;
-        text-align-last: justify;
-        text-justify: inter-word;
       }
       .print-letterhead-contact {
         font-size: 8pt;
         text-align: right;
         color: #333;
-        line-height: 1.3;
+        line-height: 1.4;
         white-space: nowrap;
+        padding-bottom: 4pt;
       }
 
       .print-doc-title {
