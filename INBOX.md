@@ -54,12 +54,44 @@ snapshot of 109 tracked assets with these relevant columns:
 - Sync cadence — how stale can data be and still be useful? Nightly is
   probably enough; real-time is overkill.
 
-**Quick next step (Phase 5-ish, no specific DEC yet):** once the Contract
-+ Sandbox/EWE work (DEC-071) is past, a lightweight "FL ingest" command
-that reads this CSV and populates `EquipmentUnit` rows (creating new, or
-updating engine hours on existing) would be ~2 hours of work and gives
-the Phase 3 UI a way to show "(B-27 · last seen at 137 S Loma Pl)" next
-to each EquipmentLine. A full daily-delta auto-populate is larger scope.
+**The compounding evidentiary value** (2026-04-17 brainstorm): GPS
+lat/lon answers "was the machine there"; engine-hour deltas answer "was
+it actually running, and for how long." Combined, an EWO claim is
+backed by timestamped, tamper-resistant business records — admissible
+under federal / most-state rules of evidence. The practical effect is a
+**flipped burden of proof**: today CP has to justify a contested EWO;
+with GPS + engine-hour records, the GC has to explain any discrepancy.
+Secondary wins: standby-vs-operating proof from whether the engine ever
+turned over, foreman protection when memory fails, reconstruction
+for late-notice claims.
+
+**Mechanic's roster (`scratch/equipment roster  9-29-23 (1) (1).xlsx`)**:
+User's internal equipment-tracking spreadsheet. Nine sheets, 483 rows
+on the main `Equipment Roster` tab, plus overlays for AQMD, tier status,
+fuel pins, market value, etc. Shares the A-/B-prefix fleet-number
+convention with Fleetlocate — key insight for reconciliation.
+
+**Reconciliation prerequisite** (user-stated, 2026-04-17): *"1st order
+of business would be to reconcile our mechanic's equipment list,
+Fleetlocate's list with ours and Caltrans."* Do NOT start building the
+ingest or auto-populate before this reconciliation exists as a
+single-source-of-truth table showing every unit across all four
+sources with match status + discrepancy flags. Building on mismatched
+catalogs creates silent bugs.
+
+**Design constraint** (user, 2026-04-17): *"we'd have to add these
+things so that they are easily added, retrievable but not hold up
+actual use."* Any FL/mechanic-list integration must be additive — new
+fields are nullable, never required; enrichment appears as overlay
+context in the UI, never in the hot path. See the
+`feedback_additive_not_blocking` memory entry for application rules.
+
+**Quick next step (Phase 5-ish, no specific DEC yet):** a read-only
+reconciliation report (`manage.py reconcile_equipment`) that takes the
+three CSV/XLSX sources and produces one merged sheet for the user to
+eyeball. Once that sheet is clean, a second command populates
+`EquipmentUnit` records from the reconciled data. Only then does an FL
+ingest or auto-populate UI become worth wiring.
 
 ### 2026-04-17 — EWO/WorkDay state: draft / in-progress / final
 **Bundle with DEC-071** (Sandbox / EWE / EWO as three artifacts). User
