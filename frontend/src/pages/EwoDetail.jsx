@@ -71,6 +71,7 @@ export default function EwoDetail() {
           </span>
         </h1>
         <div className="page-toolbar">
+          <Link to={`/ewos/${ewo.id}/print`} className="btn">Print</Link>
           {!locked && (
             <Link to={`/ewos/${ewo.id}/workdays/new`} className="btn btn-primary">+ New WorkDay</Link>
           )}
