@@ -241,6 +241,14 @@ export default function EwoPrint() {
             <p className="print-empty">No labor lines.</p>
           ) : (
             <table className="print-lines">
+              <colgroup>
+                <col /><col />
+                <col className="col-hrs" />
+                <col className="col-hrs" />
+                <col className="col-hrs" />
+                <col className="col-money" />
+                <col className="col-total" />
+              </colgroup>
               <thead>
                 <tr>
                   <th>Employee</th>
@@ -277,6 +285,15 @@ export default function EwoPrint() {
             <p className="print-empty">No equipment lines.</p>
           ) : (
             <table className="print-lines">
+              <colgroup>
+                <col className="col-code" />
+                <col />
+                <col className="col-hrs" />
+                <col className="col-hrs" />
+                <col className="col-hrs" />
+                <col className="col-hrs" />
+                <col className="col-total" />
+              </colgroup>
               <thead>
                 <tr>
                   <th>Code</th>
@@ -316,6 +333,13 @@ export default function EwoPrint() {
             <p className="print-empty">No material lines.</p>
           ) : (
             <table className="print-lines">
+              <colgroup>
+                <col />
+                <col className="col-qty-dec" />
+                <col className="col-unit" />
+                <col className="col-money" />
+                <col className="col-total" />
+              </colgroup>
               <thead>
                 <tr>
                   <th>Description</th>
@@ -323,24 +347,21 @@ export default function EwoPrint() {
                   <th>Unit</th>
                   <th className="num">Unit Cost</th>
                   <th className="num">Total</th>
-                  <th>Ref</th>
                 </tr>
               </thead>
               <tbody>
                 {materials.map(m => (
                   <tr key={m.id}>
                     <td>{m.description}{m.is_subcontractor ? ' (sub)' : ''}</td>
-                    <td className="num">{Number(m.quantity).toFixed(3)}</td>
+                    <td className="num">{Number(m.quantity).toFixed(2)}</td>
                     <td>{m.unit}</td>
                     <td className="num">{fmtMoney(m.unit_cost)}</td>
                     <td className="num">{fmtMoney(m.line_total)}</td>
-                    <td>{m.reference_number || ''}</td>
                   </tr>
                 ))}
                 <tr className="print-subtotal-row">
                   <td colSpan={4}>Materials Subtotal</td>
                   <td className="num">{fmtMoney(wd.material_subtotal)}</td>
-                  <td></td>
                 </tr>
               </tbody>
             </table>
@@ -551,12 +572,32 @@ function PrintStyles() {
       .print-lines, .print-totals, .print-kv, .print-daylist {
         width: 100%; border-collapse: collapse; font-size: 9pt;
       }
+      /* Fixed layout so the colgroup widths below actually pin the columns.
+         Without this the browser auto-fits and REG/OT/DT/Total drift
+         between Labor, Equipment, and Materials tables. */
+      .print-lines { table-layout: fixed; }
+      .print-lines td, .print-lines th {
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+      .print-lines td:first-child, .print-lines th:first-child,
+      .print-lines td:nth-child(2), .print-lines th:nth-child(2) {
+        white-space: normal;
+      }
+      .col-hrs     { width: 40pt; }
+      .col-qty-dec { width: 44pt; }
+      .col-unit    { width: 40pt; }
+      .col-money   { width: 72pt; }
+      .col-total   { width: 76pt; }
+      .col-code    { width: 72pt; }
       .print-lines thead th {
         background: #e5e5e4; color: #000;
         text-align: left; padding: 3pt 7pt; font-weight: 700;
         text-transform: uppercase; font-size: 7.5pt; letter-spacing: 0.5px;
         border-bottom: 1px solid #999;
       }
+      /* Numeric headers must right-align to match the values underneath;
+         .num alone loses the specificity battle against the rule above. */
+      .print-lines thead th.num { text-align: right; }
       .print-lines tbody td, .print-daylist tbody td {
         padding: 3pt 7pt; border-bottom: 0.5pt solid #bbb;
       }
@@ -575,7 +616,7 @@ function PrintStyles() {
       .print-markups { margin: 4px 0 0; }
       .print-kv td { padding: 3px 6px; }
       .print-kv td:first-child { color: #555; text-transform: uppercase;
-        font-size: 8pt; letter-spacing: 0.5px; width: 40%; }
+        font-size: 8pt; letter-spacing: 0.5px; white-space: nowrap; }
       .print-kv td:last-child { text-align: right; font-family: var(--mono); }
 
       .print-totals {
@@ -592,7 +633,8 @@ function PrintStyles() {
         background: #e5e5e4;
       }
 
-      .print-day-summary { margin-top: 6pt; max-width: 55%; margin-left: auto; }
+      .print-day-summary { margin-top: 6pt; width: auto; margin-left: auto; }
+      .print-day-summary .print-kv { width: auto; min-width: 50%; margin-left: auto; }
       .print-day-summary .print-total-row td {
         font-weight: 900; font-size: 10pt;
         border-top: 1.5px solid #2e2e2e; background: #f37224; color: #fff;
